@@ -1,0 +1,20 @@
+# --- スタサプRAGエンジン 共通パッケージ ---
+python-dotenv
+google-genai
+numpy
+requests
+
+# --- バックエンド用 ---
+# (※plyerがバッチ完了通知用であれば残す。不要であれば削除可)
+plyer
+# Excelファイル（.xlsx）読み込み用（pandasの裏側で必要）
+openpyxl
+# PDFからテキストを抽出する場合（※Gemini File APIで直接投げる場合は不要）
+# PyMuPDF 
+
+# --- フロントエンド用 (UI・グラフ描画等) ---
+streamlit
+streamlit-agraph
+pandas
+# Semantic Zoom ダッシュボード (Treemap) 描画用
+plotly
