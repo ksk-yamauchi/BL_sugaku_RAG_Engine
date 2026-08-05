@@ -1,8 +1,15 @@
 {
-	"folders": [
-		{
-			"path": "BL_sugaku_I_Frontend"
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "path": "BL_sugaku_I_Frontend"
+    }
+  ],
+  "settings": {
+    "window.titleBarStyle": "custom",
+    "workbench.colorCustomizations": {
+      "activityBar.background": "#d9580d",
+      "titleBar.activeBackground": "#d9580d",
+      "titleBar.activeForeground": "#ffffff"
+    }
+  }
 }
