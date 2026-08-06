@@ -1,0 +1,84 @@
+{
+  "8451503110000000": [
+    {
+      "branch_code": "_K001",
+      "name": "整式",
+      "summary_snippet": "単項式と多項式を合わせた代数式の総称。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "単項式",
+      "summary_snippet": "数や文字、およびそれらを掛け合わせてできる式（例: $3x$, $-2a^2b$）。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "係数（絶対的）",
+      "summary_snippet": "単項式において、文字に掛けられている数の部分。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "単項式の次数（絶対的）",
+      "summary_snippet": "単項式において掛け合わされているすべての文字の個数。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "多項式",
+      "summary_snippet": "いくつかの単項式の和の形として表される式（例: $x^2 + 3x - 5$）。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "項",
+      "summary_snippet": "多項式を構成する個々の単項式。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "定数項（絶対的）",
+      "summary_snippet": "多項式の中で、数だけの項。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "多項式の次数（絶対的）",
+      "summary_snippet": "多項式に含まれる各項の次数のうち、最も高いもの。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    }
+  ],
+  "8451503122000000": [
+    {
+      "branch_code": "_K001",
+      "name": "特定の文字に着目する視点",
+      "summary_snippet": "複数の文字を含む式において、特定の文字のみを「変数（文字）」として扱い、それ以外の文字を「定数（数）」とみなす思考の枠組み。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "特定の文字に着目したときの係数",
+      "summary_snippet": "着目した文字以外の部分（数値および着目しなかった文字の積）全体を「数（係数）」とみなしたもの。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "特定の文字に着目したときの単項式の次数",
+      "summary_snippet": "単項式において、着目した文字だけが掛け合わされている個数。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "特定の文字に着目したときの定数項",
+      "summary_snippet": "着目した文字を含まない項全体。数値だけの項だけでなく、他の文字を含む項も定数項として扱われるパラダイムシフトが生じる。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "特定の文字に着目したときの多項式の次数",
+      "summary_snippet": "着目した文字に関して、多項式の各項の中で最も次数が高い項の次数。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    }
+  ]
+}

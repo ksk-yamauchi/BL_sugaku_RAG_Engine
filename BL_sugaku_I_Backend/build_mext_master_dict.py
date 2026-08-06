@@ -15,19 +15,19 @@ if not API_KEY:
 
 client = genai.Client(api_key=API_KEY)
 # 長文の文脈を処理するため、Proモデルを使用（エラーが出る場合は flash に変更してください）
-MODEL_NAME = "gemini-3.6-flash" 
+MODEL_NAME = "gemini-3.6-flash"
 
 PARENT_DIR = os.path.dirname(os.path.abspath(__file__))
 # 🌟 CSVではなくExcelファイルを指定
 EXCEL_PATH = os.path.join(PARENT_DIR, "mext_code_math_high.xlsx")
 MD_PATH = os.path.join(PARENT_DIR, "mext_math_high.md")
-OUTPUT_JSON_PATH = os.path.join(PARENT_DIR, "mext_master_dict.json")
+OUTPUT_JSON_PATH = os.path.join(PARENT_DIR, "mext_master_dict_v2.json")
 
 # =========================================================
 # 📂 データ読み込み ＆ 前処理
 # =========================================================
 def load_excel_data():
-    """Excelから数学Iに関するコードとテキストを抽出"""
+    """Excelから全数学科目に関するコードとテキストを抽出"""
     if not os.path.exists(EXCEL_PATH):
         raise FileNotFoundError(f"❌ Excelファイルが見つかりません: {EXCEL_PATH}")
     
@@ -40,8 +40,8 @@ def load_excel_data():
         code = str(row.get('学習指導要領コード', '')).strip()
         text = str(row.get('学習指導要領テキスト', '')).strip().replace('\n', ' ')
         
-        # 8451... は数学Iのコード（※必要に応じて他のコードも追加可能）
-        if code.startswith("8451"):
+        # 845... または 846... は数学・理数科目のコード
+        if code.startswith("845") or code.startswith("846"):
             math_items.append({
                 "code": code,
                 "text": text
@@ -55,7 +55,7 @@ def load_md_data():
         return f.read()
 
 # =========================================================
-# 🧠 AIによる辞書統合処理
+# 🧠 AIによる辞書統合処理（三つの柱 完全分離対応）
 # =========================================================
 def build_master_dictionary(excel_items, md_content):
     print("🧠 Gemini APIを使って、Excelのコード表とMarkdownの解説文を高度に融合しています...")
@@ -71,11 +71,18 @@ def build_master_dictionary(excel_items, md_content):
 【指示】
 抽出データに存在するすべての16桁コードについて、Markdownの解説文からそのコードが意図する「指導のねらい」や「解説」を読み取り、結合してください。
 
-【入力データ1：コード表（数学I）】
+【★最重要: 三つの柱の分離】
+そのコードが、学習指導要領の「三つの柱」のどれに該当するかを判定し、`pillar` 属性として以下のいずれかを厳密に設定してください。
+- `knowledge_skill` (ア 知識及び技能)
+- `thinking_judgment` (イ 思考力，判断力，表現力等)
+- `attitude_humanity` (ウ 学びに向かう力，人間性等)
+- `general` (単元の大目標や内容の取扱いなど、上記3つに分類できないもの)
+
+【入力データ1：コード表（全数学科目）】
 {excel_context}
 
 【入力データ2：指導要領解説Markdown】
-{md_content[:30000]}
+{md_content[:35000]}
 
 【出力フォーマット】
 以下の構造を持つJSONを出力してください。
@@ -83,7 +90,10 @@ def build_master_dictionary(excel_items, md_content):
   "mext_dictionary": [
     {{
       "mext_code": "16桁のコード (例: 8451503110000000)",
-      "hierarchy": "階層構造 (例: 高校数学I > 数と式 > 知識・技能)",
+      "subject": "科目名 (例: 数学Ⅰ)",
+      "category": "領域名 (例: 数と式)",
+      "pillar": "knowledge_skill | thinking_judgment | attitude_humanity | general",
+      "hierarchy_text": "階層構造 (例: 高等学校 > 数学 > 数学Ⅰ > 内容 > (1) 数と式 > ア > (ｱ))",
       "official_text": "入力データ1に記載されている公式のテキスト",
       "explanation_summary": "Markdownから抽出・要約した、この項目を指導する上でのねらいや詳細な解説"
     }}
@@ -100,11 +110,17 @@ def build_master_dictionary(excel_items, md_content):
                     "type": "OBJECT",
                     "properties": {
                         "mext_code": {"type": "STRING"},
-                        "hierarchy": {"type": "STRING"},
+                        "subject": {"type": "STRING"},
+                        "category": {"type": "STRING"},
+                        "pillar": {
+                            "type": "STRING",
+                            "enum": ["knowledge_skill", "thinking_judgment", "attitude_humanity", "general"]
+                        },
+                        "hierarchy_text": {"type": "STRING"},
                         "official_text": {"type": "STRING"},
                         "explanation_summary": {"type": "STRING"}
                     },
-                    "required": ["mext_code", "hierarchy", "official_text", "explanation_summary"]
+                    "required": ["mext_code", "subject", "category", "pillar", "hierarchy_text", "official_text", "explanation_summary"]
                 }
             }
         },
@@ -126,10 +142,10 @@ def build_master_dictionary(excel_items, md_content):
 # 🏃‍♂️ メイン処理
 # =========================================================
 def main():
-    print("🚀 指導要領マスター辞書の自動生成を開始します...")
+    print("🚀 新・指導要領マスター辞書の自動生成を開始します...")
     
     excel_items = load_excel_data()
-    print(f"📊 Excelから数学Iの項目を {len(excel_items)} 件抽出しました。")
+    print(f"📊 Excelから数学の項目を {len(excel_items)} 件抽出しました。")
     
     md_content = load_md_data()
     print(f"📄 Markdown解説データを読み込みました。 (文字数: {len(md_content)})")
@@ -139,7 +155,7 @@ def main():
     with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(master_dict, f, ensure_ascii=False, indent=2)
 
-    print(f"\n🎉 🎉 【成功】マスター辞書の生成が完了しました！")
+    print(f"\n🎉 🎉 【成功】新マスター辞書(mext_master_dict_v2.json)の生成が完了しました！")
     print(f"💾 保存先: {OUTPUT_JSON_PATH}")
 
 if __name__ == "__main__":
