@@ -4,27 +4,102 @@ import shutil
 from glob import glob
 from dotenv import load_dotenv
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 
 # =========================================================
-# ⚙️ 設定・初期化 (.env 対応)
+# ⚙️ 設定・初期化 (.env 複数APIキー対応 ＆ 強制上書き)
 # =========================================================
-# 親フォルダの .env を読み込む
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
-API_KEY = os.environ.get("GEMINI_API_KEY")
+ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 
-if not API_KEY:
-    raise ValueError("❌ .env ファイルに GEMINI_API_KEY が設定されていません。")
+# 🌟 override=True を指定してターミナル内の古い環境変数を強制上書き
+load_dotenv(dotenv_path=ENV_PATH, override=True)
 
-client = genai.Client(api_key=API_KEY)
-# PDF解析には精度の高い 3.6-flash を使用
+# 不可視文字(BOM等)や引用符を除去するクレンジング関数
+def clean_key(k_str):
+    if not k_str:
+        return ""
+    return k_str.strip().strip("'\"").replace('\ufeff', '')
+
+# GEMINI_API_KEYS と GEMINI_API_KEY の両方に対応し、どちらでもカンマで分割する
+raw_keys = os.environ.get("GEMINI_API_KEYS", "") or os.environ.get("GEMINI_API_KEY", "")
+API_KEYS = [clean_key(k) for k in raw_keys.split(",") if clean_key(k)]
+
+if not API_KEYS:
+    raise ValueError("❌ .env ファイルに GEMINI_API_KEYS または GEMINI_API_KEY が設定されていません。")
+
+current_key_index = 0
 MODEL_ID = "gemini-3.6-flash"
 
+def get_client():
+    """現在のインデックスのAPIキーでGemini Clientを生成"""
+    global current_key_index
+    return genai.Client(api_key=API_KEYS[current_key_index])
+
+def rotate_key():
+    """次のAPIキーへローテーション"""
+    global current_key_index
+    if len(API_KEYS) <= 1:
+        print("   ⚠️ 登録されているAPIキーが1つのため、キー切り替えができません。")
+        return False
+    current_key_index = (current_key_index + 1) % len(API_KEYS)
+    masked_key = f"{API_KEYS[current_key_index][:6]}...{API_KEYS[current_key_index][-4:]}" if len(API_KEYS[current_key_index]) > 10 else "INVALID"
+    print(f"   🔄 APIキーを切り替えました (Key {current_key_index + 1}/{len(API_KEYS)}: {masked_key})")
+    return True
+
+def generate_content_with_key_rotation(uploaded_file, prompt, max_retries=None):
+    """429制限や400無効キーエラー検知時に自動でAPIキーを切り替えて即座に再トライする関数"""
+    if max_retries is None:
+        # ★ キーの数の2倍までリトライを許可する（8キーなら16回）
+        max_retries = max(5, len(API_KEYS) * 2)
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            client = get_client()
+            print(f"   [通信開始: 試行 {attempt}/{max_retries}]")
+            response = client.models.generate_content(
+                model=MODEL_ID,
+                contents=[uploaded_file, prompt]
+            )
+            print("   [通信完了]")
+            return response
+        except errors.APIError as e:
+            err_str = str(e).lower()
+            if any(k in err_str for k in ["429", "quota", "resource_exhausted", "api_key_invalid", "invalid_argument"]):
+                curr_k = API_KEYS[current_key_index]
+                masked_k = f"{curr_k[:6]}...{curr_k[-4:]}" if len(curr_k) > 10 else "INVALID"
+                print(f"   ⚠️ APIエラー/無効キーを検知しました (Key: {masked_k}, 試行 {attempt}/{max_retries})")
+                if rotate_key():
+                    print("   ⏩ 新しいAPIキーで即座にリトライします...")
+                    # 🌟 [重要] ファイル解析の場合、キーが変わると100% 403エラーになるため再アップロードを要求
+                    raise Exception("NEED_REUPLOAD")
+                else:
+                    print("   ⏳ 40秒待機後に再トライします...")
+                    time.sleep(40)
+            elif "403" in err_str or "permission_denied" in err_str:
+                print(f"   ⚠️ 403アクセス拒否エラーを検知。別アカウントでのアップロードが必要なため再アップロードを要求します。")
+                raise Exception("NEED_REUPLOAD")
+            elif "503" in err_str or "unavailable" in err_str:
+                print(f"   ⚠️ 503サーバーエラー (試行 {attempt}/{max_retries}): 30秒待機後に再トライ...")
+                time.sleep(30)
+            else:
+                if attempt == max_retries: raise e
+                print(f"   ⚠️ APIエラー ({e}) (試行 {attempt}/{max_retries}): 15秒待機後に再トライ...")
+                time.sleep(15)
+        except Exception as e:
+            if "NEED_REUPLOAD" in str(e):
+                raise e
+            if attempt == max_retries: raise e
+            print(f"   ⚠️ 通信エラー ({e}) (試行 {attempt}/{max_retries}): 15秒待機後に再トライ...")
+            time.sleep(15)
+    raise RuntimeError("❌ リトライ上限超過")
+
 def main():
-    print("=== 📄 [Phase 0] PDF to Markdown 変換処理開始 ===")
+    print("=== 📄 [Phase 0 Ver 1.2] 403検知・動的再アップロード対応版 起動 ===")
     print("   💡 [強化版] レイアウト構造化 ＋ 図形の自動言語化 を有効化")
+    print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
+    first_key_masked = f"{API_KEYS[0][:6]}...{API_KEYS[0][-4:]}" if len(API_KEYS[0]) > 10 else "INVALID"
+    print(f"   👉 現在使用中のキー: {first_key_masked}")
     
-    # フォルダ内のPDFを検索
     pdf_files = glob("*.pdf")
     if not pdf_files:
         print("   ⚠️ PDFファイルが見つかりません。Phase 0 をスキップします。")
@@ -34,31 +109,47 @@ def main():
     base_name = os.path.splitext(os.path.basename(pdf_path))[0]
     md_filename = f"{base_name}_clean.md"
 
-    # 🌟 API節約ガード: すでに変換済みMDがあればスキップ
     if os.path.exists(md_filename):
         print(f"   ✅ 既に {md_filename} が存在します。API枠節約のため変換をスキップします。")
         return
 
-    # 🛡️ HTTPヘッダー文字コードエラー回避用の一時ファイルを作成（ASCII文字のみ）
     temp_pdf_path = "temp_processing_file.pdf"
     shutil.copy(pdf_path, temp_pdf_path)
 
     try:
-        print(f"   ⬆️ PDFファイルをアップロード中: {pdf_path}")
-        uploaded_file = client.files.upload(file=temp_pdf_path)
+        max_upload_retries = max(5, len(API_KEYS) * 2)
+        upload_attempt = 0
 
-        # 処理完了を待機
-        print("   ⏳ Google側のPDF処理完了を待機しています...")
-        while uploaded_file.state.name == "PROCESSING":
-            print("      ... 処理中 ...")
-            time.sleep(5)
-            uploaded_file = client.files.get(name=uploaded_file.name)
+        while upload_attempt < max_upload_retries:
+            upload_attempt += 1
+            print(f"   ⬆️ PDFファイルをアップロード中: {pdf_path} (試行 {upload_attempt}/{max_upload_retries})")
+            
+            upload_client = get_client()
+            try:
+                uploaded_file = upload_client.files.upload(file=temp_pdf_path)
+            except Exception as e:
+                err_str = str(e).lower()
+                if any(k in err_str for k in ["429", "quota", "api_key_invalid"]):
+                    print("   ⚠️ アップロード時にAPI制限を検知。キーを切り替えて再試行します...")
+                    rotate_key()
+                    continue
+                print(f"❌ {pdf_path} のアップロードに失敗しました: {e}")
+                break
 
-        if uploaded_file.state.name == "FAILED":
-            raise Exception("❌ PDFファイルの処理に失敗しました。")
+            print("   ⏳ Google側のPDF処理完了を待機しています...")
+            try:
+                while uploaded_file.state.name == "PROCESSING":
+                    time.sleep(5)
+                    uploaded_file = upload_client.files.get(name=uploaded_file.name)
+            except Exception as e:
+                pass # 通信エラーは無視して続行
 
-        print("   🧠 GeminiによるMarkdown変換（および図形の言語化）を実行中...")
-        prompt = """
+            if uploaded_file.state.name == "FAILED":
+                print(f"❌ PDFファイルの処理に失敗しました。")
+                break
+
+            print("   🧠 GeminiによるMarkdown変換（および図形の言語化）を実行中...")
+            prompt = """
 あなたは、PDFの内容を正確に読み取り、Markdown形式のテキストデータに変換する高校数学専門のアシスタントです。
 以下のルールに従って、PDFからテキストおよび「図形・グラフの意味情報」を抽出・成形してください。
 
@@ -99,27 +190,38 @@ PDF内にグラフ、ベン図、幾何図形、数直線、統計グラフな�
   - 散布図：点の分布傾向（右上がり＝正の相関、右下がり＝負の相関）
   - 記述例: `[図の説明: 強い負の相関（右下がりの傾向）を示す散布図。]`
 """
+            try:
+                response = generate_content_with_key_rotation(uploaded_file, prompt)
 
-        response = client.models.generate_content(
-            model=MODEL_ID,
-            contents=[uploaded_file, prompt]
-        )
+                with open(md_filename, "w", encoding="utf-8") as f:
+                    f.write(response.text)
+                
+                print(f"   💾 変換完了！ 保存先: {md_filename}")
 
-        # Markdownファイルとして保存
-        with open(md_filename, "w", encoding="utf-8") as f:
-            f.write(response.text)
-        
-        print(f"   💾 変換完了！ 保存先: {md_filename}")
+                try:
+                    upload_client.files.delete(name=uploaded_file.name)
+                    print("   🗑️ クラウド上のPDFキャッシュを削除しました。")
+                except Exception:
+                    pass
 
-        # 🧹 API上のファイルをクリーンアップ（削除）
-        try:
-            client.files.delete(name=uploaded_file.name)
-            print("   🗑️ クラウド上のPDFキャッシュを削除しました。")
-        except Exception:
-            pass
+                break # 解析大成功！ループを抜ける
+
+            except Exception as e:
+                # 🌟 APIキーが切り替わった事によるファイルアクセスエラーを捕捉
+                if "NEED_REUPLOAD" in str(e):
+                    print("   🔄 APIキーが切り替わりました。別アカウントとなるため、PDFを新しいキーで再アップロードして変換を再開します...")
+                    try:
+                        upload_client.files.delete(name=uploaded_file.name)
+                    except: pass
+                    continue # whileループの最初に戻る
+                else:
+                    print(f"   ❌ 予期せぬエラー: {e}")
+                    try:
+                        upload_client.files.delete(name=uploaded_file.name)
+                    except: pass
+                    break
 
     finally:
-        # 🧹 ローカルに作った一時ファイルを確実に削除
         if os.path.exists(temp_pdf_path):
             os.remove(temp_pdf_path)
 
