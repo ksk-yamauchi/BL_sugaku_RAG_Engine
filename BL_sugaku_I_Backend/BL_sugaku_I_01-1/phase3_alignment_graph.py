@@ -10,17 +10,13 @@ from google.genai import errors, types
 # ⚙️ 設定・初期化 (.env 複数APIキー対応 ＆ 強制上書き)
 # =========================================================
 ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
-
-# 🌟 override=True を指定してターミナル内の古い環境変数を強制上書き
 load_dotenv(dotenv_path=ENV_PATH, override=True)
 
-# 不可視文字(BOM等)や引用符を除去するクレンジング関数
 def clean_key(k_str):
     if not k_str:
         return ""
     return k_str.strip().strip("'\"").replace('\ufeff', '')
 
-# GEMINI_API_KEYS と GEMINI_API_KEY の両方に対応し、どちらでもカンマで分割する
 raw_keys = os.environ.get("GEMINI_API_KEYS", "") or os.environ.get("GEMINI_API_KEY", "")
 API_KEYS = [clean_key(k) for k in raw_keys.split(",") if clean_key(k)]
 
@@ -31,12 +27,10 @@ current_key_index = 0
 MODEL_NAME = "gemini-3.6-flash"
 
 def get_client():
-    """現在のインデックスのAPIキーでGemini Clientを生成"""
     global current_key_index
     return genai.Client(api_key=API_KEYS[current_key_index])
 
 def rotate_key():
-    """次のAPIキーへローテーション"""
     global current_key_index
     if len(API_KEYS) <= 1:
         print("   ⚠️ 登録されているAPIキーが1つのため、キー切り替えができません。")
@@ -47,11 +41,10 @@ def rotate_key():
     return True
 
 # =========================================================
-# 🔄 API 呼び出し (JSON修復 ＋ 制限検知キー切り替え ＋ 動的リトライ)
+# 🔄 API 呼び出し (JSON修復 ＋ 制限検知キー切り替え)
 # =========================================================
 def generate_content_and_parse_json(prompt, max_retries=None):
     if max_retries is None:
-        # キーの数の2倍までリトライを許可する
         max_retries = max(5, len(API_KEYS) * 2)
 
     config = types.GenerateContentConfig(response_mime_type="application/json", temperature=0.1)
@@ -67,130 +60,173 @@ def generate_content_and_parse_json(prompt, max_retries=None):
             )
             print("      [通信完了]")
             
-            # Markdownブロックの除去
             text = response.text
             text = re.sub(r'^```json\s*', '', text.strip(), flags=re.IGNORECASE)
             text = re.sub(r'\s*```$', '', text)
             
-            # JSONのパースと自動修復
             try:
                 return json.loads(text)
             except json.JSONDecodeError:
-                # LaTeXの \ をエスケープし忘れたエラーに対する自動修復
                 fixed_text = text.replace('\\', '\\\\').replace('\\\\"', '\\"').replace('\\\\n', '\\n')
                 try:
                     return json.loads(fixed_text)
                 except json.JSONDecodeError as je:
-                    print(f"      ⚠️ AI出力のJSON形式エラー(LaTeXエスケープ起因等)。安全に再生成します... (試行 {attempt}/{max_retries})")
+                    print(f"      ⚠️ AI出力のJSON形式エラー(LaTeX等起因)。再生成します... (試行 {attempt}/{max_retries})")
                     if attempt == max_retries:
-                        raise RuntimeError(f"❌ JSONパースが{max_retries}回失敗しました: {je}")
+                        raise RuntimeError(f"❌ JSONパース失敗: {je}")
                     time.sleep(3)
                     continue
 
         except errors.APIError as e:
             err_str = str(e).lower()
             if any(k in err_str for k in ["429", "quota", "resource_exhausted", "api_key_invalid", "invalid_argument"]):
-                curr_k = API_KEYS[current_key_index]
-                masked_k = f"{curr_k[:6]}...{curr_k[-4:]}" if len(curr_k) > 10 else "INVALID"
-                print(f"      ⚠️ API制限/無効キーを検知しました (Key: {masked_k}, 試行 {attempt}/{max_retries})")
                 if rotate_key():
                     print("      ⏩ 新しいAPIキーで即座にリトライします...")
                     continue
                 else:
-                    print("      ⏳ 40秒待機後にリトライします...")
                     time.sleep(40)
             elif "503" in err_str or "unavailable" in err_str:
-                print(f"      ⚠️ 503サーバーエラー (試行 {attempt}/{max_retries}): 30秒待機後リトライ...")
                 time.sleep(30)
             else:
                 if attempt == max_retries: raise e
-                print(f"      ⚠️ API通信エラー ({e}) (試行 {attempt}/{max_retries}): 20秒待機後リトライ...")
                 time.sleep(20)
         except Exception as e:
             if attempt == max_retries: raise e
-            print(f"      ⚠️ 予期せぬ通信エラー ({e}) (試行 {attempt}/{max_retries}): 20秒待機後リトライ...")
             time.sleep(20)
     raise RuntimeError("❌ リトライ上限超過")
 
+# =========================================================
+# 📂 パス定義とマスター管理関数
+# =========================================================
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_DIR = os.path.join(CURRENT_DIR, "output_result")
+PARENT_DIR = os.path.dirname(CURRENT_DIR)
 
+OUTPUT_DIR = os.path.join(CURRENT_DIR, "output_result")
 PHASE1_FILE = os.path.join(OUTPUT_DIR, "final_knowledge_graph.json")
 PHASE2_FILE = os.path.join(OUTPUT_DIR, "lecture_map.json")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "final_knowledge_graph_complete.json")
 
+KNOWLEDGE_MASTER_PATH = os.path.join(PARENT_DIR, "knowledge_master.json")
+
 def load_json(filepath):
-    if not os.path.exists(filepath):
-        return None
-    with open(filepath, "r", encoding="utf-8") as f:
-        return json.load(f)
+    if not os.path.exists(filepath): return None
+    with open(filepath, "r", encoding="utf-8") as f: return json.load(f)
 
 def time_to_seconds(t_str):
-    """ 'MM:SS' 形式の文字列を秒数（整数）に変換する """
     try:
         m, s = map(int, t_str.split(':'))
         return m * 60 + s
     except:
         return -1
 
-def execute_phase3_alignment(phase1_data, phase2_data):
-    print("🚀 [Phase 3] ノード・確認問題・動画の三位一体アライメントを実行中...")
+def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, prefix=""):
+    master_data = {}
+    if os.path.exists(master_path):
+        try:
+            with open(master_path, "r", encoding="utf-8") as f: master_data = json.load(f)
+        except: pass
 
-    # 🌟 Ver 13.1.1の新しいグラフ構造（4分類のnodes）に対応
+    mext_code = str(mext_code).strip()
+    if not mext_code: mext_code = "UNKNOWN"
+    if mext_code not in master_data: master_data[mext_code] = []
+
+    for item in master_data[mext_code]:
+        if item["name"] == node_name: return item["branch_code"]
+
+    existing_nums = []
+    for item in master_data[mext_code]:
+        b_code = item.get("branch_code", f"_{prefix}000")
+        match = re.search(r"_([A-Z]?)(\d+)", b_code)
+        if match: existing_nums.append(int(match.group(2)))
+    
+    next_num = max(existing_nums) + 1 if existing_nums else 1
+    new_branch_code = f"_{prefix}{next_num:03d}"
+
+    master_data[mext_code].append({
+        "branch_code": new_branch_code,
+        "name": node_name,
+        "summary_snippet": summary[:100] if summary else "",
+        "first_appeared_in": bundle_name
+    })
+
+    with open(master_path, "w", encoding="utf-8") as f:
+        json.dump(master_data, f, ensure_ascii=False, indent=2)
+
+    return new_branch_code
+
+# =========================================================
+# 🧠 動的補完 ＆ アライメント実行
+# =========================================================
+def execute_dynamic_alignment(phase1_data, phase2_data, bundle_name):
+    print("🚀 [Phase 3] マルチモーダル暗黙知補完と三位一体アライメントを実行中...")
+
     nodes = phase1_data.get("nodes", {})
     questions = phase1_data.get("questions", [])
     video_segments = phase2_data.get("videos", [])
 
     prompt = f"""あなたは教育工学とカリキュラム・アライメントのエキスパートです。
-以下の【Phase 1: ノード・問題データ】と【Phase 2: 動画タイムラインデータ】を読み込み、
-「各ノード」および「確認問題」と、「動画セグメント」を紐づけてください。
+以下の【Phase 1: テキスト抽出グラフ】と【Phase 2: 動画タイムライン・板書データ】を読み込み、以下の2つのミッションを実行してください。
 
-【Phase 1: ノード・問題データ】
-{json.dumps({"nodes": nodes, "questions": questions}, ensure_ascii=False, indent=2)}
+【ミッション1：暗黙知の可視化とグラフの動的補完（差分抽出）】
+動画の「口頭解説（explanation_summary）」や「板書（blackboard_ocr）」から、テキストには書かれていない『暗黙の知識』や『新しい視点・条件（レンズ）』が発見された場合、Phase 1のグラフに新しいノードとエッジを【動的に追加・補完】してください。
+- 追加できるノードは `foundation_knowledge`, `perspective_condition`, `derived_knowledge` のみです。一時的なID（NEW_K1等）を付与してください。
+★【絶対ルール: タスク追加の禁止】GNN-KTの確率計算を保護するため、動画から新しい `tasks` (技能) を追加することは【絶対に禁止】します。
 
-【Phase 2: 動画タイムラインデータ】
-{json.dumps(video_segments, ensure_ascii=False, indent=2)}
+【ミッション2：三位一体アライメントと粒度の吸収】
+既存のノード、新たに追加した知識ノード、および確認問題に対して、解説している「動画セグメント」を紐づけてください。
+- alignment_type は "concept_input" (概念解説), "task_walkthrough" (タスク解説), "direct_explanation" (例題の直接解説), "prerequisite" (前提解説) を使用。
 
-【★マッチングの絶対ルール★】
-1. node_video_alignments (ノードと動画の紐付け):
-   各ノード（node_id）について、その知識やタスクを「直接解説しているインプット講義」等のセグメントを探し紐付けてください。
-   - alignment_typeは "concept_input" (概念解説) または "task_walkthrough" (タスク解説) としてください。
+★【最重要: 動画ロール(role)に応じた細かいセグメントの束ね方】
+Phase 2の動画データには `role` が付与されています。
+`role` が "exercise_walkthrough" または "concept_application" の動画は、UI上の頭出しのために非常に細かい計算ステップ（方針、立式、計算など）ごとにセグメント分割されています。
+これらについては、動画をばらばらにして新しいタスクを作るのではなく、「Phase 1 で抽出済みの既存のタスク」や「確認問題」の `aligned_videos` の中に、一連のプロセスとして複数個（配列として）まとめて紐付けて吸収させてください。
 
-2. question_video_alignments (問題と動画の紐付け):
-   各確認問題（question_number）について、それを解くための解説動画セグメントを探してください。
-   - alignment_typeは "direct_explanation" (例題の直接解説) または "prerequisite" (前提概念の解説) を指定してください。
+【★最重要: LaTeXとJSONエスケープの絶対ルール】
+`reasoning`等にLaTeX数式を含める場合は、必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\subset）してください。
 
-3. video_file の完全一致指定 (【最重要】伏字・省略の絶対禁止):
-   - `video_file` の項目には、必ず【Phase 2: 動画タイムラインデータ】内に存在する実際のファイル名（例: `BL_sugaku_I_01-1-3.mp4` など）をそのまま正確に記述してください。
+---
+■ 【Phase 1】テキスト抽出ベースグラフ:
+{json.dumps({"nodes": nodes, "questions": questions}, ensure_ascii=False)}
 
-【★最重要: LaTeXとJSONエスケープの絶対ルール★】
-`reasoning` (理由付け) のテキスト内にLaTeX数式（$...$）を含める場合、**必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\subset）** してください。JSONフォーマットとしてInvalidにならないよう細心の注意を払ってください。
+■ 【Phase 2】動画タイムライン・板書データ:
+{json.dumps(video_segments, ensure_ascii=False)}
+---
 
 【出力JSONフォーマット】:
 {{
+  "added_nodes": {{
+    "foundation_knowledge": [
+      {{ "node_id": "NEW_K1", "name": "...", "parent_concept": "...", "summary": "...", "mext_code": "..." }}
+    ],
+    "perspective_condition": [],
+    "derived_knowledge": []
+  }},
+  "added_edges": [
+    {{
+      "source_id": "NEW_K1",
+      "target_id": "_T001",
+      "relation_type": "applies_condition | prerequisite | relative_to | applied_to",
+      "reasoning": "動画内で先生が〇〇と解説していたため"
+    }}
+  ],
   "node_video_alignments": [
     {{
-      "node_id": "...",
+      "node_id": "既存IDまたは追加ID(NEW_K1)",
       "aligned_videos": [
         {{
-          "video_file": "Phase 2に存在する実際の動画ファイル名",
+          "video_file": "...",
           "start_time": "MM:SS",
           "alignment_type": "concept_input | task_walkthrough",
-          "reasoning": "なぜこの動画セグメントがこのノードに該当するかの理由"
+          "reasoning": "..."
         }}
       ]
     }}
   ],
   "question_video_alignments": [
     {{
-      "question_number": "...",
+      "question_number": "1",
       "aligned_videos": [
-        {{
-          "video_file": "Phase 2に存在する実際の動画ファイル名",
-          "start_time": "MM:SS",
-          "alignment_type": "direct_explanation | prerequisite",
-          "reasoning": "なぜこの動画セグメントが該当するかの理由"
-        }}
+        {{ "video_file": "...", "start_time": "MM:SS", "alignment_type": "direct_explanation", "reasoning": "..." }}
       ]
     }}
   ]
@@ -199,31 +235,57 @@ def execute_phase3_alignment(phase1_data, phase2_data):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.0 新構造対応セーフティ版】Phase 3 起動 ===")
-    print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
-    first_key_masked = f"{API_KEYS[0][:6]}...{API_KEYS[0][-4:]}" if len(API_KEYS[0]) > 10 else "INVALID"
-    print(f"   👉 現在使用中のキー: {first_key_masked}")
+    print("=== 🏁 【Ver 13.2 ロール連動・ダイナミック粒度吸収版】Phase 3 起動 ===")
     
     phase1_data = load_json(PHASE1_FILE)
     phase2_data = load_json(PHASE2_FILE)
     
     if not phase1_data:
-        print("❌ Phase 1 のデータが見つかりません。先に Phase 1 を実行してください。")
+        print("❌ Phase 1 のデータが見つかりません。")
         return
 
+    bundle_name = phase1_data.get("metadata", {}).get("bundle_name", "Unknown_Bundle")
+
     if not phase2_data:
-        print("⚠️ Phase 2 のデータがありません。動画リンクなしで最終JSONを生成します。")
+        print("⚠️ Phase 2 の動画データがありません。アライメントをスキップします。")
         final_graph = phase1_data.copy()
-        final_graph["metadata"]["engine_version"] = "13.0_video_skipped"
+        final_graph["metadata"]["engine_version"] = "13.2_video_skipped"
     else:
-        alignment_result = execute_phase3_alignment(phase1_data, phase2_data)
+        result = execute_dynamic_alignment(phase1_data, phase2_data, bundle_name)
         video_segments = phase2_data.get("videos", [])
         
-        # 🌟 idでマッピングするように変更（Ver 12.1からの変更点）
-        node_alignments = {item["node_id"]: item["aligned_videos"] for item in alignment_result.get("node_video_alignments", [])}
-        question_alignments = {str(item["question_number"]): item["aligned_videos"] for item in alignment_result.get("question_video_alignments", [])}
+        added_nodes = result.get("added_nodes", {})
+        added_edges = result.get("added_edges", [])
+        node_alignments = {item["node_id"]: item["aligned_videos"] for item in result.get("node_video_alignments", [])}
+        question_alignments = {str(item["question_number"]): item["aligned_videos"] for item in result.get("question_video_alignments", [])}
+
+        id_map = {}
+        print("   🌐 動画から発見された新知識ノードをマスター辞書に登録・採番中...")
+        knowledge_lists = ["foundation_knowledge", "perspective_condition", "derived_knowledge"]
         
-        # 🌟 Phase 2の全データを安全に結合する関数（Ver 12.1のファジーマッチを完全維持）
+        for k_type in knowledge_lists:
+            for node in added_nodes.get(k_type, []):
+                temp_id = node.get("node_id")
+                m_code = node.get("mext_code", "UNKNOWN")
+                name = node.get("name", "")
+                summary = node.get("summary", "")
+                
+                new_id = assign_or_get_code(KNOWLEDGE_MASTER_PATH, m_code, name, summary, bundle_name, prefix="K")
+                id_map[temp_id] = new_id
+                node["node_id"] = new_id
+                phase1_data["nodes"].setdefault(k_type, []).append(node)
+
+        for edge in added_edges:
+            edge["source_id"] = id_map.get(edge.get("source_id"), edge.get("source_id"))
+            edge["target_id"] = id_map.get(edge.get("target_id"), edge.get("target_id"))
+            phase1_data.setdefault("edges", []).append(edge)
+
+        # 🌟 動画紐付け側のIDも更新 (NEW_K1 -> _K008 など)
+        updated_node_alignments = {}
+        for nid, videos in node_alignments.items():
+            updated_node_alignments[id_map.get(nid, nid)] = videos
+        node_alignments = updated_node_alignments
+
         def enrich_videos(aligned_list, p2_videos):
             enriched = []
             for v in aligned_list:
@@ -236,59 +298,40 @@ def main():
                 for p2v in p2_videos:
                     if p2v.get("video_file") == v_file:
                         segments = p2v.get("segments", [])
-                        
-                        # 1. まずは完全一致を探す
                         for seg in segments:
                             if seg.get("start_time") == s_time:
                                 matched_seg = seg
                                 break
-                                
-                        # 2. 🌟完全一致がなければ、一番近い時間のセグメントを探す（フォールバック）
                         if not matched_seg and s_sec >= 0 and segments:
                             matched_seg = min(segments, key=lambda seg: abs(time_to_seconds(seg.get("start_time", "")) - s_sec))
                 
-                # 結合 (板書OCRや要約をPhase 2からマージ)
                 if matched_seg:
                     new_v["end_time"] = matched_seg.get("end_time", "")
                     new_v["topic"] = matched_seg.get("topic", "")
                     new_v["blackboard_ocr"] = matched_seg.get("blackboard_ocr", "")
                     new_v["explanation_summary"] = matched_seg.get("explanation_summary", "")
-                
                 enriched.append(new_v)
             return enriched
 
-        # 🌟 新しい nodes 構造に対して動画リンクを付与
-        enriched_nodes = {}
+        print("   🔗 ノードおよび問題に動画データを結合しています...")
         for category, node_list in phase1_data.get("nodes", {}).items():
-            enriched_nodes[category] = []
-            for n in node_list:
-                n_copy = n.copy()
-                n_id = n.get("node_id")
+            for node in node_list:
+                n_id = node.get("node_id")
                 raw_aligned = node_alignments.get(n_id, [])
-                n_copy["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
-                enriched_nodes[category].append(n_copy)
-            
-        enriched_questions = []
+                node["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
+
         for q in phase1_data.get("questions", []):
-            q_copy = q.copy()
             q_num = str(q.get("question_number", ""))
             raw_aligned = question_alignments.get(q_num, [])
-            q_copy["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
-            enriched_questions.append(q_copy)
-            
-        final_graph = {
-            "metadata": phase1_data.get("metadata", {}),
-            "nodes": enriched_nodes,
-            "edges": phase1_data.get("edges", []),
-            "questions": enriched_questions,
-            "alignments": phase1_data.get("alignments", [])
-        }
-        final_graph["metadata"]["engine_version"] = "13.0_safe_alignment"
+            q["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
+
+        final_graph = phase1_data
+        final_graph["metadata"]["engine_version"] = "13.2_dynamic_ontology_completed"
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(final_graph, f, ensure_ascii=False, indent=2)
         
-    print(f"🎉 統合完了！ノードと動画が安全にリンクされました。 💾 保存先: {OUTPUT_FILE}")
+    print(f"🎉 統合完了！暗黙知の補完と動画リンクが完了しました。\n💾 保存先: {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     main()
