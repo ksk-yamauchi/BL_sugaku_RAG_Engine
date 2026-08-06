@@ -1,7 +1,9 @@
 import os
-import json
-import time
 import re
+import json
+import sys
+import time
+from glob import glob
 from dotenv import load_dotenv
 from google import genai
 from google.genai import errors, types
@@ -24,7 +26,7 @@ if not API_KEYS:
     raise ValueError("❌ .env ファイルに GEMINI_API_KEYS または GEMINI_API_KEY が設定されていません。")
 
 current_key_index = 0
-MODEL_NAME = "gemini-3.6-flash" # 膨大なコンテキスト（グラフ＋動画）の統合と高度な推論のためProを推奨
+MODEL_NAME = "gemini-3.6-flash"
 
 def get_client():
     global current_key_index
@@ -40,12 +42,13 @@ def rotate_key():
     print(f"   🔄 APIキーを切り替えました (Key {current_key_index + 1}/{len(API_KEYS)}: {masked_key})")
     return True
 
+# 🌟 堅牢なJSON生成＆パース関数
 def generate_content_and_parse_json(prompt, max_retries=None):
     if max_retries is None:
         max_retries = max(5, len(API_KEYS) * 2)
-
+        
     config = types.GenerateContentConfig(response_mime_type="application/json", temperature=0.1)
-
+    
     for attempt in range(1, max_retries + 1):
         try:
             client = get_client()
@@ -66,7 +69,7 @@ def generate_content_and_parse_json(prompt, max_retries=None):
                 try:
                     return json.loads(fixed_text)
                 except json.JSONDecodeError as je:
-                    print(f"      ⚠️ JSON形式エラー(LaTeX起因等)。安全に再生成します... (試行 {attempt}/{max_retries})")
+                    print(f"   ⚠️ AI出力のJSON形式エラー。安全に再生成します... (試行 {attempt}/{max_retries})")
                     if attempt == max_retries:
                         raise RuntimeError(f"❌ JSONパースが{max_retries}回失敗しました: {je}")
                     time.sleep(3)
@@ -76,49 +79,56 @@ def generate_content_and_parse_json(prompt, max_retries=None):
             err_str = str(e).lower()
             if any(k in err_str for k in ["429", "quota", "resource_exhausted", "api_key_invalid", "invalid_argument"]):
                 if rotate_key():
-                    print("      ⏩ 新しいAPIキーで即座にリトライします...")
+                    print("   ⏩ 次のAPIキーへ切り替えて即座にリトライします...")
                     continue
                 else:
-                    print("      ⏳ 40秒待機後にリトライします...")
                     time.sleep(40)
             elif "503" in err_str or "unavailable" in err_str:
-                print(f"      ⚠️ 503エラー: 30秒待機後リトライ...")
                 time.sleep(30)
             else:
                 if attempt == max_retries: raise e
-                time.sleep(20)
+                time.sleep(15)
         except Exception as e:
             if attempt == max_retries: raise e
-            time.sleep(20)
+            time.sleep(15)
+            
     raise RuntimeError("❌ リトライ上限超過")
 
 # =========================================================
-# 📂 パス定義とマスター管理関数
+# 📂 パス定義・マスター処理
 # =========================================================
+md_files = glob("*_clean.md")
+if not md_files:
+    raise FileNotFoundError("❌ 教材Markdown(*_clean.md)が見つかりません。")
+TEXTBOOK_MD_PATH = md_files[0]
+
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR = os.path.dirname(CURRENT_DIR)
 
-OUTPUT_DIR = os.path.join(CURRENT_DIR, "output_result")
-PHASE1_FILE = os.path.join(OUTPUT_DIR, "final_knowledge_graph.json")
-PHASE2_FILE = os.path.join(OUTPUT_DIR, "lecture_map.json")
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "final_knowledge_graph_complete.json")
-
+MEXT_DICT_PATH = os.path.join(PARENT_DIR, "mext_master_dict_v2.json")
+INDEX_MASTER_PATH = os.path.join(PARENT_DIR, "lecture_index_master.json")
 KNOWLEDGE_MASTER_PATH = os.path.join(PARENT_DIR, "knowledge_master.json")
 TASK_MASTER_PATH = os.path.join(PARENT_DIR, "task_master.json")
 
-def load_json(filepath):
-    if not os.path.exists(filepath): return None
-    with open(filepath, "r", encoding="utf-8") as f: return json.load(f)
+OUTPUT_DIR = os.path.join(CURRENT_DIR, "output_result")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-def time_to_seconds(t_str):
-    try:
-        m, s = map(int, t_str.split(':'))
-        return m * 60 + s
-    except:
-        return -1
+def get_bundle_name_from_master(folder_name):
+    if not os.path.exists(INDEX_MASTER_PATH): return "Unknown_Bundle"
+    with open(INDEX_MASTER_PATH, "r", encoding="utf-8") as f: index_master = json.load(f)
+    match = re.search(r"(\d{2}-\d+)", folder_name)
+    if not match: return "Unknown_Bundle"
+    key = match.group(1)
+    return index_master.get(key, {}).get("bundle_name", "Unknown_Bundle")
+
+def load_and_prepare_inputs():
+    with open(TEXTBOOK_MD_PATH, "r", encoding="utf-8") as f: textbook_content = f.read()
+    folder_name = os.path.basename(CURRENT_DIR)
+    bundle_name = get_bundle_name_from_master(folder_name)
+    with open(MEXT_DICT_PATH, "r", encoding="utf-8") as f: mext_master_dict = f.read()
+    return textbook_content, mext_master_dict, bundle_name
 
 def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, prefix=""):
-    """Phase 3で動的に追加されたノードをマスターに登録し、枝番を採番する"""
     master_data = {}
     if os.path.exists(master_path):
         try:
@@ -154,82 +164,110 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
     return new_branch_code
 
 # =========================================================
-# 🧠 動的補完 ＆ アライメント実行
+# 🧠 Phase 1 / Step 1: オントロジー抽出
 # =========================================================
-def execute_dynamic_alignment(phase1_data, phase2_data, bundle_name):
-    print("🚀 [Phase 3] マルチモーダル・オントロジー統合とグラフ自己増殖を実行中...")
+def execute_step1_extraction(textbook_content, mext_master_dict, bundle_name):
+    print(f"\n🚀 [Phase 1 / Step 1] 概念・タスク抽出を実行中（対象: {bundle_name}）...")
 
-    # Phase 1のグラフとPhase 2の動画データをプロンプトに渡す
-    phase1_summary = {
-        "nodes": phase1_data.get("nodes", {}),
-        "edges": phase1_data.get("edges", []),
-        "questions": phase1_data.get("questions", [])
-    }
-    video_segments = phase2_data.get("videos", [])
+    prompt = f"""あなたは高等学校数学科の教材分析・学習オントロジー構築のエキスパートです。
+以下の「教材データ」と「指導要領マスター辞書」を解析し、GNN-KT（学習状態推論）およびGraph RAGに最適化されたナレッジグラフ（ノードとエッジ）を構築してください。
 
-    prompt = f"""あなたは教育工学とカリキュラム・アライメントのエキスパートです。
-以下の【Phase 1: テキストから抽出した基礎グラフ】と【Phase 2: 動画タイムライン・板書データ】を読み込み、以下の2つのミッションを実行してください。
+【対象単元】: {bundle_name}
 
-【ミッション1：暗黙知の可視化とグラフの動的補完（差分抽出）】
-テキストには書かれていないが、動画の「口頭解説（explanation_summary）」や「板書（blackboard_ocr）」から、以下の要素が新たに発見された場合は、それらを【追加ノード・追加エッジ】として抽出してください。
-- 基礎知識（foundation_knowledge）
-- 新しい視点・条件（perspective_condition / レンズ）★特に重要
-- 再構成された知識（derived_knowledge）
-- 高度なタスク（tasks）
-※ 追加するノードのIDは "NEW_K1", "NEW_T1" などの形式を使用してください。追加要素がない場合は空配列で構いません。
+【★最重要：用語抽出とグラウンディング（根拠）のルール★】
+ノード名や親概念名（parent_concept）がブレたり、高校数学の範囲外の大学用語などが混入するのを防ぐため、日本の高校数学（検定教科書レベル）の標準的な名称にグラウンディングさせてください。自分の独自の造語は禁止です。
 
-【ミッション2：三位一体アライメント】
-既存のノード、新たに追加したノード、および確認問題に対して、それを解説している「動画セグメント」を紐づけてください。
-- `alignment_type` は "concept_input" (概念の解説), "direct_explanation" (例題の直接解説), "prerequisite" (前提解説) のいずれかを指定してください。
-
-【★最重要: LaTeXとJSONエスケープの絶対ルール】
-`reasoning`等にLaTeX数式を含める場合は、必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\subset）してください。
-
----
-■ 【Phase 1】テキスト抽出ベースグラフ:
-{json.dumps(phase1_summary, ensure_ascii=False)}
-
-■ 【Phase 2】動画タイムライン・板書データ:
-{json.dumps(video_segments, ensure_ascii=False)}
----
+【ノードの分類】
+1. foundation_knowledge (基礎知識): 単元のベースとなる静的な知識。
+2. perspective_condition (視点・条件): 「特定の文字に着目する」など、思考の枠組み（レンズ）。
+3. derived_knowledge (再構成知識): 基礎と視点が組み合わさった結果の知識。
+4. tasks (技能・タスク): 「〜を特定する」「展開する」など、生徒が実行する具体的な学習アクション。※これがGNN-KTの確率計算の主役となります。
+   ★【重要: タスク抽出の細分化ルール】: 行うタスクが同じでも、対象となる数式や図形（例：「単項式」と「多項式」）が異なる場合は、GNN-KTで別々の技能として追跡するため、必ず別々のタスクノードとして分割して抽出してください。
+※ 一時的なIDとして "K1", "T1" などの文字列を `node_id` に指定してください。
 
 【出力JSONフォーマット】:
 {{
-  "added_nodes": {{
+  "nodes": {{
     "foundation_knowledge": [
-      {{ "node_id": "NEW_K1", "name": "...", "summary": "...", "parent_concept": "...", "mext_code": "..." }}
+      {{
+        "node_id": "K1",
+        "name": "抽出した用語（テキスト通り）",
+        "parent_concept": "属する一般的な用語",
+        "summary": "要約",
+        "extracted_from": "テキストの該当箇所をそのまま引用",
+        "mext_code": "16桁コード"
+      }}
     ],
     "perspective_condition": [],
     "derived_knowledge": [],
-    "tasks": []
+    "tasks": [
+      {{
+        "node_id": "T1",
+        "name": "生徒の具体的なアクション",
+        "parent_concept": "関連用語",
+        "summary": "要約",
+        "extracted_from": "テキストの該当箇所",
+        "mext_code": "16桁コード"
+      }}
+    ]
   }},
-  "added_edges": [
+  "edges": [
     {{
-      "source_id": "NEW_K1",
+      "source_id": "K1",
       "target_id": "T1",
-      "relation_type": "applies_condition | prerequisite | relative_to | part_of | is_a | subsumes | requires_logical | applied_to | explanation",
-      "reasoning": "動画内で先生が〇〇と解説していたため"
+      "relation_type": "applies_condition | prerequisite | relative_to | applied_to",
+      "reasoning": "なぜこの関係があるかの理由"
     }}
   ],
-  "node_video_alignments": [
+  "questions": [
     {{
-      "node_id": "K1",
-      "aligned_videos": [
-        {{
-          "video_file": "...",
-          "start_time": "MM:SS",
-          "alignment_type": "concept_input",
-          "reasoning": "板書に〇〇とあり、この概念の解説に該当するため"
-        }}
-      ]
+      "question_number": "問題番号",
+      "question_text": "問題文（LaTeXエスケープ厳守）",
+      "answer_text": "[正解] ... \\n[解説] ..."
     }}
-  ],
-  "question_video_alignments": [
+  ]
+}}
+
+【★最重要: LaTeXエスケープ★】
+数式を含める場合は、必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\subset）してください。
+
+■ 教材Markdownデータ:
+{textbook_content}
+■ 指導要領マスター辞書:
+{mext_master_dict}
+"""
+    return generate_content_and_parse_json(prompt)
+
+# =========================================================
+# 🧠 Phase 1 / Step 2: 精密アライメント
+# =========================================================
+def execute_step2_alignment(mapped_step1_data):
+    print("\n🧠 [Phase 1 / Step 2] 問題とGNN-KTタスクの精密アライメントを実行中...")
+    
+    # トークン節約のため、マスター辞書や不要な情報は落として渡す
+    prompt_data = {
+        "nodes": mapped_step1_data["nodes"],
+        "questions": mapped_step1_data["questions"]
+    }
+
+    prompt = f"""あなたは教育工学のエキスパートです。
+以下の整理済みデータから、確認問題と学習タスク（GNN-KT推論用）のアライメント構造を構築してください。
+
+【整理済みデータ】:
+{json.dumps(prompt_data, ensure_ascii=False, indent=2)}
+
+【ルール】
+各確認問題（question_number）を解くために、どのタスク（tasksノードのID）と、どの知識（foundation_knowledge等のID）が必要になるかを分析し、配列で紐づけてください。
+
+【出力JSONフォーマット】:
+{{
+  "alignments": [
     {{
-      "question_number": "1",
-      "aligned_videos": [
-        {{ "video_file": "...", "start_time": "MM:SS", "alignment_type": "direct_explanation", "reasoning": "..." }}
-      ]
+      "question_number": "問題番号",
+      "linked_task_ids": ["_T001", "_T002"],
+      "linked_knowledge_ids": ["_K001"],
+      "reasoning": "なぜこれらのタスクや知識が必要かの理由",
+      "formula_used": "使用する公式や解法の要点（LaTeXエスケープ厳守）"
     }}
   ]
 }}
@@ -237,105 +275,53 @@ def execute_dynamic_alignment(phase1_data, phase2_data, bundle_name):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.0 動的オントロジー補完＆アライメント対応】Phase 3 起動 ===")
+    print("=== 🏁 【Ver 13.1.1 GNN-KT両立・グラウンディング＆タスク分割ルール追加】Phase 1 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
+
+    textbook_content, mext_master_dict, bundle_name = load_and_prepare_inputs()
     
-    phase1_data = load_json(PHASE1_FILE)
-    phase2_data = load_json(PHASE2_FILE)
+    # [Step 1] 抽出
+    step1_output = execute_step1_extraction(textbook_content, mext_master_dict, bundle_name)
     
-    if not phase1_data:
-        print("❌ Phase 1 のデータが見つかりません。")
-        return
+    print("   🌐 マスター辞書との照合・正式ID (_Kxxx, _Txxx) への変換処理中...")
+    id_map = {}
+    
+    # 知識ノードの採番とID置換
+    knowledge_lists = ["foundation_knowledge", "perspective_condition", "derived_knowledge"]
+    for k_type in knowledge_lists:
+        for node in step1_output.get("nodes", {}).get(k_type, []):
+            old_id = node.get("node_id")
+            new_id = assign_or_get_code(KNOWLEDGE_MASTER_PATH, node.get("mext_code"), node.get("name"), node.get("summary"), bundle_name, "K")
+            id_map[old_id] = new_id
+            node["node_id"] = new_id
+            
+    # タスクノードの採番とID置換
+    for node in step1_output.get("nodes", {}).get("tasks", []):
+        old_id = node.get("node_id")
+        new_id = assign_or_get_code(TASK_MASTER_PATH, node.get("mext_code"), node.get("name"), node.get("summary"), bundle_name, "T")
+        id_map[old_id] = new_id
+        node["node_id"] = new_id
 
-    bundle_name = phase1_data.get("metadata", {}).get("bundle_name", "Unknown_Bundle")
+    # エッジのID置換
+    for edge in step1_output.get("edges", []):
+        edge["source_id"] = id_map.get(edge.get("source_id"), edge.get("source_id"))
+        edge["target_id"] = id_map.get(edge.get("target_id"), edge.get("target_id"))
 
-    if not phase2_data:
-        print("⚠️ Phase 2 の動画データがありません。アライメントをスキップします。")
-        final_graph = phase1_data.copy()
-        final_graph["metadata"]["engine_version"] = "13.0_video_skipped"
-    else:
-        # LLMによる動的補完とアライメントの実行
-        result = execute_dynamic_alignment(phase1_data, phase2_data, bundle_name)
-        video_segments = phase2_data.get("videos", [])
-        
-        added_nodes = result.get("added_nodes", {})
-        added_edges = result.get("added_edges", [])
-        node_alignments = {item["node_id"]: item["aligned_videos"] for item in result.get("node_video_alignments", [])}
-        question_alignments = {str(item["question_number"]): item["aligned_videos"] for item in result.get("question_video_alignments", [])}
+    # [Step 2] アライメント (正式なIDに置換されたデータを使用)
+    step2_output = execute_step2_alignment(step1_output)
 
-        print("   🌐 追加されたノードをマスター辞書に登録・採番中...")
-        # 新規ノードに枝番を採番
-        knowledge_lists = ["foundation_knowledge", "perspective_condition", "derived_knowledge"]
-        for k_type in knowledge_lists:
-            for node in added_nodes.get(k_type, []):
-                m_code = node.get("mext_code", "")
-                name = node.get("name", "")
-                summary = node.get("summary", "")
-                node["branch_code"] = assign_or_get_code(KNOWLEDGE_MASTER_PATH, m_code, name, summary, bundle_name, prefix="K")
-                # Phase 1のグラフに結合
-                phase1_data["nodes"].setdefault(k_type, []).append(node)
-
-        for node in added_nodes.get("tasks", []):
-            m_code = node.get("mext_code", "")
-            name = node.get("name", "")
-            summary = node.get("summary", "")
-            node["branch_code"] = assign_or_get_code(TASK_MASTER_PATH, m_code, name, summary, bundle_name, prefix="T")
-            phase1_data["nodes"].setdefault("tasks", []).append(node)
-
-        # 追加エッジの結合
-        phase1_data["edges"].extend(added_edges)
-
-        # 🌟 動画データのファジーマッチ結合処理
-        def enrich_videos(aligned_list, p2_videos):
-            enriched = []
-            for v in aligned_list:
-                v_file = v.get("video_file", "")
-                s_time = v.get("start_time", "")
-                s_sec = time_to_seconds(s_time)
-                new_v = v.copy()
-                
-                matched_seg = None
-                for p2v in p2_videos:
-                    if p2v.get("video_file") == v_file:
-                        segments = p2v.get("segments", [])
-                        # 1. 完全一致
-                        for seg in segments:
-                            if seg.get("start_time") == s_time:
-                                matched_seg = seg
-                                break
-                        # 2. ファジーマッチ（最寄時間）
-                        if not matched_seg and s_sec >= 0 and segments:
-                            matched_seg = min(segments, key=lambda seg: abs(time_to_seconds(seg.get("start_time", "")) - s_sec))
-                
-                if matched_seg:
-                    new_v["end_time"] = matched_seg.get("end_time", "")
-                    new_v["topic"] = matched_seg.get("topic", "")
-                    new_v["blackboard_ocr"] = matched_seg.get("blackboard_ocr", "")
-                    new_v["explanation_summary"] = matched_seg.get("explanation_summary", "")
-                enriched.append(new_v)
-            return enriched
-
-        print("   🔗 ノードおよび問題に動画データを結合（ファジーマッチ）しています...")
-        # ノードへの動画結合
-        for category, node_list in phase1_data.get("nodes", {}).items():
-            for node in node_list:
-                n_id = node.get("node_id")
-                raw_aligned = node_alignments.get(n_id, [])
-                node["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
-
-        # 問題への動画結合
-        for q in phase1_data.get("questions", []):
-            q_num = str(q.get("question_number", ""))
-            raw_aligned = question_alignments.get(q_num, [])
-            q["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
-
-        final_graph = phase1_data
-        final_graph["metadata"]["engine_version"] = "13.0_dynamic_ontology_completed"
-
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        json.dump(final_graph, f, ensure_ascii=False, indent=2)
-        
-    print(f"🎉 統合完了！暗黙知の補完と動画リンクが完了しました。\n💾 保存先: {OUTPUT_FILE}")
+    final_knowledge_graph = {
+        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.1_gnn_kt_dual_engine", "model_used": MODEL_NAME},
+        "nodes": step1_output.get("nodes", {}),
+        "edges": step1_output.get("edges", []),
+        "questions": step1_output.get("questions", []),
+        "alignments": step2_output.get("alignments", []),
+    }
+    
+    output_filepath = os.path.join(OUTPUT_DIR, "final_knowledge_graph.json")
+    with open(output_filepath, "w", encoding="utf-8") as f:
+        json.dump(final_knowledge_graph, f, ensure_ascii=False, indent=2)
+    print(f"🎉 処理完了！ 💾 保存先: {output_filepath}")
 
 if __name__ == "__main__":
     main()

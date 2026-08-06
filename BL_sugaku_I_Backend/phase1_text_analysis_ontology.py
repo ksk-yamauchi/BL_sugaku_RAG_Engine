@@ -12,7 +12,6 @@ from google.genai import errors, types
 # ⚙️ 設定・初期化 (.env 複数APIキー対応 ＆ 強制上書き)
 # =========================================================
 ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
-
 load_dotenv(dotenv_path=ENV_PATH, override=True)
 
 def clean_key(k_str):
@@ -31,8 +30,7 @@ MODEL_NAME = "gemini-3.6-flash"
 
 def get_client():
     global current_key_index
-    key = API_KEYS[current_key_index]
-    return genai.Client(api_key=key)
+    return genai.Client(api_key=API_KEYS[current_key_index])
 
 def rotate_key():
     global current_key_index
@@ -44,7 +42,7 @@ def rotate_key():
     print(f"   🔄 APIキーを切り替えました (Key {current_key_index + 1}/{len(API_KEYS)}: {masked_key})")
     return True
 
-# 🌟 JSONパースエラー(LaTeXエスケープ等)も検知・修復してリトライする最強関数
+# 🌟 堅牢なJSON生成＆パース関数
 def generate_content_and_parse_json(prompt, max_retries=None):
     if max_retries is None:
         max_retries = max(5, len(API_KEYS) * 2)
@@ -60,12 +58,10 @@ def generate_content_and_parse_json(prompt, max_retries=None):
                 config=config
             )
             
-            # Markdownブロックの除去
             text = response.text
             text = re.sub(r'^```json\s*', '', text.strip(), flags=re.IGNORECASE)
             text = re.sub(r'\s*```$', '', text)
             
-            # JSONのパースと自動修復
             try:
                 return json.loads(text)
             except json.JSONDecodeError:
@@ -73,7 +69,7 @@ def generate_content_and_parse_json(prompt, max_retries=None):
                 try:
                     return json.loads(fixed_text)
                 except json.JSONDecodeError as je:
-                    print(f"   ⚠️ AI出力のJSON形式エラー(LaTeX起因等)。安全に再生成します... (試行 {attempt}/{max_retries})")
+                    print(f"   ⚠️ AI出力のJSON形式エラー。安全に再生成します... (試行 {attempt}/{max_retries})")
                     if attempt == max_retries:
                         raise RuntimeError(f"❌ JSONパースが{max_retries}回失敗しました: {je}")
                     time.sleep(3)
@@ -82,30 +78,25 @@ def generate_content_and_parse_json(prompt, max_retries=None):
         except errors.APIError as e:
             err_str = str(e).lower()
             if any(k in err_str for k in ["429", "quota", "resource_exhausted", "api_key_invalid", "invalid_argument"]):
-                curr_k = API_KEYS[current_key_index]
-                masked_k = f"{curr_k[:6]}...{curr_k[-4:]}" if len(curr_k) > 10 else "INVALID"
-                print(f"   ⚠️ API制限/無効キーを検知しました (Key: {masked_k}, 試行 {attempt}/{max_retries})")
                 if rotate_key():
                     print("   ⏩ 次のAPIキーへ切り替えて即座にリトライします...")
                     continue
                 else:
-                    print("   ⏳ 40秒待機後に再トライします...")
                     time.sleep(40)
             elif "503" in err_str or "unavailable" in err_str:
-                print(f"   ⚠️ 503サーバーエラー (試行 {attempt}/{max_retries}): 30秒待機後に再トライ...")
                 time.sleep(30)
             else:
                 if attempt == max_retries: raise e
-                print(f"   ⚠️ APIエラー ({e}) (試行 {attempt}/{max_retries}): 15秒待機後に再トライ...")
                 time.sleep(15)
         except Exception as e:
             if attempt == max_retries: raise e
-            print(f"   ⚠️ 通信エラー ({e}) (試行 {attempt}/{max_retries}): 15秒待機後に再トライ...")
             time.sleep(15)
             
     raise RuntimeError("❌ リトライ上限超過")
 
-
+# =========================================================
+# 📂 パス定義・マスター処理
+# =========================================================
 md_files = glob("*_clean.md")
 if not md_files:
     raise FileNotFoundError("❌ 教材Markdown(*_clean.md)が見つかりません。")
@@ -114,7 +105,6 @@ TEXTBOOK_MD_PATH = md_files[0]
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR = os.path.dirname(CURRENT_DIR)
 
-# 🌟 新しい辞書と、分離されたマスター群のパス
 MEXT_DICT_PATH = os.path.join(PARENT_DIR, "mext_master_dict_v2.json")
 INDEX_MASTER_PATH = os.path.join(PARENT_DIR, "lecture_index_master.json")
 KNOWLEDGE_MASTER_PATH = os.path.join(PARENT_DIR, "knowledge_master.json")
@@ -123,62 +113,44 @@ TASK_MASTER_PATH = os.path.join(PARENT_DIR, "task_master.json")
 OUTPUT_DIR = os.path.join(CURRENT_DIR, "output_result")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-
 def get_bundle_name_from_master(folder_name):
-    if not os.path.exists(INDEX_MASTER_PATH):
-        print("\n❌ 【エラー】 目次マスターが見つかりません。")
-        sys.exit(1)
-        
-    with open(INDEX_MASTER_PATH, "r", encoding="utf-8") as f:
-        index_master = json.load(f)
-
+    if not os.path.exists(INDEX_MASTER_PATH): return "Unknown_Bundle"
+    with open(INDEX_MASTER_PATH, "r", encoding="utf-8") as f: index_master = json.load(f)
     match = re.search(r"(\d{2}-\d+)", folder_name)
-    if not match:
-        print(f"\n❌ 【エラー】 フォルダ名 ({folder_name}) から単元番号(XX-Y)を抽出できませんでした。")
-        sys.exit(1)
-        
+    if not match: return "Unknown_Bundle"
     key = match.group(1)
-    if key not in index_master:
-        print(f"\n❌ 【エラー】 マスターファイルに単元 [{key}] の情報が登録されていません。")
-        sys.exit(1)
-        
-    return index_master[key]["bundle_name"]
+    return index_master.get(key, {}).get("bundle_name", "Unknown_Bundle")
 
+def load_and_prepare_inputs():
+    with open(TEXTBOOK_MD_PATH, "r", encoding="utf-8") as f: textbook_content = f.read()
+    folder_name = os.path.basename(CURRENT_DIR)
+    bundle_name = get_bundle_name_from_master(folder_name)
+    with open(MEXT_DICT_PATH, "r", encoding="utf-8") as f: mext_master_dict = f.read()
+    return textbook_content, mext_master_dict, bundle_name
 
 def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, prefix=""):
-    """知識(K)とタスク(T)を分離してマスターを管理・採番する関数"""
     master_data = {}
     if os.path.exists(master_path):
         try:
-            with open(master_path, "r", encoding="utf-8") as f:
-                master_data = json.load(f)
-        except Exception:
-            master_data = {}
+            with open(master_path, "r", encoding="utf-8") as f: master_data = json.load(f)
+        except: pass
 
     mext_code = str(mext_code).strip()
-    if not mext_code:
-        mext_code = "UNKNOWN"
+    if not mext_code: mext_code = "UNKNOWN"
+    if mext_code not in master_data: master_data[mext_code] = []
 
-    if mext_code not in master_data:
-        master_data[mext_code] = []
-
-    # 既存の同名ノードがあればそのコードを返す
     for item in master_data[mext_code]:
-        if item["name"] == node_name:
-            return item["branch_code"]
+        if item["name"] == node_name: return item["branch_code"]
 
-    # 連番の発行
     existing_nums = []
     for item in master_data[mext_code]:
         b_code = item.get("branch_code", f"_{prefix}000")
         match = re.search(r"_([A-Z]?)(\d+)", b_code)
-        if match:
-            existing_nums.append(int(match.group(2)))
+        if match: existing_nums.append(int(match.group(2)))
     
     next_num = max(existing_nums) + 1 if existing_nums else 1
     new_branch_code = f"_{prefix}{next_num:03d}"
 
-    # 新規登録
     master_data[mext_code].append({
         "branch_code": new_branch_code,
         "name": node_name,
@@ -191,165 +163,165 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
 
     return new_branch_code
 
-
-def load_and_prepare_inputs():
-    with open(TEXTBOOK_MD_PATH, "r", encoding="utf-8") as f:
-        textbook_content = f.read()
-        
-    folder_name = os.path.basename(CURRENT_DIR)
-    bundle_name = get_bundle_name_from_master(folder_name)
-    
-    if not os.path.exists(MEXT_DICT_PATH):
-        raise FileNotFoundError(f"❌ マスター辞書(v2)が見つかりません: {MEXT_DICT_PATH}")
-        
-    with open(MEXT_DICT_PATH, "r", encoding="utf-8") as f:
-        mext_master_dict = f.read()
-        
-    return textbook_content, mext_master_dict, bundle_name
-
-
-def execute_integrated_ontology_analysis(textbook_content, mext_master_dict, bundle_name):
-    print(f"\n🚀 [Phase 1] 動的オントロジー抽出を実行中（三元構造＆技能分離: {bundle_name}）...")
+# =========================================================
+# 🧠 Phase 1 / Step 1: オントロジー抽出
+# =========================================================
+def execute_step1_extraction(textbook_content, mext_master_dict, bundle_name):
+    print(f"\n🚀 [Phase 1 / Step 1] 概念・タスク抽出を実行中（対象: {bundle_name}）...")
 
     prompt = f"""あなたは高等学校数学科の教材分析・学習オントロジー構築のエキスパートです。
-以下の「教材データ」と「指導要領マスター辞書」を解析し、学習指導要領が示す「三つの柱」および数学的活動（体系化、説明、発見）を動的に可視化する【高度なナレッジグラフ（ノードとエッジ）】を構築してください。
+以下の「教材データ」と「指導要領マスター辞書」を解析し、GNN-KT（学習状態推論）およびGraph RAGに最適化されたナレッジグラフ（ノードとエッジ）を構築してください。
 
 【対象単元】: {bundle_name}
 
-【★最重要: ノード（頂点）の抽出・分離ルール★】
-概念を以下の4つの型（Type）に厳密に分離して抽出してください。
-単なるキーワード抽出ではなく、「数学的見方・考え方」による知識の変容（パラダイムシフト）を表現することが目的です。
+【★最重要：用語抽出とグラウンディング（根拠）のルール★】
+ノード名や親概念名（parent_concept）がブレたり、高校数学の範囲外の大学用語などが混入するのを防ぐため、日本の高校数学（検定教科書レベル）の標準的な名称にグラウンディングさせてください。自分の独自の造語は禁止です。
 
-1. `foundation_knowledge` (基礎知識ノード / 名詞ベース)
-   - 条件によって揺らがない純粋な概念、定義、用語、公式。（例：「単項式」「係数」「定数項（数だけの項）」）
-   - `parent_concept` (Level 3) として属する一般的な高校数学の標準用語を1つ指定。
-   - 辞書から `pillar` が `knowledge_skill` または `general` のコードを紐付け。
-
-2. `perspective_condition` (視点・条件ノード / レンズ)
-   - 基礎知識を相対化させ、生徒に「見方・考え方」の切り替えを要求する条件やルール。（例：「ある文字に着目するルール」）
-   - 辞書から `pillar` が `thinking_judgment` のコードを紐付け（事象の本質を認識する力）。
-
-3. `derived_knowledge` (再構成された知識ノード)
-   - 基礎知識に「視点・条件」を通した結果、新しく変容した知識。（例：「特定の文字に着目した場合の定数項（文字を含む）」）
-   - これにより「定数項＝数字だけ」という固定観念が破られるパラダイムシフトを表現。
-   - `parent_concept` を指定。
-
-4. `task_nodes` (技能ノード / 動詞ベース)
-   - 生徒が知識を用いて実際に行う具体的な計算手順や操作アクション。（例：「特定の文字に着目して多項式の次数と定数項を特定する」）
-   - 辞書から `pillar` が `knowledge_skill` または `thinking_judgment` のコードを紐付け。
-
-【★最重要: エッジ（辺）の抽出ルール★】
-抽出したノード間の「思考と活動の軌跡（関係性）」を `edges` として定義してください。
-関係性 (`relation_type`) は以下のいずれかから厳密に選択してください。
-
-- `part_of` (構成要素): 知識が別の知識の一部である場合。
-- `is_a` (特殊例・分類): 知識が別の知識の特殊な状態である場合。
-- `subsumes` (包摂・統合): 上位概念が下位概念を包み込む場合（例：「整式」が「多項式」を subsumes）。
-- `relative_to` (相対化される): 基礎知識が「視点・条件ノード」によって意味を変えられる関係。
-- `applies_condition` (条件の適用): 視点・条件から、再構成された知識へと向かう推論のプロセス。
-- `requires_logical` (論理的判断の要求): 再構成された知識を用いて、高度な技能（タスク）を実行する関係。
-- `applied_to` (単純適用): 基礎知識を用いて、基本的な技能（タスク）を実行する関係。
-- `explanation` (理由・説明): 例外やルールの論理的な理由付け（例：「0の扱い」）。
-- `prerequisite` (前提知識): 技能や知識を学ぶために不可欠な過去の知識（多重化可能）。
-
-【★絶対ルール: LaTeXとJSONエスケープ★】
-`summary`や`reasoning`、`question_text`等のテキスト内にLaTeX数式（$...$）を含める場合、**必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\subset）** してください。JSONとしてInvalidにならないよう細心の注意を払ってください。
-
----
-■ 教材Markdownデータ:
-{textbook_content}
-
-■ 指導要領マスター辞書 (JSON / 関連部分):
-{mext_master_dict}
----
+【ノードの分類】
+1. foundation_knowledge (基礎知識): 単元のベースとなる静的な知識。
+2. perspective_condition (視点・条件): 「特定の文字に着目する」など、思考の枠組み（レンズ）。
+3. derived_knowledge (再構成知識): 基礎と視点が組み合わさった結果の知識。
+4. tasks (技能・タスク): 「〜を特定する」「展開する」など、生徒が実行する具体的な学習アクション。※これがGNN-KTの確率計算の主役となります。
+   ★【重要: タスク抽出の細分化ルール】: 行行うタスクが同じでも、対象となる数式や図形（例：「単項式」と「多項式」）が異なる場合は、GNN-KTで別々の技能として追跡するため、必ず別々のタスクノードとして分割して抽出してください。
+※ 一時的なIDとして "K1", "T1" などの文字列を `node_id` に指定してください。
 
 【出力JSONフォーマット】:
-以下のスキーマに厳密に従って出力してください。Markdownのコードブロックは使用せず、JSON文字列のみを出力してください。
-
 {{
-  "bundle_name": "{bundle_name}",
   "nodes": {{
     "foundation_knowledge": [
-      {{ "node_id": "FK1", "name": "...", "summary": "...", "parent_concept": "...", "mext_code": "..." }}
+      {{
+        "node_id": "K1",
+        "name": "抽出した用語（テキスト通り）",
+        "parent_concept": "属する一般的な用語",
+        "summary": "要約",
+        "extracted_from": "テキストの該当箇所をそのまま引用",
+        "mext_code": "16桁コード"
+      }}
     ],
-    "perspective_condition": [
-      {{ "node_id": "PC1", "name": "...", "summary": "...", "mext_code": "..." }}
-    ],
-    "derived_knowledge": [
-      {{ "node_id": "DK1", "name": "...", "summary": "...", "parent_concept": "...", "mext_code": "..." }}
-    ],
+    "perspective_condition": [],
+    "derived_knowledge": [],
     "tasks": [
-      {{ "node_id": "T1", "name": "...", "summary": "...", "mext_code": "..." }}
+      {{
+        "node_id": "T1",
+        "name": "生徒の具体的なアクション",
+        "parent_concept": "関連用語",
+        "summary": "要約",
+        "extracted_from": "テキストの該当箇所",
+        "mext_code": "16桁コード"
+      }}
     ]
   }},
   "edges": [
     {{
-      "source_id": "FK1",
+      "source_id": "K1",
       "target_id": "T1",
-      "relation_type": "applied_to | part_of | is_a | subsumes | relative_to | applies_condition | requires_logical | explanation | prerequisite",
-      "reasoning": "なぜこの関係性が成り立つかの数学的・論理的理由（LaTeXエスケープ厳守）"
+      "relation_type": "applies_condition | prerequisite | relative_to | applied_to",
+      "reasoning": "なぜこの関係があるかの理由"
     }}
   ],
   "questions": [
     {{
       "question_number": "問題番号",
       "question_text": "問題文（LaTeXエスケープ厳守）",
-      "linked_task_ids": ["T1"] 
+      "answer_text": "[正解] ... \\n[解説] ..."
+    }}
+  ]
+}}
+
+【★最重要: LaTeXエスケープ★】
+数式を含める場合は、必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\subset）してください。
+
+■ 教材Markdownデータ:
+{textbook_content}
+■ 指導要領マスター辞書:
+{mext_master_dict}
+"""
+    return generate_content_and_parse_json(prompt)
+
+# =========================================================
+# 🧠 Phase 1 / Step 2: 精密アライメント
+# =========================================================
+def execute_step2_alignment(mapped_step1_data):
+    print("\n🧠 [Phase 1 / Step 2] 問題とGNN-KTタスクの精密アライメントを実行中...")
+    
+    # トークン節約のため、マスター辞書や不要な情報は落として渡す
+    prompt_data = {
+        "nodes": mapped_step1_data["nodes"],
+        "questions": mapped_step1_data["questions"]
+    }
+
+    prompt = f"""あなたは教育工学のエキスパートです。
+以下の整理済みデータから、確認問題と学習タスク（GNN-KT推論用）のアライメント構造を構築してください。
+
+【整理済みデータ】:
+{json.dumps(prompt_data, ensure_ascii=False, indent=2)}
+
+【ルール】
+各確認問題（question_number）を解くために、どのタスク（tasksノードのID）と、どの知識（foundation_knowledge等のID）が必要になるかを分析し、配列で紐づけてください。
+
+【出力JSONフォーマット】:
+{{
+  "alignments": [
+    {{
+      "question_number": "問題番号",
+      "linked_task_ids": ["_T001", "_T002"],
+      "linked_knowledge_ids": ["_K001"],
+      "reasoning": "なぜこれらのタスクや知識が必要かの理由",
+      "formula_used": "使用する公式や解法の要点（LaTeXエスケープ厳守）"
     }}
   ]
 }}
 """
-    
-    ontology_json = generate_content_and_parse_json(prompt)
-
-    print("   🌐 分離型マスター（知識・タスク）と照合・採番中...")
-    nodes_group = ontology_json.get("nodes", {})
-    
-    # --- 知識(K)系ノードの採番 ---
-    knowledge_lists = [
-        nodes_group.get("foundation_knowledge", []),
-        nodes_group.get("perspective_condition", []),
-        nodes_group.get("derived_knowledge", [])
-    ]
-    for k_list in knowledge_lists:
-        for node in k_list:
-            m_code = node.get("mext_code", "")
-            name = node.get("name", "")
-            summary = node.get("summary", "")
-            node["branch_code"] = assign_or_get_code(KNOWLEDGE_MASTER_PATH, m_code, name, summary, bundle_name, prefix="K")
-
-    # --- タスク(T)系ノードの採番 ---
-    for node in nodes_group.get("tasks", []):
-        m_code = node.get("mext_code", "")
-        name = node.get("name", "")
-        summary = node.get("summary", "")
-        node["branch_code"] = assign_or_get_code(TASK_MASTER_PATH, m_code, name, summary, bundle_name, prefix="T")
-
-    return ontology_json
-
+    return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.0 三元構造＆技能分離 オントロジー対応】Phase 1 起動 ===")
+    print("=== 🏁 【Ver 13.1.1 GNN-KT両立・グラウンディング＆タスク分割ルール追加】Phase 1 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
-    first_key_masked = f"{API_KEYS[0][:6]}...{API_KEYS[0][-4:]}" if len(API_KEYS[0]) > 10 else "INVALID"
-    print(f"   👉 現在使用中のキー: {first_key_masked}")
 
     textbook_content, mext_master_dict, bundle_name = load_and_prepare_inputs()
     
-    ontology_output = execute_integrated_ontology_analysis(textbook_content, mext_master_dict, bundle_name)
+    # [Step 1] 抽出
+    step1_output = execute_step1_extraction(textbook_content, mext_master_dict, bundle_name)
+    
+    print("   🌐 マスター辞書との照合・正式ID (_Kxxx, _Txxx) への変換処理中...")
+    id_map = {}
+    
+    # 知識ノードの採番とID置換
+    knowledge_lists = ["foundation_knowledge", "perspective_condition", "derived_knowledge"]
+    for k_type in knowledge_lists:
+        for node in step1_output.get("nodes", {}).get(k_type, []):
+            old_id = node.get("node_id")
+            new_id = assign_or_get_code(KNOWLEDGE_MASTER_PATH, node.get("mext_code"), node.get("name"), node.get("summary"), bundle_name, "K")
+            id_map[old_id] = new_id
+            node["node_id"] = new_id
+            
+    # タスクノードの採番とID置換
+    for node in step1_output.get("nodes", {}).get("tasks", []):
+        old_id = node.get("node_id")
+        new_id = assign_or_get_code(TASK_MASTER_PATH, node.get("mext_code"), node.get("name"), node.get("summary"), bundle_name, "T")
+        id_map[old_id] = new_id
+        node["node_id"] = new_id
 
-    # 最終出力用JSONの成形
+    # エッジのID置換
+    for edge in step1_output.get("edges", []):
+        edge["source_id"] = id_map.get(edge.get("source_id"), edge.get("source_id"))
+        edge["target_id"] = id_map.get(edge.get("target_id"), edge.get("target_id"))
+
+    # [Step 2] アライメント (正式なIDに置換されたデータを使用)
+    step2_output = execute_step2_alignment(step1_output)
+
     final_knowledge_graph = {
-        "metadata": {"bundle_name": bundle_name, "engine_version": "13.0_dynamic_ontology", "model_used": MODEL_NAME},
-        "nodes": ontology_output.get("nodes", {}),
-        "edges": ontology_output.get("edges", []),
-        "questions": ontology_output.get("questions", [])
+        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.1_gnn_kt_dual_engine", "model_used": MODEL_NAME},
+        "nodes": step1_output.get("nodes", {}),
+        "edges": step1_output.get("edges", []),
+        "questions": step1_output.get("questions", []),
+        "alignments": step2_output.get("alignments", []),
     }
     
     output_filepath = os.path.join(OUTPUT_DIR, "final_knowledge_graph.json")
     with open(output_filepath, "w", encoding="utf-8") as f:
         json.dump(final_knowledge_graph, f, ensure_ascii=False, indent=2)
-    print(f"🎉 処理完了！分離型オントロジーの抽出が完了しました。 💾 保存先: {output_filepath}")
+    print(f"🎉 処理完了！ 💾 保存先: {output_filepath}")
 
 if __name__ == "__main__":
     main()
