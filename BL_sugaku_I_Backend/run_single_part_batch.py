@@ -89,32 +89,39 @@ def process_subfolder(subfolder_name, mode=1):
     print(f"🚀 【一括処理開始】 フォルダ: {subfolder_name} [{mode_str}]")
     print("=" * 80)
 
+    # ---------------------------------------------------------
+    # 0. Phase 0 実行 (PDF to MD) ※ mode 1 のみ
+    # ---------------------------------------------------------
     if mode == 1:
-    # 0. Phase 0 実行 (PDF to MD)
         if not run_phase_script("phase0_pdf_to_md.py", subfolder_path):
             return
         print(f"☕ Phase間ウェイト: {INTERVAL_BETWEEN_PHASES}秒待機中...")
         time.sleep(INTERVAL_BETWEEN_PHASES)
 
-    # 1. Phase 1 実行 (テキスト解析)
+    # ---------------------------------------------------------
+    # 1. Phase 1 実行 (テキスト解析) ※ 常に実行
+    # ---------------------------------------------------------
     if not run_phase_script("phase1_text_analysis_ontology.py", subfolder_path):
         return
-    
-    if mode == 1:
-        print(f"☕ Phase間ウェイト: {INTERVAL_BETWEEN_PHASES}秒待機中...")
-        time.sleep(INTERVAL_BETWEEN_PHASES)
+    print(f"☕ Phase間ウェイト: {INTERVAL_BETWEEN_PHASES}秒待機中...")
+    time.sleep(INTERVAL_BETWEEN_PHASES)
 
-    # 2. Phase 2 実行（動画解析）
+    # ---------------------------------------------------------
+    # 2. Phase 2 実行（動画解析） ※ mode 1 のみ
+    # ---------------------------------------------------------
+    if mode == 1:
         if not run_phase_script("phase2_video_analysis.py", subfolder_path):
             print("⚠️ Phase 2で中断したため、処理を停止します。")
             return
         print(f"☕ Phase間ウェイト: {INTERVAL_BETWEEN_PHASES}秒待機中...")
         time.sleep(INTERVAL_BETWEEN_PHASES)
 
-    # 3. Phase 3 実行（統合）
-    #if not run_phase_script("phase3_alignment_graph.py", subfolder_path):
-    #    print("⚠️ Phase 3で中断したため、処理を停止します。")
-    #    return
+    # ---------------------------------------------------------
+    # 3. Phase 3 実行（統合） ※ 常に実行
+    # ---------------------------------------------------------
+    if not run_phase_script("phase3_alignment_graph.py", subfolder_path):
+        print("⚠️ Phase 3で中断したため、処理を停止します。")
+        return
 
     print("\n" + "=" * 80)
     print(f"🎉 🎉 【完全完了】 {subfolder_name} の解析処理が正常に完了しました！")

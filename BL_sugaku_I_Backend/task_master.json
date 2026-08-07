@@ -17,6 +17,54 @@
       "name": "多項式における同類項をまとめる",
       "summary_snippet": "多項式の中で文字部分が同じ項を見つけ出し、分配法則を用いて1つの項にまとめて式を簡潔にする技能。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "1変数の多項式を同類項でまとめて降べきの順に整理する",
+      "summary_snippet": "1種類の文字からなる多項式において、同類項の係数を計算して1つにまとめ、次数の高い順に並べ替える。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_T005",
+      "name": "整式の加法を計算する",
+      "summary_snippet": "ふたつ以上の整式の和を同類項をまとめて計算する。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_T006",
+      "name": "整式の減法を計算する",
+      "summary_snippet": "引く整式の各項の符号を変えて、同類項をまとめて計算する。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_T007",
+      "name": "整式の定数倍を含む加減混合式を計算する",
+      "summary_snippet": "2A-3B などのように整式に定数を掛けた項が含まれる加減算を展開して同類項をまとめる。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_T008",
+      "name": "単項式どうしの乗法を計算する",
+      "summary_snippet": "指数法則を活用し、係数どうし・文字どうしの積を計算する。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_T009",
+      "name": "単項式と多項式の乗法を展開する",
+      "summary_snippet": "分配法則を用いて単項式を多項式の各項に掛け、式を展開・整理する。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_T010",
+      "name": "整式の同類項をまとめる",
+      "summary_snippet": "同類項の係数の和を計算して1つの項に集約する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_T011",
+      "name": "1変数の整式を降べきの順に整理する",
+      "summary_snippet": "1種類の文字のみを含む整式において、同類項をまとめて次数の高い項から順に並べ替える技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
     }
   ],
   "8451503122000000": [
@@ -31,6 +79,838 @@
       "name": "特定の文字に着目して多項式の次数と定数項を特定する",
       "summary_snippet": "指定された文字以外の文字を含む項も定数扱いして、多項式の最高次数と定数項を判別する技能。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "複数文字を含む整式を指定された文字に着目して降べきの順に整理する",
+      "summary_snippet": "複数の文字が含まれる整式で、指定された文字に着目し、他の文字を定数扱いとして同類項を括り出し、降べきの順に整理する。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "共通部分を別の文字でおき換えて整式を展開する",
+      "summary_snippet": "多項式の中に共通する式を見出し、それを別の文字でおき換えて2次式の展開公式を適用する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T005",
+      "name": "置き換えまたは公式拡張を利用して3項の平方を展開する",
+      "summary_snippet": "$(a+b+c)^2$ において $a+b=A$ とおくか拡張公式を用いて展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T006",
+      "name": "特定文字に着目して整式を降べきの順に整理する",
+      "summary_snippet": "複数文字を含む整式において、指定された文字に着目し、それ以外の文字を定数として扱って同類項をまとめ、降べきの順に整理する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_T007",
+      "name": "共通部分を置き換えて展開する",
+      "summary_snippet": "式の一部を文字でおきかえるか、まとめて見ることにより展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T008",
+      "name": "3項の平方を展開する",
+      "summary_snippet": "置き換えまたは公式を用いて3項の和の2乗を展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    }
+  ],
+  "8451503112000000": [
+    {
+      "branch_code": "_T001",
+      "name": "倍数条件による集合の外延的表示",
+      "summary_snippet": "指定された範囲の倍数全体からなる集合の要素を書き並べて表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "約数条件による集合の外延的表示",
+      "summary_snippet": "指定された数の正の約数全体からなる集合の要素を書き並べて表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "2つの集合の共通部分 A ∩ B の要素を求める",
+      "summary_snippet": "与えられた2つの集合 A, B の両方に属する要素を特定し、集合として書き表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "2つの集合の和集合 A ∪ B の要素を求める",
+      "summary_snippet": "与えられた2つの集合 A, B の少なくとも一方に属する要素を重複なく特定し、集合として書き表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_T005",
+      "name": "補集合 \\bar{A} の要素を求める",
+      "summary_snippet": "全体集合 U の要素のうち、集合 A に属さない要素を抽出して集合として書き表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_T006",
+      "name": "補集合と他集合の共通部分 \\bar{A} ∩ B の要素を求める",
+      "summary_snippet": "集合 A の補集合 \\bar{A} と集合 B の両方に属する要素（B の要素のうち A に属さないもの）を特定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_T007",
+      "name": "和集合の補集合 \\overline{A ∪ B} の要素を求める",
+      "summary_snippet": "和集合 A \\cup B に属さない全体集合 U の要素を特定する（または ド・モルガンの法則 \\bar{A} \\cap \\bar{B} を利用する）。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_T008",
+      "name": "文や式が命題であるか判定する",
+      "summary_snippet": "与えられた文や式が正しいか正しくないかが一義的に決まるかを判断し、命題であるかを判定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_T009",
+      "name": "命題の仮定と結論を特定する",
+      "summary_snippet": "「p ⇒ q」の形式の命題において、どの条件が仮定でどの条件が結論かを識別・抽出する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_T010",
+      "name": "数や属性に関する単一条件の否定の作成",
+      "summary_snippet": "「有理数」「正の数」などの属性や不等式の条件に対して、その補集合に対応する否定文を作成する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_T011",
+      "name": "「かつ」で結ばれた条件の否定の作成",
+      "summary_snippet": "「x=a かつ y=b」という条件に対し、各条件の否定と「または」を用いて否定条件を作成する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_T012",
+      "name": "「または」で結ばれた不等式条件の否定の作成",
+      "summary_snippet": "不等式が「または」で結ばれた条件に対し、不等号の向きとイコールの有無を反転させて「かつ」で結ぶ否定条件を作成する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_T013",
+      "name": "整数の倍数に関する命題の逆・裏・対偶の記述",
+      "summary_snippet": "整数の倍数関係を表す命題に対して、その逆・裏・対偶を正確に構成して述べる技能。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_T014",
+      "name": "代数方程式・不等式に関する命題の逆・裏・対偶の記述",
+      "summary_snippet": "等式・不等式を含む代数的命題に対して、否定や条件の入れ替えを行って逆・裏・対偶を作成する技能。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    }
+  ],
+  "8451503121000000": [
+    {
+      "branch_code": "_T001",
+      "name": "有限集合間の包含関係の判定と記号表示",
+      "summary_snippet": "要素が具体的に列挙された2つの集合の要素を比較し、包含関係（\\subset, = など）を特定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "条件記述された集合の包含関係の特定",
+      "summary_snippet": "内包的に表された集合の要素を書き並べて具体化し、他の集合との包含関係や相等を判定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "空集合を含む包含関係の判定",
+      "summary_snippet": "空集合が含まれる集合間の包含関係において \\varnothing \\subset A の性質を適用して関係を表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "与えられた集合のすべての部分集合の列挙",
+      "summary_snippet": "集合のすべての部分集合（空集合や自分自身を含む）を漏れなく書き挙げる。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_T005",
+      "name": "ド・モルガンの法則を用いて \\bar{A} ∪ \\bar{B} の要素を求める",
+      "summary_snippet": "\\bar{A} \\cup \\bar{B} を \\overline{A \\cap B} に変換し、共通部分 A \\cap B に属さない要素を効率的に特定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_T006",
+      "name": "ベン図を作成して各領域に要素を書き入れる",
+      "summary_snippet": "全体集合 U とその部分集合 A, B の枠組みを描き、共通部分、各集合のみの部分、外側の部分に要素を配置する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_T007",
+      "name": "等式・代数条件に関する命題の真偽を判定する",
+      "summary_snippet": "代数式や方程式などの条件からなる命題について、常に成立するか否かを分析して真偽を調べる。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_T008",
+      "name": "約数に関する命題の真偽を判定する",
+      "summary_snippet": "自然数の約数集合を要素挙挙によって求め、集合の包含関係から命題の真偽を判定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_T009",
+      "name": "不等式に関する命題の真偽を数直線を用いて判定する",
+      "summary_snippet": "実数の不等式で表された条件の範囲を数直線上に表し、包含関係の有無に基づいて真偽を判定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_T010",
+      "name": "命題が偽であることを示す反例を特定する",
+      "summary_snippet": "仮定を満たすが結論を満たさない具象的な数値・例を1つ見つけ出し、偽であることを証明する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_T011",
+      "name": "代数方程式に関する必要・十分条件の判定",
+      "summary_snippet": "2次方程式や因数分解される方程式の条件について、双方の命題の真偽および反例を調べることで必要・十分条件を特定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_T012",
+      "name": "一次不等式に関する必要・十分条件の判定",
+      "summary_snippet": "不等式が表す範囲の包含関係や真偽を比較し、必要・十分条件を判定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_T013",
+      "name": "絶対値を含む条件に関する必要・十分条件の判定",
+      "summary_snippet": "絶対値記号を含む式と同値な条件（|x|=0 など）との比較により、必要・十分条件を判定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_T014",
+      "name": "2変数の和・積の不等式に関する必要・十分条件の判定",
+      "summary_snippet": "xy > 0 や x+y > 0 などの 2 変数条件について、具体例・反例を挙げて命題の真偽を吟味し判定する。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_T015",
+      "name": "整数の倍数に関する命題およびその逆・裏・対偶の真偽判定",
+      "summary_snippet": "倍数・約数の性質や反例を用いて、整数の命題およびその逆・裏・対偶の真偽を判定する技能。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_T016",
+      "name": "2次方程式・不等式に関する命題およびその逆・裏・対偶の真偽判定",
+      "summary_snippet": "因数分解や反例の提示を用いて、代数的な命題および関連する各命題の真偽を判定する技能。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_T017",
+      "name": "対偶を利用した命題の真偽判定",
+      "summary_snippet": "直接の判定が難しい不等式等の命題に対し、対偶の命題を作ってその真偽を判定することで元の命題の真偽を導く技能。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_T018",
+      "name": "奇数・偶数に関する命題を対偶を用いて証明する",
+      "summary_snippet": "整数の平方の奇偶に関する命題に対し、対偶である「整数が奇数（偶数）ならば平方も奇数（偶数）」を立案し、文字式で表して展開・整理することで証明する技能。",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    },
+    {
+      "branch_code": "_T019",
+      "name": "倍数に関する命題を対偶を用いて証明する",
+      "summary_snippet": "「$n^2$ が $3$ の倍数でないならば $n$ は $3$ の倍数でない」などの命題の対偶を立案し、$n=3k$ 等とおいて計算し証明する技能。",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    },
+    {
+      "branch_code": "_T020",
+      "name": "無理数に関する命題を背理法を用いて証明する",
+      "summary_snippet": "「$a+b\\sqrt{c}$ や $a\\sqrt{b}$ が無理数である」ことを、有理数 $r$ と仮定して $\\sqrt{c} = \\dots$ の形に変形し、既知の「$\\sqrt{c}$ は無理数",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    }
+  ],
+  "8451503322000000": [
+    {
+      "branch_code": "_T001",
+      "name": "三角形の面積をxの関数式で表す",
+      "summary_snippet": "底辺と高さの条件から三角形の面積 $y$ を $x$ の二次関数として定式化する。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "長方形の面積をxの関数式で表す",
+      "summary_snippet": "縦と横の長さの関係から長方形の面積 $y$ を $x$ の二次関数として定式化する。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "図形条件から定義域を特定する",
+      "summary_snippet": "図形の辺の長さが正である不等式を連立させて $x$ の定義域（変域）を求める。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    }
+  ],
+  "8451503310000000": [
+    {
+      "branch_code": "_T001",
+      "name": "関数の式に数値を代入して関数値を計算する",
+      "summary_snippet": "与えられた関数 $f(x)$ に具体的な実数を代入して $f(a)$ の値を計算する。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "関数の式に文字を代入して関数値を表す",
+      "summary_snippet": "与えられた関数 $f(x)$ の $x$ に別の文字 $t$ を代入して $f(t)$ を文字式で表す。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    }
+  ],
+  "8451502100000000": [
+    {
+      "branch_code": "_T001",
+      "name": "座標平面上の点が属する象限の特定",
+      "summary_snippet": "与えられた点(x, y)の符号から、その点が第幾象限にあるかを判定する。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    }
+  ],
+  "8451503311000000": [
+    {
+      "branch_code": "_T001",
+      "name": "定義域の端点における1次関数のy座標の計算",
+      "summary_snippet": "定義域の端点のx値を1次関数の式に代入し、対応するy座標を求める。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "定義域が制限された1次関数のグラフの描画",
+      "summary_snippet": "端点の含む・含まない（黒丸・白丸）を区別し、定義域に応じた1次関数のグラフの実線・破線を描く。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "y=ax^2+q 型の2次関数の軸と頂点を特定する",
+      "summary_snippet": "y=ax^2+q の式から、軸（直線 x=0）および頂点 (0, q) を求める。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "y=a(x-p)^2 型の2次関数の軸と頂点を特定する",
+      "summary_snippet": "y=a(x-p)^2 の式から、軸（直線 x=p）および頂点 (p, 0) を求める。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_T005",
+      "name": "y=ax^2+q 型の2次関数のグラフを描画・選択する",
+      "summary_snippet": "軸・頂点・凸の向きおよび座標軸との交点・通過点を考慮して y=ax^2+q のグラフを描く、または正しく選択する。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_T006",
+      "name": "y=a(x-p)^2 型の2次関数のグラフを描画・選択する",
+      "summary_snippet": "軸・頂点・凸の向きおよび座標軸との交点・通過点を考慮して y=a(x-p)^2 のグラフを描く、または正しく選択する。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_T007",
+      "name": "$y=a(x-p)^2+q$ の頂点の座標を特定する",
+      "summary_snippet": "与えられた 2次関数 $y=a(x-p)^2+q$ の式から頂点の座標 $(p, q)$ を求める。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    },
+    {
+      "branch_code": "_T008",
+      "name": "$y=a(x-p)^2+q$ の軸の方程式を特定する",
+      "summary_snippet": "与えられた 2次関数 $y=a(x-p)^2+q$ の式から軸の方程式 $x=p$ を求める。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    },
+    {
+      "branch_code": "_T009",
+      "name": "$y=a(x-p)^2+q$ の $y$ 軸との交点を求める",
+      "summary_snippet": "式に $x=0$ を代入して $y$ 軸との交点の $y$ 座標を計算する。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    },
+    {
+      "branch_code": "_T010",
+      "name": "$y=a(x-p)^2+q$ のグラフを描く・選択する",
+      "summary_snippet": "頂点、軸、凸方向、$y$ 軸との交点を元に $y=a(x-p)^2+q$ のグラフを描画または選択肢から選ぶ。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    }
+  ],
+  "8451503312000000": [
+    {
+      "branch_code": "_T001",
+      "name": "1次関数の値域の特定",
+      "summary_snippet": "グラフや端点のy座標から、yのとり得る値の範囲（不等式）を求める。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "閉区間における1次関数の最大値・最小値の特定",
+      "summary_snippet": "両端点を含む定義域において、1次関数の最大値および最小値とそれをとるxの値を特定する。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "半開区間・開区間における1次関数の最大値・最小値の有無の判定と特定",
+      "summary_snippet": "端点を含まない境界がある場合、最大値・最小値が存在しない（「ない」）ことを含めて正しく判定・特定する。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    }
+  ],
+  "8451503213000000": [
+    {
+      "branch_code": "_T001",
+      "name": "三平方の定理を用いた斜辺の長さの算出",
+      "summary_snippet": "直角を挟む2辺の長さから、三平方の定理 $c = \\sqrt{a^2 + b^2}$ を用いて斜辺の長さを計算する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "三平方の定理を用いた直角を挟む辺の長さの算出",
+      "summary_snippet": "斜辺と他の1辺の長さから、三平方の定理 $a = \\sqrt{c^2 - b^2}$ を用いて直角を挟む未知の1辺の長さを計算する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    }
+  ],
+  "8451503211000000": [
+    {
+      "branch_code": "_T001",
+      "name": "直角三角形からのsin θの値の特定",
+      "summary_snippet": "直角三角形の対辺と斜辺の長さの比から $\\sin \\theta$ の値を特定する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "直角三角形からのcos θの値の特定",
+      "summary_snippet": "直角三角形の隣辺と斜辺の長さの比から $\\cos \\theta$ の値を特定する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "直角三角形からのtan θの値の特定",
+      "summary_snippet": "直角三角形の対辺と隣辺の長さの比から $\\tan \\theta$ の値を特定する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "30°の三角比の値を求める",
+      "summary_snippet": "30°, 60°, 90°の直角三角形の辺の比を用いて、30°の正弦・余弦・正接の値を決定する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_T005",
+      "name": "45°の三角比の値を求める",
+      "summary_snippet": "45°, 45°, 90°の直角二等辺三角形の辺の比を用いて、45°の正弦・余弦・正接の値を決定する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_T006",
+      "name": "60°の三角比の値を求める",
+      "summary_snippet": "30°, 60°, 90°の直角三角形の辺の比を用いて、60°の正弦・余弦・正接の値を決定する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_T007",
+      "name": "三角比の表から指定された角の三角比の値を読み取る",
+      "summary_snippet": "表を用いて、特定の角度に対応する sin, cos, tan の値を読み取る。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_T008",
+      "name": "斜辺と特別な角から他の2辺の長さを求める",
+      "summary_snippet": "斜辺の長さと $30^\\circ, 45^\\circ, 60^\\circ$ などの特別な角から、正弦・余弦の定義値を用いて直角三角形の高さや底辺を算出する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_T009",
+      "name": "底辺と特別な角から高さを求める",
+      "summary_snippet": "底辺の長さと $30^\\circ, 45^\\circ, 60^\\circ$ などの特別な角から、正接の定義値を用いて直角三角形の高さを算出する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_T010",
+      "name": "文字式・記号で三角比を用いた辺の長さを選択・指定する",
+      "summary_snippet": "図形の条件から $x = c \\sin \\theta$, $y = c \\cos \\theta$, $z = b \\tan \\theta$ の形式の正答を選択・記述する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_T011",
+      "name": "sinθの値から鋭角θのcosθおよびtanθの値を求める",
+      "summary_snippet": "\\sin^2 \\theta + \\cos^2 \\theta = 1 を用いて \\cos \\theta を求め、\\tan \\theta = \\frac{\\sin \\theta}{\\cos \\theta}",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_T012",
+      "name": "cosθの値から鋭角θのsinθおよびtanθの値を求める",
+      "summary_snippet": "\\sin^2 \\theta + \\cos^2 \\theta = 1 を用いて \\sin \\theta を求め、\\tan \\theta = \\frac{\\sin \\theta}{\\cos \\theta}",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_T013",
+      "name": "tanθの値から鋭角θのcosθおよびsinθの値を求める",
+      "summary_snippet": "1 + \\tan^2 \\theta = \\frac{1}{\\cos^2 \\theta} を用いて \\cos \\theta を求め、\\sin \\theta = \\tan \\theta \\cos \\the",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_T014",
+      "name": "正弦の90°-θの公式を用いた角度の変換",
+      "summary_snippet": "sin(90°-θ) = cosθ を用いて、45°より大きい角の正弦を45°以下の角の余弦で表す。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART5 $90^\\circ-\\theta$ の三角比"
+    },
+    {
+      "branch_code": "_T015",
+      "name": "余弦の90°-θの公式を用いた角度の変換",
+      "summary_snippet": "cos(90°-θ) = sinθ を用いて、45°より大きい角の余弦を45°以下の角の正弦で表す。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART5 $90^\\circ-\\theta$ の三角比"
+    },
+    {
+      "branch_code": "_T016",
+      "name": "正接の90°-θの公式を用いた角度の変換",
+      "summary_snippet": "tan(90°-θ) = 1/tanθ を用いて、45°より大きい角の正接を45°以下の角の正接の逆数で表す。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART5 $90^\\circ-\\theta$ の三角比"
+    }
+  ],
+  "8451503410000000": [
+    {
+      "branch_code": "_T001",
+      "name": "生データから平均値を算出する",
+      "summary_snippet": "与えられた数値データの合計を求め、データの個数で割って平均値を算出する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "奇数個の生データから中央値を特定する",
+      "summary_snippet": "奇数個のデータを大きさの順に並べ替え、ちょうど中央にくる値を特定する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "偶数個の生データから中央値を算出する",
+      "summary_snippet": "偶数個のデータを大きさの順に並べ替え、中央に並ぶ2つの値の平均を計算する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "生データから最頻値を特定する",
+      "summary_snippet": "個々のデータの中で最も多く出現している数値を特定する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T005",
+      "name": "度数分布表から中央値が含まれる階級を特定する",
+      "summary_snippet": "データの総数から中央の位置（第n番目）を割り出し、度数の累積から該当する階級を特定する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T006",
+      "name": "度数分布表から最頻値を算出する",
+      "summary_snippet": "度数が最も大きい階級を見つけ出し、その階級の階級値（中央の値）を最頻値として計算する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T007",
+      "name": "度数分布表から階級の相対度数を算出する",
+      "summary_snippet": "特定の階級の度数を全体の度数の合計で割って相対度数を求める。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    }
+  ],
+  "8451503412000000": [
+    {
+      "branch_code": "_T001",
+      "name": "生データからの平均値の計算",
+      "summary_snippet": "未整理の数値データ列の和を個数で割って平均値を算出する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "奇数個の生データからの中央値の特定",
+      "summary_snippet": "奇数個の未整理データを昇順に並べ、中央に位置する1つの値を中央値として特定する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "偶数個の生データからの中央値の計算",
+      "summary_snippet": "偶数個の未整理データを昇順に並べ、中央に位置する2つの値の平均を計算して中央値とする。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "生データからの最頻値の特定",
+      "summary_snippet": "未整理のデータ列から最も出現回数の多い値を特定する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T005",
+      "name": "度数分布表・ヒストグラムの読取りと相対度数の計算",
+      "summary_snippet": "度数分布表やヒストグラムから階級の幅や特定の階級の相対度数を計算・特定する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T006",
+      "name": "度数分布表からの中央値が含まれる階級の特定",
+      "summary_snippet": "度数の合計から中央値にあたる順番のデータを算出し、それが属する階級を特定する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T007",
+      "name": "度数分布表からの最頻値（階級値）の計算",
+      "summary_snippet": "度数分布表で度数が最大の階級を特定し、その階級値（両端の平均）を最頻値として計算する。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_T008",
+      "name": "データの範囲を求める",
+      "summary_snippet": "データから最大値と最小値を特定し、その差を計算する。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_T009",
+      "name": "四分位数を求める",
+      "summary_snippet": "データを大きさ順に並べ、第1四分位数 $Q_1$、第2四分位数 $Q_2$（中央値）、第3四分位数 $Q_3$ を求める。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_T010",
+      "name": "四分位範囲を求める",
+      "summary_snippet": "第3四分位数 $Q_3$ から第1四分位数 $Q_1$ を引き、四分位範囲を計算する。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_T011",
+      "name": "箱ひげ図を描く",
+      "summary_snippet": "最小値、第1四分位数、中央値、第3四分位数、最大値の5つの要約統計量をもとに、箱ひげ図を作図する。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_T012",
+      "name": "データ群の平均値および四分位数を求める",
+      "summary_snippet": "与えられたデータ群から平均値、第1四分位数 $Q_1$、第2四分位数 $Q_2$、第3四分位数 $Q_3$ を正確に算定する。",
+      "first_appeared_in": "第15講 データの分析 PART5 外れ値"
+    },
+    {
+      "branch_code": "_T013",
+      "name": "四分位数を用いて外れ値の境界値を計算する",
+      "summary_snippet": "第1四分位数 $Q_1$ と第3四分位数 $Q_3$ の値から $Q_1 - 1.5(Q_3 - Q_1)$ および $Q_3 + 1.5(Q_3 - Q_1)$ の境界値を算出する。",
+      "first_appeared_in": "第15講 データの分析 PART5 外れ値"
+    },
+    {
+      "branch_code": "_T014",
+      "name": "外れ値を除いたデータ群の平均値を求める",
+      "summary_snippet": "特定した外れ値を元のデータ群から除去し、残ったデータ群の平均値を新たに算出する。",
+      "first_appeared_in": "第15講 データの分析 PART5 外れ値"
+    },
+    {
+      "branch_code": "_T015",
+      "name": "コイン6回試行の度数表を用いた相対度数の計算",
+      "summary_snippet": "1000セットのコイン6回投げデータにおいて、表が5回以上出る場合の相対度数を計算して確率とする。",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    },
+    {
+      "branch_code": "_T016",
+      "name": "コイン30回試行の度数表を用いた相対度数の計算",
+      "summary_snippet": "500セットのコイン30回投げデータにおいて、表が20回以上出る場合の相対度数を計算して確率とする。",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    }
+  ],
+  "8451503422000000": [
+    {
+      "branch_code": "_T001",
+      "name": "データの散らばりの度合いを比較・判断する",
+      "summary_snippet": "範囲や四分位範囲の大きさ、箱ひげ図の形状を比較し、どちらのデータがより散らばっているかを考察・判断する。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "散布図から相関関係（正・負・なし）を特定する",
+      "summary_snippet": "描かれた散布図の分布傾向（右上がり・右下がり等）から相関関係の有無および種類を判定する。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "散布図から適切な相関係数の値を推定・選択する",
+      "summary_snippet": "散布図の点の集中度や傾きの正負を見て、選択肢の中から最も妥当な相関係数 $r$ の値を選択する。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "データ群から外れ値を特定する",
+      "summary_snippet": "算出された境界値と実際のデータの各値を比較し、外れ値に該当する値を検出・特定する。",
+      "first_appeared_in": "第15講 データの分析 PART5 外れ値"
+    }
+  ],
+  "8451503113000000": [
+    {
+      "branch_code": "_T001",
+      "name": "分配法則を用いて多項式の積を展開する",
+      "summary_snippet": "公式が使えない一般の多項式の積に対し、分配法則を順次適用して展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "展開の公式1・2を用いて1次式の平方を展開する",
+      "summary_snippet": "$(a+b)^2 = a^2+2ab+b^2$ や $(a-b)^2 = a^2-2ab+b^2$ を用いて1次式の2乗を展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "展開の公式3を用いて和と差の積を展開する",
+      "summary_snippet": "$(a+b)(a-b) = a^2-b^2$ を用いて、同じ項の和と差の積を展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "展開の公式4を用いて1次式の積を展開する",
+      "summary_snippet": "$(x+a)(x+b) = x^2+(a+b)x+ab$ を用いて、1次係数が1の1次式同士の積を展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T005",
+      "name": "展開の公式5を用いてax+b型の1次式の積を展開する",
+      "summary_snippet": "$(ax+b)(cx+d) = acx^2+(ad+bc)x+bd$ を用いて、1次係数が1以外の1次式同士の積を展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T006",
+      "name": "整式の加法を計算する",
+      "summary_snippet": "与えられた2つの整式の和を、カッコを外して同類項をまとめることで求める。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_T007",
+      "name": "整式の減法を計算する",
+      "summary_snippet": "与えられた2つの整式の差を、引く式の符号を反転させて同類項をまとめることで求める。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_T008",
+      "name": "整式の線形結合式を計算する",
+      "summary_snippet": "$3A-2B$ などの式に整式を代入し、分配法則と加減法を用いて整理する。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_T009",
+      "name": "指数法則を用いて単項式の累乗・積を計算する",
+      "summary_snippet": "指数法則を用いて単項式の累乗や複数文字を含む単項式同士の積を計算する。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_T010",
+      "name": "単項式と多項式の積を展開する",
+      "summary_snippet": "分配法則を適用して、単項式と多項式の積のカッコを外して展開する。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_T011",
+      "name": "整式の積を分配法則で展開する",
+      "summary_snippet": "分配法則を用いて、多項式と多項式の積を展開する具体的な計算技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T012",
+      "name": "和・差の平方の公式を用いて展開する",
+      "summary_snippet": "$(a+b)^2$ または $(a-b)^2$ の公式を用いて式を展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T013",
+      "name": "平方の差（和と差の積）の公式を用いて展開する",
+      "summary_snippet": "$(a+b)(a-b) = a^2 - b^2$ の公式を用いて式を展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T014",
+      "name": "$(x+a)(x+b)$ の公式を用いて展開する",
+      "summary_snippet": "$(x+a)(x+b) = x^2 + (a+b)x + ab$ の公式を用いて式を展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_T015",
+      "name": "$(ax+b)(cx+d)$ の公式を用いて展開する",
+      "summary_snippet": "$(ax+b)(cx+d) = acx^2 + (ad+bc)x + bd$ の公式を用いて式を展開する技能。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    }
+  ],
+  "8451503411000000": [
+    {
+      "branch_code": "_T001",
+      "name": "データの平均値を算出する",
+      "summary_snippet": "データの全要素の総和をデータ数で割ることで平均値を求める。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "各データの偏差および偏差の2乗を算出する",
+      "summary_snippet": "各データの値から平均値を引いて偏差を求め、さらにその2乗を求める。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "定義に基づいて偏差の2乗の平均から分散を算出する",
+      "summary_snippet": "偏差の2乗の和をデータの個数で割ることで分散を求める。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_T004",
+      "name": "2乗の平均値から平均値の2乗を引いて分散を算出する",
+      "summary_snippet": "各データの2乗の平均値を計算し、そこから平均値の2乗を引くことで分散を求める。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_T005",
+      "name": "分散の正の平方根から標準偏差を算出する",
+      "summary_snippet": "求めた分散の正の平方根を計算して標準偏差を求める。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_T006",
+      "name": "データから散布図を作成する",
+      "summary_snippet": "2つの変量のデータの組 $(x, y)$ を座標平面上にプロットして散布図を描く。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_T007",
+      "name": "共分散を計算する",
+      "summary_snippet": "2変量のデータから各平均値を求め、偏差の積の平均値を計算して共分散 $s_{xy}$ を求める。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_T008",
+      "name": "共分散と標準偏差から相関係数を計算する",
+      "summary_snippet": "共分散 $s_{xy}$ と各変量の標準偏差 $s_x, s_y$ を用いて公式 $r = \\frac{s_{xy}}{s_x s_y}$ により相関係数を求める。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    }
+  ],
+  "8451503413000000": [
+    {
+      "branch_code": "_T001",
+      "name": "主張したい仮説とそれに反する仮説の設定",
+      "summary_snippet": "検証対象の課題に対して、主張したい仮説①と、それに反する仮説②を明確に設定する。",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    }
+  ],
+  "8451503423000000": [
+    {
+      "branch_code": "_T001",
+      "name": "仮説検定の実行と結論の考察（コイン投げ問題）",
+      "summary_snippet": "求めた確率0.11と基準確率0.05を比較し、「このコインは表が出やすい」とは判断できないと考察・結論付ける。",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "仮説検定の実行と結論の考察（給食アンケート問題）",
+      "summary_snippet": "求めた確率0.058と基準確率0.05を比較し、「給食はおいしくなった」とは判断できないと考察・結論付ける。",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    }
+  ],
+  "8451503222000000": [
+    {
+      "branch_code": "_T001",
+      "name": "実生活の直角三角形から三角比を計算し表を用いて角度を求める",
+      "summary_snippet": "斜辺や高さなどの辺の長さの比から三角比の小数値を計算し、三角比の表を用いて最も近い角の大きさを特定する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_T002",
+      "name": "斜辺と小数三角比を用いて水平距離・鉛直距離を算出する",
+      "summary_snippet": "斜辺の長さと与えられた $\\sin, \\cos$ の小数値を用いて、水平方向および鉛直方向の移動距離を計算し、四捨五入して求める。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_T003",
+      "name": "仰角・水平距離・目の高さから建造物や木の高さを算出する",
+      "summary_snippet": "水平距離と仰角から $\\tan$ を用いて目線より上の高さを求め、それに目の高さを加えて全体の高さを求め、端数処理を行う。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
     }
   ]
 }

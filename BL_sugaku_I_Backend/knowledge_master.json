@@ -47,6 +47,102 @@
       "name": "数だけの単項式の次数と「0」の扱い",
       "summary_snippet": "2などの数だけの単項式の次数は0とするが、数「0」自体の次数は多項式で通常表記されないため定義せず考えないとする注意点・特殊ルール。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "降べきの順",
+      "summary_snippet": "整式を整理するときに、特定の文字の次数の高い項から低い項へ順に並べること。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "昇べきの順",
+      "summary_snippet": "整式を整理するときに、特定の文字の次数の低い項から高い項へ順に並べること。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "定数",
+      "summary_snippet": "特定の文字に着目した際、着目していない他の文字や数値を定数（決まった数）として扱う概念。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "整式の整理",
+      "summary_snippet": "1つの整式の中で同類項をまとめ、降べきの順（または昇べきの順）に項を並べ替えること。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "降べきの順による整理の原則",
+      "summary_snippet": "特に問題で形式の指定がない場合でも、指示がない限り降べきの順に整式を整理することが数学的な標準ルールであるという視点・姿勢。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "和",
+      "summary_snippet": "加法（足し算）の結果。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "差",
+      "summary_snippet": "減法（引き算）の結果。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K016",
+      "name": "累乗",
+      "summary_snippet": "同じ数や文字をいくつか掛け合わせたもの。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K017",
+      "name": "指数",
+      "summary_snippet": "aをn個掛け合わせたa^nにおいて、掛け合わせる個数を表す数n。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K018",
+      "name": "指数法則",
+      "summary_snippet": "正の整数m, nに対して成り立つ、a^m \\times a^n = a^{m+n}, (a^m)^n = a^{mn}, (ab)^n = a^n b^n などの計算規則。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K019",
+      "name": "積",
+      "summary_snippet": "乗法（掛け算）の結果。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K020",
+      "name": "分配法則",
+      "summary_snippet": "A(B+C) = AB + AC や (A+B)C = AC + BC で表される式の展開規則。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K021",
+      "name": "整式の減法における符号反転の規則",
+      "summary_snippet": "整式の引く式 (A-B) の計算において、引き算する式 B の各項の符号をすべて変えて足し算に変形する知識。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K022",
+      "name": "単項式と多項式の乗法手順",
+      "summary_snippet": "単項式を多項式の各項に分配して掛け合わせ、展開する規則と手順。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K023",
+      "name": "中黒（・）による乗法表記規則",
+      "summary_snippet": "乗法を表す記号として「\\times」の代わりに中黒「\\cdot」を用いる表記規則。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K024",
+      "name": "降べきの順の標準適用原則",
+      "summary_snippet": "特に指示がない場合であっても、整式を整理する際は慣例として「降べきの順」に並べ替える思考原則。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
     }
   ],
   "8451503122000000": [
@@ -67,6 +163,1498 @@
       "name": "特定文字に着目した多項式の次数と定数項",
       "summary_snippet": "特定の文字に着目したとき、その文字を含まない項を「定数項」とし、各項の中で着目した文字の次数が最高であるものをその多項式の「次数」とする概念。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "特定の文字への着目",
+      "summary_snippet": "複数の文字を含む整式において、特定の文字のみを変数（文字）として扱い、その他の文字を定数とみなす視点・思考の枠組み。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "特定の文字に着目した整式の整理",
+      "summary_snippet": "指定された文字以外の文字を定数とみなし、その文字について同類項をまとめ、降べきの順に整理すること。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "同類項に着目する",
+      "summary_snippet": "整式の和や差を計算する際、同じ文字部分を持つ項（同類項）を識別してまとめるための思考の枠組み。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "係数と文字を分けて計算する視点",
+      "summary_snippet": "単項式どうしの積の計算において、係数の積と文字の積（指数法則適用）を独立して計算する視点。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "特定の文字に着目して整理する",
+      "summary_snippet": "指定された特定の文字以外の項を定数とみなして降べきの順などに整理する視点。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "共通部分の置き換え（ひとつのかたまりとみる）",
+      "summary_snippet": "複雑な式の一部を別の1つの文字に置き換えるか、またはまとまりとして捉える思考の枠組み。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "置き換えによる式の展開",
+      "summary_snippet": "複雑な多項式の展開において、共通部分を別文字とおくことで基本の展開公式へ帰着させて解く再構成知識。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "3項の平方の展開",
+      "summary_snippet": "(a+b+c)^2 のような3項の和の2乗を、2項の和の平方公式の繰り返し適用や置き換えにより展開した知識 ($a^2+b^2+c^2+2ab+2bc+2ca$)。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "輪環の順（a→b→c→a）で整理する視点",
+      "summary_snippet": "3つの文字を含む対称的な式を展開・整理する際、アルファベット順ではなく a→b→c→a の循環順（2caなど）に項を並べて整える表記上の視点。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "特定文字に着目した整式の整理",
+      "summary_snippet": "指定された文字に着目し、着目していない文字を定数扱いしながら同類項を括り出し、降べきの順に並べる知識。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "減法における各項の符号反転に着目する",
+      "summary_snippet": "整式の引き算 $A-B$ を行う際、引く式 $B$ の各項の符号をすべて変えて加法にする視点。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "係数と文字の分解整理に着目する",
+      "summary_snippet": "単項式同士の掛け算において、①係数の積、②文字の積（指数法則の適用）と順を追って計算する視点。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K016",
+      "name": "共通部分のおき換え（ひとつのかたまりとみる）",
+      "summary_snippet": "式の一部を別の文字でおき換えたり、ひとつのかたまりとみて基本公式を利用できるようにする思考の枠組み。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K017",
+      "name": "置き換えを利用した展開",
+      "summary_snippet": "共通部分を1文字に置換することで、基本の展開公式を適用可能にする知識。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K018",
+      "name": "3項の平方の展開公式",
+      "summary_snippet": "$(a+b+c)^2 = a^2 + b^2 + c^2 + 2ab + 2bc + 2ca$",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K019",
+      "name": "輪環の順による整理",
+      "summary_snippet": "複数の文字を含む積の和において、文字を $a \\to b \\to c \\to a$ のように循環させて項の順序を綺麗に整理する表記の視点。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    }
+  ],
+  "8451503112000000": [
+    {
+      "branch_code": "_K001",
+      "name": "集合",
+      "summary_snippet": "範囲のはっきりしたものの集まり。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "要素",
+      "summary_snippet": "集合を構成する1つ1つのもの。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "属する",
+      "summary_snippet": "xが集合Aの要素であるとき、xはAに属するといい、x \\in A と表す。要素でない場合は y \\notin A と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "要素を書き並べる方法",
+      "summary_snippet": "集合の要素を { } の中に書き並べて表す方法。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "要素が満たす条件を書く方法",
+      "summary_snippet": "集合の要素が満たす条件を {x | xは…} のように書く方法。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "有限集合・無限集合",
+      "summary_snippet": "要素の個数が有限個である集合を有限集合、有限個ではない集合を無限集合という。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "部分集合",
+      "summary_snippet": "集合Aのすべての要素が集合Bの要素でもあるとき、AはBの部分集合であるといい A \\subset B と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "空集合",
+      "summary_snippet": "要素が1つもない集合。\\varnothing と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "集合の相等",
+      "summary_snippet": "2つの集合A, Bの要素がすべて一致しているときAとBは等しいといい A = B と表す。A = B は A \\subset B かつ A \\supset B と同値。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "空集合の包含関係",
+      "summary_snippet": "空集合はどんな集合に対してもその部分集合である (\\varnothing \\subset A)。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "集合自身の包含関係",
+      "summary_snippet": "集合A自身もAの部分集合である (A \\subset A)。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "省略記号を用いた要素の書き並べ",
+      "summary_snippet": "要素の個数が多い場合や無限に続く集合において、省略記号 \\dots を用いて規則性を示し記述する方法。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "共通部分",
+      "summary_snippet": "2つの集合 A, B の両方に属する要素全体の集合。A ∩ B と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "和集合",
+      "summary_snippet": "2つの集合 A, B の少なくとも一方に属する要素全体の集合。A ∪ B と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "ベン図",
+      "summary_snippet": "集合とその要素を図に表したもの。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K016",
+      "name": "全体集合",
+      "summary_snippet": "1つの集合 U を最初に定め、その要素や部分集合のみを考えるとき、この集合 U のこと。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K017",
+      "name": "補集合",
+      "summary_snippet": "全体集合 U の部分集合 A に対して、U の要素のうち A に属さない要素全体の集合。\\bar{A} と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K018",
+      "name": "ド・モルガンの法則",
+      "summary_snippet": "2つの集合 A, B について、\\overline{A \\cup B} = \\bar{A} \\cap \\bar{B} および \\overline{A \\cap B} = \\bar{A} \\cup \\b",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K019",
+      "name": "補集合の基本性質",
+      "summary_snippet": "集合 A とその補集合 \\bar{A} について、A \\cap \\bar{A} = \\emptyset、A \\cup \\bar{A} = U、\\overline{\\bar{A}} = A が成り立つこ",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K020",
+      "name": "差集合的な領域表現（「Aのみ」「Bのみ」の集合表現）",
+      "summary_snippet": "一方の集合のみに属する要素の集合を、$A \\cap \\bar{B}$（$A$ のみ）や $\\bar{A} \\cap B$（$B$ のみ）のように補集合との共通部分として表す考え方。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K021",
+      "name": "命題",
+      "summary_snippet": "正しい（真）か正しくない（偽）かが明確に決まる文や式のこと。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K022",
+      "name": "条件",
+      "summary_snippet": "文字を含む文や式のうち、文字のとる値を変えると真偽が変わるもののこと。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K023",
+      "name": "仮定と結論",
+      "summary_snippet": "「p ⇒ q」の形の命題において、pを仮定、qを結論という。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K024",
+      "name": "命題の真偽",
+      "summary_snippet": "命題が正しいとき「真」、正しくないとき「偽」であるという。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K025",
+      "name": "反例",
+      "summary_snippet": "命題「p ⇒ q」において、仮定pを満たすが結論qを満たさない具体的な要素のこと。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K026",
+      "name": "十分条件",
+      "summary_snippet": "命題 p ⇒ q が真であるとき、p は q であるための十分条件であるという。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K027",
+      "name": "必要条件",
+      "summary_snippet": "命題 p ⇒ q が真であるとき、q は p であるための必要条件であるという。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K028",
+      "name": "必要十分条件",
+      "summary_snippet": "2つの命題 p ⇒ q と q ⇒ p がともに真であるとき、p は q であるための必要十分条件であるという。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K029",
+      "name": "同値",
+      "summary_snippet": "p ⇔ q（必要十分条件）が成り立つとき、p と q は同値であるという。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K030",
+      "name": "条件の否定",
+      "summary_snippet": "条件 p に対して「p でない」を表す条件を否定といい、p̄ と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K031",
+      "name": "「かつ」「または」を含む条件の否定公式",
+      "summary_snippet": "「p かつ q」の否定は「p̄ または q̄」、「p または q」の否定は「p̄ かつ q̄」となる。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K032",
+      "name": "全体集合（前提となる数の範囲）に着目した否定の検証視点",
+      "summary_snippet": "条件の否定を考える際、前提となる全体集合（実数範囲、整数範囲など）を意識して適切に補集合を定義する視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K033",
+      "name": "逆",
+      "summary_snippet": "命題 $p \\Rightarrow q$ の条件と結論を入れ替えた命題 $q \\Rightarrow p$。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K034",
+      "name": "裏",
+      "summary_snippet": "命題 $p \\Rightarrow q$ の条件と結論をそれぞれ否定した命題 $\\bar{p} \\Rightarrow \\bar{q}$。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K035",
+      "name": "対偶",
+      "summary_snippet": "命題 $p \\Rightarrow q$ の結論の否定から条件の否定への命題 $\\bar{q} \\Rightarrow \\bar{p}$。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K036",
+      "name": "背理法",
+      "summary_snippet": "証明する命題が成り立たないと仮定し、その仮定のもとで論理を進めて矛盾を導くことで、仮定が誤りであり元の命題が成り立つことを証明する方法。",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    },
+    {
+      "branch_code": "_K037",
+      "name": "偶数・奇数の文字表示",
+      "summary_snippet": "整数 $k$ を用いて、偶数は $2k$、奇数は $2k+1$（または $2k-1$）と表すことができる。",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    }
+  ],
+  "8451503121000000": [
+    {
+      "branch_code": "_K001",
+      "name": "要素の満たす条件の吟味",
+      "summary_snippet": "与えられた範囲（倍数、約数、素数など）の条件を満たす要素を正確に特定する視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "包含関係の判定視点",
+      "summary_snippet": "集合Aのすべての要素が集合Bに含まれているか（x \\in A \\implies x \\in B）を要素比較により判定する視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "ベン図による包含関係の視覚化",
+      "summary_snippet": "集合間の包含関係や要素の所属関係を図（ベン図）で表し、論理的関係を視覚的に把握する視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "ベン図を用いた集合関係の整理",
+      "summary_snippet": "集合の包含関係や共通部分・和集合・補集合の領域をベン図を描いて視覚的に把握する視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "ド・モルガンの法則による集合の同値変形",
+      "summary_snippet": "補集合の和集合 \\bar{A} \\cup \\bar{B} を 共通部分の補集合 \\overline{A \\cap B} に等しいとして変形・把握すること。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "集合の包含関係に着目する",
+      "summary_snippet": "条件p, qを満たす要素全体の集合P, Qを設定し、その包含関係（P ⊂ Q）から論理的真偽を視覚的・代数的に考察する視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "数直線の活用",
+      "summary_snippet": "実数範囲の不等式条件を数直線上に表し、集合の範囲の包含関係を捉える思考の枠組み。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "集合を用いた命題の真偽判定基準",
+      "summary_snippet": "条件p, qを満たす集合をP, Qとするとき、P ⊂ Q ならば命題「p ⇒ q」は真であり、P ∩ Q̄ の要素が存在すれば偽となるという知識。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "反例優先探索アプローチ",
+      "summary_snippet": "命題「p \\Rightarrow q」の真偽を判定する際、証明を試みる前にまず反例（仮定pを満たすが結論qを満たさない例）が存在するかどうかを優先的に疑い調べる思考法。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "集合の包含関係による判定",
+      "summary_snippet": "条件 p, q を満たす集合 P, Q について P ⊂ Q であるか否かによって必要条件・十分条件を視覚的・論理的に捉える視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "命題の真偽および反例の検証",
+      "summary_snippet": "p ⇒ q および q ⇒ p の双方の真偽を反例の有無によって検証する思考過程。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "必要条件・十分条件と集合の包含関係の対応",
+      "summary_snippet": "P ⊂ Q のとき、小集合 P の条件 p は十分条件、大集合 Q の条件 q は必要条件となる関係。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "双方向偽における非必要・非十分条件の判定ルール",
+      "summary_snippet": "命題 $p \\Rightarrow q$ および $q \\Rightarrow p$ の双方ともに偽である場合、 $p$ は $q$ であるための「必要条件でも十分条件でもない」と結論付ける知識。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "集合の包含関係と命題の真偽",
+      "summary_snippet": "命題 $p \\Rightarrow q$ が真であることは、条件を満たす集合の包含関係 $P \\subset Q$ と同値である。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "命題と対偶の真偽の一致",
+      "summary_snippet": "命題 $p \\Rightarrow q$ とその対偶 $\\bar{q} \\Rightarrow \\bar{p}$ の真偽は必ず一致する。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K016",
+      "name": "逆と裏の真偽の一致",
+      "summary_snippet": "命題の逆 $q \\Rightarrow p$ と裏 $\\bar{p} \\Rightarrow \\bar{q}$ は互いに対偶の関係にあるため、真偽が一致する。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K017",
+      "name": "命題の真偽と逆の真偽の独立性",
+      "summary_snippet": "元の命題が真であっても、その逆が真になるとは限らない。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K018",
+      "name": "補集合の包含関係の反転性質",
+      "summary_snippet": "全体集合における部分集合 $P, Q$ について、$P \\subset Q \\iff \\bar{Q} \\subset \\bar{P}$ が成り立ち、補集合をとることで包含関係の向きが反転する性質。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K019",
+      "name": "対偶の利用に着目する視点",
+      "summary_snippet": "直接証明することが困難な条件 $p \\Rightarrow q$ を、否定の形を扱う方が容易な対偶 $\\bar{q} \\Rightarrow \\bar{p}$ の証明へ切り替える視点。",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    },
+    {
+      "branch_code": "_K020",
+      "name": "結論の否定と矛盾導出に着目する視点",
+      "summary_snippet": "「〜でない」などの否定的な命題の証明において、命題の否定を仮定して既知の事実や前提条件との矛盾を誘発させる視点。",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    },
+    {
+      "branch_code": "_K021",
+      "name": "対偶による証明法",
+      "summary_snippet": "対偶 $\\bar{q} \\Rightarrow \\bar{p}$ を立案し、その仮定 $\\bar{q}$ から代数変形等を経て結論 $\\bar{p}$ を導き、元の命題の真偽を示す再構成された証明手順",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    },
+    {
+      "branch_code": "_K022",
+      "name": "背理法による無理数の証明構造",
+      "summary_snippet": "無理数であることを証明する際、「有理数である」と仮定して代入・変形し、既知の無理数論理や前提との矛盾を示す構造化された知識。",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    },
+    {
+      "branch_code": "_K023",
+      "name": "無理数の孤立化に着目する視点",
+      "summary_snippet": "背理法において「無理数＝有理数」の矛盾を導くため、仮定した式を変形して既知の無理数を一方の辺に孤立させる視点。",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    }
+  ],
+  "8451503300000000": [
+    {
+      "branch_code": "_K001",
+      "name": "関数",
+      "summary_snippet": "2つの変数 $x, y$ について、$x$ の値を決めると、それに対応して $y$ の値がただ1つ決まる関係。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "関数の表し方",
+      "summary_snippet": "$y$ が $x$ の関数であることを文字 $f$ を用いて $y = f(x)$ と表す記述法。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "関数の値",
+      "summary_snippet": "関数 $y = f(x)$ において、$x$ の値 $a$ に対応して決まる $y$ の値 $f(a)$。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "定義域",
+      "summary_snippet": "関数 $y = f(x)$ において、変数 $x$ のとりうる値の範囲（$x$ の変域）。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "値域",
+      "summary_snippet": "$x$ が定義域全体を動くときの $y$ のとりうる値の範囲（$y$ の変域）。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "異なる関数記号の使い分け",
+      "summary_snippet": "複数の関数を同時に扱ったり、別の関数であることを明確にするために、$f(x)$ 以外にも $g(x)$ や $h(x)$ などの異なるアルファベットを関数記号として使い分ける知識。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    }
+  ],
+  "8451503310000000": [
+    {
+      "branch_code": "_K001",
+      "name": "変数への代入の視点",
+      "summary_snippet": "関数 $f(x)$ の $x$ に具体的な数値や他の文字を置き換えて（代入して）評価する考え方。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    }
+  ],
+  "8451503322000000": [
+    {
+      "branch_code": "_K001",
+      "name": "図形的量の正条件",
+      "summary_snippet": "長さや面積などの幾何学的な量は常に正の数であるという条件から変域を制限する視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "二次関数による図形問題の定式化",
+      "summary_snippet": "図形の構成要素間の関係を二次関数式として立式し、幾何条件から定義域を特定した知識。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "関数の定義域の併記表記",
+      "summary_snippet": "関数の関係式の直後に括弧を付して $y = f(x) \\quad (a \\leqq x \\leqq b)$ のように定義域（変域）をセットで明記する表現上のルール・視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART1 関数とその表し方"
+    }
+  ],
+  "8451502100000000": [
+    {
+      "branch_code": "_K001",
+      "name": "座標平面",
+      "summary_snippet": "原点Oで直交する2つの数直線（x軸、y軸）によって定められた平面。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "象限",
+      "summary_snippet": "座標平面が座標軸によって分けられる4つの部分（第1象限、第2象限、第3象限、第4象限）。座標軸上の点はどの象限にも含まれない。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "各象限における座標の符号パターン",
+      "summary_snippet": "第1象限 $(x > 0, y > 0)$、第2象限 $(x < 0, y > 0)$、第3象限 $(x < 0, y < 0)$、第4象限 $(x > 0, y < 0)$ という各象限における座標",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "座標軸上の点の非象限性",
+      "summary_snippet": "x軸上、y軸上、および原点などの座標軸上にある点は、どの象限にも属さないという性質。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    }
+  ],
+  "8451503311000000": [
+    {
+      "branch_code": "_K001",
+      "name": "1次関数",
+      "summary_snippet": "yがxの式として y = ax + b (a, bは定数、a ≠ 0) の形で表される関数。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "1次関数のグラフ",
+      "summary_snippet": "1次関数 y = ax + b のグラフは、傾きa、y切片bの直線となる。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "1次関数の単調性",
+      "summary_snippet": "1次関数はa > 0のとき常に単調増加、a < 0のとき常に単調減少する性質。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "2次関数",
+      "summary_snippet": "yがxの2次式 y=ax^2+bx+c (a, b, cは定数, a≠0) で表される関数。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "放物線",
+      "summary_snippet": "2次関数のグラフが描く独特の曲線。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "軸",
+      "summary_snippet": "放物線の対称軸のこと。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "頂点",
+      "summary_snippet": "放物線とその軸との交点のこと。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "下に凸・上に凸",
+      "summary_snippet": "a>0のとき下に開いた「下に凸」、a<0のとき上に開いた「上に凸」というグラフの形状。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "平行移動",
+      "summary_snippet": "平面上で図形上の各点を一定の向きに一定の距離だけ移動させること。形や大きさは変わらない。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "y軸方向への平行移動",
+      "summary_snippet": "グラフ全体をy軸の正または負の向きに一定の長さだけずらす視点・操作。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "x軸方向への平行移動",
+      "summary_snippet": "グラフ全体をx軸の正または負の向きに一定の長さだけずらす視点・操作。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "y=ax^2+q のグラフの性質",
+      "summary_snippet": "y=ax^2 のグラフを y 軸方向に q だけ平行移動した放物線。軸は y 軸（直線 x=0）、頂点は点 (0, q)。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "y=a(x-p)^2 のグラフの性質",
+      "summary_snippet": "y=ax^2 のグラフを x 軸方向に p だけ平行移動した放物線。軸は直線 x=p、頂点は点 (p, 0)。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "xの置き換えによる平行移動の仕組み",
+      "summary_snippet": "式中のxをx-pに置き換えることで、表やグラフ上で同じyの値をとるx座標がpだけ右にずれる理由・代入計算のメカニズム。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "グラフの開き具合・位置を確定する点（y切片・代表点）の特定",
+      "summary_snippet": "頂点や軸に加えて、(1, a) やx=0のときのy切片などを求めることで、放物線の開き具合や座標軸との位置関係を正確に決定・描画する視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART3 $y=ax^2+q$ のグラフ，$y=a(x-p)^2$ のグラフ"
+    },
+    {
+      "branch_code": "_K016",
+      "name": "2次関数 $y=a(x-p)^2+q$ のグラフ",
+      "summary_snippet": "2次関数 $y=a(x-p)^2+q$ のグラフは、$y=ax^2$ のグラフを $x$ 軸方向に $p$、$y$ 軸方向に $q$ だけ平行移動した放物線である。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    },
+    {
+      "branch_code": "_K017",
+      "name": "放物線の軸と頂点",
+      "summary_snippet": "2次関数 $y=a(x-p)^2+q$ のグラフの軸は直線 $x=p$、頂点は点 $(p, q)$ である。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    },
+    {
+      "branch_code": "_K018",
+      "name": "放物線の凸方向",
+      "summary_snippet": "2次関数 $y=a(x-p)^2+q$ において、$a > 0$ のときは下に凸、$a < 0$ のときは上に凸の放物線となる。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    },
+    {
+      "branch_code": "_K019",
+      "name": "係数 $a$ の符号による凸性の判定",
+      "summary_snippet": "$x^2$ の係数 $a$ の正負に着目し、グラフが下に凸か上に凸かを判断する視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    },
+    {
+      "branch_code": "_K020",
+      "name": "標準形における符号の着目 $(x-p)$",
+      "summary_snippet": "$y=a(x-p)^2+q$ の $(x-p)$ の部分から、$x$ 軸方向の平行移動量 $p$ （頂点の $x$ 座標）の符号を正確に読み取る視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    },
+    {
+      "branch_code": "_K021",
+      "name": "$y=a(x-p)^2+q$ のグラフの記述手順",
+      "summary_snippet": "頂点 $(p, q)$ をとり、$y$ 軸との交点 $(0, ap^2+q)$ を求め、凸方向に注意して放物線を描き、主要な座標を書き入れる一連の手順。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    },
+    {
+      "branch_code": "_K022",
+      "name": "$y$軸切片が描画範囲外となる場合の代替点選択",
+      "summary_snippet": "$y$ 軸との交点の $y$ 座標が大きすぎてグラフの枠内に収まらない場合、頂点や軸に近い整数座標の点（$x=-2$ など）を計算して代替の補助点とする視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    }
+  ],
+  "8451503312000000": [
+    {
+      "branch_code": "_K001",
+      "name": "関数の最大値・最小値",
+      "summary_snippet": "関数の値域において最も大きい値を最大値、最も小さい値を最小値という。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "端点",
+      "summary_snippet": "定義域（区間）の両端に対応するグラフ上の点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "1次関数の最大値・最小値の端点性",
+      "summary_snippet": "定義域に制限がある1次関数では、最大値・最小値は必ず定義域の端点においてとるという性質。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "開区間・半開区間における最大値・最小値の不在",
+      "summary_snippet": "定義域の端点を含まない（等号がない）場合、その端側では最大値または最小値が存在しないという性質。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    }
+  ],
+  "8451502200000000": [
+    {
+      "branch_code": "_K001",
+      "name": "傾きの符号への着目",
+      "summary_snippet": "1次関数の傾きaの正負に着目して、yの単調増加・単調減少の性質を判断する枠組み。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "定義域の端点への着目",
+      "summary_snippet": "1次関数のように単調に変化する関数において、定義域の端点に注目して最大・最小を判定する枠組み。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "端点がグラフ（定義域）に含まれるかの着目",
+      "summary_snippet": "不等号に等号が含まれるか（黒丸・含む）含まれないか（白丸・含まない）に着目して最大値・最小値の有無を判断する枠組み。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "定義域外の破線表現への着目",
+      "summary_snippet": "定義域が制限された関数のグラフを描く際、元の直線との関係性を明確にするために定義域外の範囲を破線（点線）で描き分ける枠組み。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART2 1次関数のグラフと最大値，最小値"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "条件と結論の位置関係および否定への着目",
+      "summary_snippet": "命題の条件 $p$ と結論 $q$ の順序や否定に着目して、逆・裏・対偶の関係を捉える視点。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "命題とその対偶の真偽の一致への着目",
+      "summary_snippet": "元の命題の真偽判定が難しい場合に、同値な対偶の真偽に着目して判定を行う思考の枠組み。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "否定表現を含む命題に対する対偶利用の視点",
+      "summary_snippet": "「$\\neq$」や「$<$」などの否定・条件が複雑な命題の真偽判定において、対偶をとることで「$=$」や「$\\leqq$」などの扱いやすい肯定表現に変換して判定する視点。",
+      "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    }
+  ],
+  "8451503111000000": [
+    {
+      "branch_code": "_K001",
+      "name": "有理数と無理数",
+      "summary_snippet": "実数のうち、分数形式（整数/自然数）で表せる数を有理数、表せない数を無理数という。",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "有理数の分数表示",
+      "summary_snippet": "有理数は整数 $m, n$ ($n \\neq 0$) を用いて $\\frac{m}{n}$ の分数形式で一般化して表すことができる性質。",
+      "first_appeared_in": "第6講 命題と論証 PART2 命題と証明"
+    }
+  ],
+  "8451503211000000": [
+    {
+      "branch_code": "_K001",
+      "name": "直角三角形の相似",
+      "summary_snippet": "1つの鋭角が等しい2つの直角三角形は相似であり、対応する2辺の長さの比は三角形の大きさによらず一定である。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "三角比",
+      "summary_snippet": "直角三角形の辺の長さの比で定義される正弦（サイン）、余弦（コサイン）、正接（タンジェント）の総称。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "角θに着目した対辺・隣辺・斜辺の認識",
+      "summary_snippet": "直角三角形において、着目する角 $\\theta$ の位置に応じて、3つの辺を「斜辺」「対辺」「隣辺」として適切に識別する視点。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "直角三角形における正弦の定義",
+      "summary_snippet": "直角三角形において $\\sin \\theta = \\frac{\\text{対辺}}{\\text{斜辺}}$ と定義される。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "直角三角形における余弦の定義",
+      "summary_snippet": "直角三角形において $\\cos \\theta = \\frac{\\text{隣辺}}{\\text{斜辺}}$ と定義される。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "直角三角形における正接の定義",
+      "summary_snippet": "直角三角形において $\\tan \\theta = \\frac{\\text{対辺}}{\\text{隣辺}}$ と定義される。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "三角比における分母の有理化の非必須性",
+      "summary_snippet": "三角比の値は2辺の長さの比を表す数値であるため、特に指定がない限り分母の有理化を行う必要はなく、約分のみを行えばよいという解答上のルール。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "図の回転を行わない角\\thetaの位置に基づく直角三角形の辺識別視点",
+      "summary_snippet": "角 $\\theta$ が上側にあるなど直角三角形の向きが回転している場合でも、図を回転させずに角 $\\theta$ の向かい側を「対辺」、直角と角 $\\theta$ を挟む辺を「隣辺」と直接見分ける視",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "30°, 60°, 90° の直角三角形の辺の比",
+      "summary_snippet": "30°, 60°, 90° の角をもつ直角三角形の3辺の比は 1 : 2 : \\sqrt{3} である。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "45°, 45°, 90° の直角三角形の辺の比",
+      "summary_snippet": "45°, 45°, 90° の角をもつ直角二等辺三角形の3辺の比は 1 : 1 : \\sqrt{2} である。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "三角比の表",
+      "summary_snippet": "0°から90°までの角に対する正弦・余弦・正接の近似値をまとめた一覧表。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "有名角（30°, 45°, 60°）の三角比の値",
+      "summary_snippet": "30°, 45°, 60°の正弦・余弦・正接の定まった値。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "三角比の直角三角形の大きさに対する不変性（相似性）",
+      "summary_snippet": "角度が等しい直角三角形どうしは相似であるため、三角形の大きさによらず三角比（辺の比）の値は常に一定である。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "鋭角の三角比の定義",
+      "summary_snippet": "直角三角形の2辺の長さの比として定義される正弦(sin)、余弦(cos)、正接(tan)の基本概念。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "斜辺を用いた辺の長さの表し方",
+      "summary_snippet": "斜辺 $c$ と鋭角 $\\theta$ を用いて、高さ $a = c \\sin \\theta$、底辺 $b = c \\cos \\theta$ と表す関係式。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_K016",
+      "name": "底辺を用いた高さの表し方",
+      "summary_snippet": "底辺 $b$ と鋭角 $\\theta$ を用いて、高さ $a = b \\tan \\theta$ と表す関係式。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_K017",
+      "name": "三角比における乗算による辺長算出の視覚的イメージ",
+      "summary_snippet": "斜辺に $\\sin\\theta$ をかけると縦（対辺）、斜辺に $\\cos\\theta$ をかけると横（隣辺）、横に $\\tan\\theta$ をかけると縦が出るという位置関係の捉え方。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_K018",
+      "name": "三平方の定理",
+      "summary_snippet": "直角三角形の斜辺の二乗は、他の2辺の二乗の和に等しい ($a^2 + b^2 = c^2$)。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_K019",
+      "name": "角が鋭角である条件",
+      "summary_snippet": "角θが鋭角(0° < θ < 90°)のとき、sinθ, cosθ, tanθの値はすべて正となる。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_K020",
+      "name": "正接と正弦・余弦の相互関係",
+      "summary_snippet": "\\tan \\theta = \\frac{\\sin \\theta}{\\cos \\theta} が成り立つ。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_K021",
+      "name": "正弦と余弦の二乗和の相互関係",
+      "summary_snippet": "\\sin^2 \\theta + \\cos^2 \\theta = 1 が成り立つ。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_K022",
+      "name": "正接と余弦の二乗の相互関係",
+      "summary_snippet": "1 + \\tan^2 \\theta = \\frac{1}{\\cos^2 \\theta} が成り立つ。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_K023",
+      "name": "三角比の乗数表記",
+      "summary_snippet": "(\\sin \\theta)^2, (\\cos \\theta)^2, (\\tan \\theta)^2 をそれぞれ \\sin^2 \\theta, \\cos^2 \\theta, \\tan^2 \\theta ",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_K024",
+      "name": "直角三角形を用いた視覚的図解と検算の視点",
+      "summary_snippet": "公式を用いた代数的計算に加え、与えられた三角比から直角三角形の3辺の長さを再現し、三平方の定理を用いて残りの三角比を視覚的に導出・検算するアプローチ。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_K025",
+      "name": "正接関係式からの正弦の直接算出",
+      "summary_snippet": "\\tan \\theta = \\frac{\\sin \\theta}{\\cos \\theta} を変形した \\sin \\theta = \\tan \\theta \\cos \\theta により、2乗計算を経",
+      "first_appeared_in": "第11講 鋭角の三角比 PART4 三角比の相互関係"
+    },
+    {
+      "branch_code": "_K026",
+      "name": "三角形の内角の和",
+      "summary_snippet": "三角形の内角の和は180°であるという性質。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART5 $90^\\circ-\\theta$ の三角比"
+    },
+    {
+      "branch_code": "_K027",
+      "name": "45°より大きい鋭角への着目",
+      "summary_snippet": "鋭角が45°より大きいときに 90°-θ の形に表し、45°より小さい角の三角比に帰着させる視点。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART5 $90^\\circ-\\theta$ の三角比"
+    },
+    {
+      "branch_code": "_K028",
+      "name": "90°-θの三角比の公式",
+      "summary_snippet": "90°-θの三角比をθの三角比で表す公式（sin(90°-θ)=cosθ, cos(90°-θ)=sinθ, tan(90°-θ)=1/tanθ）。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART5 $90^\\circ-\\theta$ の三角比"
+    },
+    {
+      "branch_code": "_K029",
+      "name": "直角三角形の縦横の入れ替わりによる三角比の変化",
+      "summary_snippet": "基準角を \\theta から 90^\\circ - \\theta に変更すると、直角三角形の底辺と高さ（縦と横）の役割が入れ替わるため、\\sin と \\cos の値が入れ替わり、\\tan の値は逆数に",
+      "first_appeared_in": "第11講 鋭角の三角比 PART5 $90^\\circ-\\theta$ の三角比"
+    }
+  ],
+  "8451503231000000": [
+    {
+      "branch_code": "_K001",
+      "name": "正弦",
+      "summary_snippet": "直角三角形において、着目する角の対辺の長さの斜辺の長さに対する比。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    }
+  ],
+  "8451503233000000": [
+    {
+      "branch_code": "_K001",
+      "name": "余弦",
+      "summary_snippet": "直角三角形において、着目する角の隣辺の長さの斜辺の長さに対する比。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    }
+  ],
+  "8451503235000000": [
+    {
+      "branch_code": "_K001",
+      "name": "正接",
+      "summary_snippet": "直角三角形において、着目する角の対辺の長さの隣辺の長さに対する比。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    }
+  ],
+  "8451503213000000": [
+    {
+      "branch_code": "_K001",
+      "name": "三平方の定理",
+      "summary_snippet": "直角三角形において、直角を挟む2辺の長さを $a, b$、斜辺の長さを $c$ とするとき、$a^2 + b^2 = c^2$ が成り立つ関係。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART1 直角三角形と三角比"
+    }
+  ],
+  "8451503410000000": [
+    {
+      "branch_code": "_K001",
+      "name": "変量",
+      "summary_snippet": "身長，気温，テストの点数の用に，人や物の特性を数量的に表したもの。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "データ",
+      "summary_snippet": "変量の観測値や測定値などの集まり。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "代表値",
+      "summary_snippet": "データ全体の特徴を1つの数値で表したもの。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "平均値",
+      "summary_snippet": "データの値の総和をデータの個数で割った値。記号 \\bar{x} などで表される。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "中央値",
+      "summary_snippet": "データを値の大きさの順に並べたとき、中央の位置にくる値（メジアン）。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "最頻値",
+      "summary_snippet": "データにおいて最も個数の多い値（モード）。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "階級値",
+      "summary_snippet": "階級の中央の値。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "データ個数の奇偶の視点",
+      "summary_snippet": "データ個数 $n$ が奇数か偶数かによって中央値の特定方法を切り替える思考の枠組み。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "偶数個データの中央値",
+      "summary_snippet": "データの個数が偶数のとき、大きさに並べた際の中央に位置する2つの値の平均値を中央値とする法則。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "度数分布表における最頻値",
+      "summary_snippet": "度数分布表において度数が最も大きい階級の階級値を最頻値とする法則。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "代表値の性質（外れ値の影響）",
+      "summary_snippet": "平均値は極端に離れた値の影響を受けやすく、中央値は影響を受けにくい性質。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    }
+  ],
+  "8451503412000000": [
+    {
+      "branch_code": "_K001",
+      "name": "度数分布表",
+      "summary_snippet": "データをいくつかの階級に分け、各階級に属するデータの個数（度数）を表にしたもの。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "ヒストグラム",
+      "summary_snippet": "度数分布表を柱状のグラフにしたもの。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "階級",
+      "summary_snippet": "データを整理するために区切った区間。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "階級の幅",
+      "summary_snippet": "階級の区間の大きさ（幅）。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "相対度数",
+      "summary_snippet": "各階級の度数がデータ全体の度数（総数）に対して占める割合。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "データ提示形式の視点",
+      "summary_snippet": "データが未整理の生データ（個別数値のリスト）か度数分布表かによって代表値の定義・求め方を切り替える視点。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "度数分布表における階級特定と生データ非特定の視点",
+      "summary_snippet": "度数分布表では個々の生の数値が分からないため、中央値そのものを算出するのではなく「中央値が含まれる階級」を特定する問題設定になるという視点。",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "累計度数による中央値含有階級の決定法則",
+      "summary_snippet": "全データ数 $n$ から中央の位置にあたる順番（奇数の場合は $\\frac{n+1}{2}$ 番目）を算出し、階級の端から度数を順に足し合わせる（累計度数）ことで、該当する順番のデータが属する階級を特",
+      "first_appeared_in": "第15講 データの分析 PART1 データの整理と代表値"
+    }
+  ],
+  "8451503411000000": [
+    {
+      "branch_code": "_K001",
+      "name": "データの範囲",
+      "summary_snippet": "データの最大値から最小値を引いた差。データの散らばりの度合いを表す最も基本的な指標。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "四分位数",
+      "summary_snippet": "データを値の大きさの順に並べたとき、4等分する位置にくる値。小さい方から第1四分位数($Q_1$)、第2四分位数($Q_2$、中央値)、第3四分位数($Q_3$)という。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "四分位範囲",
+      "summary_snippet": "第3四分位数 $Q_3$ から第1四分位数 $Q_1$ を引いた差 ($Q_3 - Q_1$)。中央約50%のデータの範囲を表す。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "四分位偏差",
+      "summary_snippet": "四分位範囲を2で割った値 $\\dfrac{Q_3 - Q_1}{2}$。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "箱ひげ図",
+      "summary_snippet": "最小値、第1四分位数、中央値、第3四分位数、最大値を、箱と線（ひげ）を用いて1つの図で表したもの。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "データ個数の偶奇に応じた四分位数の位置決定規則",
+      "summary_snippet": "データ数が奇数の場合は中央値を除いた前後半の中央値をそれぞれ $Q_1, Q_3$ とし、偶数の場合は中央2値の平均を中央値 $Q_2$ として二分した前後半のデータの中央値をそれぞれ $Q_1, Q",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "偏差",
+      "summary_snippet": "各データの値から平均値を引いた差のこと。和および平均は常に0になる。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "分散",
+      "summary_snippet": "偏差の2乗の平均値。データの散らばりの度合いを表す指標の1つ。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "標準偏差",
+      "summary_snippet": "分散の正の平方根。元のデータ（変量）と同じ単位を持つ散らばりの指標。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "分散の計算公式（2乗の平均値と平均値の2乗の差）",
+      "summary_snippet": "分散は「(x^2 の平均値) - (x の平均値)^2」として求めることができる。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "分散公式の選択条件（平均値の数値的性質）",
+      "summary_snippet": "平均値が整数の場合は定義式による計算、平均値が小数や分数で偏差の計算が複雑になる場合は公式 s^2 = \\overline{x^2} - (\\bar{x})^2 を選択・活用する視点。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "散布図",
+      "summary_snippet": "2つの変量からなるデータを点として座標平面上に図示したもの。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "正の相関",
+      "summary_snippet": "2つの変量の一方が増えると他方も増える傾向にある関係。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "負の相関",
+      "summary_snippet": "2つの変量の一方が増えると他方が減る傾向にある関係。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "共分散",
+      "summary_snippet": "xの偏差とyの偏差の積の平均値。$s_{xy}$で表される。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_K016",
+      "name": "相関係数",
+      "summary_snippet": "共分散をx, yの標準偏差の積で割った値。相関関係の強弱を数値化する指標で、$r = \\frac{s_{xy}}{s_x s_y}$ で求められる。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_K017",
+      "name": "相関係数rの数値範囲と1, -1, 0への近さ",
+      "summary_snippet": "相関係数r（$-1 \\leqq r \\leqq 1$）の値が1, -1, 0のどこに近いかという数値的な条件・指標。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_K018",
+      "name": "相関係数による相関の向きと強さの評価",
+      "summary_snippet": "相関係数rの値から、正負の相関の向きおよびその強弱を客観的な数値で評価する知識。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_K019",
+      "name": "相関関係と因果関係の区別",
+      "summary_snippet": "2つの変量に相関関係（連動する傾向）が見られても、一方の変化が他方の直接の原因（因果関係）を意味するわけではないという概念・見方。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_K020",
+      "name": "相関係数における外れ値の影響",
+      "summary_snippet": "データの中に他の値と極端に離れた「外れ値」が存在する場合、相関係数の値がその影響を受けて大きく歪むという条件・注意点。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_K021",
+      "name": "共分散の符号による相関方向の判定",
+      "summary_snippet": "共分散 $s_{xy}$ の符号が正のときは正の相関、負のときは負の相関、0に近いときは相関なしとなる性質から、データの連動傾向を判断する知識。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    }
+  ],
+  "8451503421000000": [
+    {
+      "branch_code": "_K001",
+      "name": "外れ値・極端な値への影響度への着目",
+      "summary_snippet": "範囲は極端に離れた値の影響を受けやすく、四分位範囲は極端に離れた値の影響を受けにくいという特性に着目する視点。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "偏差の2乗への着目",
+      "summary_snippet": "偏差の和・平均が常に0になるため、散らばりを捉えるために偏差を2乗して正の値（または0）として扱う視点。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "単位の整合（正の平方根の着目）",
+      "summary_snippet": "偏差の2乗により2乗された単位を、正の平方根をとることで元の変量の単位に合わせる視点。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "分散・標準偏差の性質と散らばりの比較",
+      "summary_snippet": "データが平均値の周りに集中しているほど分散や標準偏差は小さくなり、外れ値が存在すると値は大きくなる性質。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "外れ値（極端な値）の分散・標準偏差への影響",
+      "summary_snippet": "データ群の中に他と極端に離れた値（外れ値）が存在する場合、偏差の2乗値が著しく大きくなるため、分散や標準偏差も大きな値をとる性質。",
+      "first_appeared_in": "第15講 データの分析 PART3 分散と標準偏差"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "外れ値が統計量に与える影響",
+      "summary_snippet": "外れ値を含むデータにおいて、範囲、平均値、分散、標準偏差、相関係数は外れ値から強い影響を受ける。",
+      "first_appeared_in": "第15講 データの分析 PART5 外れ値"
+    }
+  ],
+  "8451503422000000": [
+    {
+      "branch_code": "_K001",
+      "name": "箱ひげ図によるデータ分布の比較",
+      "summary_snippet": "箱ひげ図を用いることで、複数のデータの広がりや偏りなど分布のおおまかな様子を並べて視覚的に比較できる。",
+      "first_appeared_in": "第15講 データの分析 PART2 データの散らばり"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "散布図における点の分布の傾向",
+      "summary_snippet": "点の分布が右上がり直線状か、右下がり直線状か、ランダムに散らばっているかという視点。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "散布図による相関関係の判別",
+      "summary_snippet": "散布図の点の分布パターンから、正の相関・負の相関・相関なし、およびその強弱を可視化して判断する知識。",
+      "first_appeared_in": "第15講 データの分析 PART4 データの相関"
+    }
+  ],
+  "8451503113000000": [
+    {
+      "branch_code": "_K001",
+      "name": "展開",
+      "summary_snippet": "整式の積を単項式の和の形に表すこと。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "分配法則",
+      "summary_snippet": "括弧を開いて各項に積を分配して掛ける代数法則。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "展開の公式",
+      "summary_snippet": "特別な形の積を展開する際、途中計算を省略して直ちに結果を得るための公式群。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "整式の加法と減法",
+      "summary_snippet": "整式の「和」を求める計算を加法、「差」を求める計算を減法という。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "累乗と指数",
+      "summary_snippet": "同じ数や文字をいくつか掛けたものを累乗といい、$a$を$n$個掛けた$a^n$における$n$を指数と呼ぶ。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "指数法則",
+      "summary_snippet": "正の整数$m, n$に対して成り立ち、単項式の積や累乗の計算を簡略化する基本的な法則（$a^m \\times a^n = a^{m+n}$, $(a^m)^n = a^{mn}$, $(ab)^n =",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "整式の和と差の整理法",
+      "summary_snippet": "カッコを外し、同類項をまとめることで整式の和や差を簡潔に計算・整理する方法。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "単項式同士の積の計算手順",
+      "summary_snippet": "累乗の処理を行い、係数どうしの積と文字どうしの積（指数法則）を組み合わせる手順。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "単項式と多項式の積の展開法",
+      "summary_snippet": "分配法則を用いて単項式を多項式の各項に掛け合わせ、カッコを外して展開する方法。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "中黒記号を用いた積の表記",
+      "summary_snippet": "乗法記号「$\\times$」の代わりに中黒「$\\cdot$」を用いて積を表す記号の約束法。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "展開の公式（和と差の平方）",
+      "summary_snippet": "$(a+b)^2 = a^2 + 2ab + b^2$ および $(a-b)^2 = a^2 - 2ab + b^2$",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "展開の公式（和と差の積）",
+      "summary_snippet": "$(a+b)(a-b) = a^2 - b^2$",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "展開の公式（一次式の積1）",
+      "summary_snippet": "$(x+a)(x+b) = x^2 + (a+b)x + ab$",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "展開の公式（一次式の積2）",
+      "summary_snippet": "$(ax+b)(cx+d) = acx^2 + (ad+bc)x + bd$",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    }
+  ],
+  "8451503431000000": [
+    {
+      "branch_code": "_K001",
+      "name": "外れ値",
+      "summary_snippet": "データの中に、他の値と極端にかけ離れた値が含まれる場合、その値のことを指す。",
+      "first_appeared_in": "第15講 データの分析 PART5 外れ値"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "異常値",
+      "summary_snippet": "測定ミスや入力ミスなどによって生じたデータの値。価値がなく除外して考えることが望ましいとされる。",
+      "first_appeared_in": "第15講 データの分析 PART5 外れ値"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "四分位数を用いた外れ値の判定条件",
+      "summary_snippet": "第1四分位数 $Q_1$ および第3四分位数 $Q_3$ を用いて、$Q_1 - 1.5(Q_3 - Q_1)$ 以下の値、または $Q_3 + 1.5(Q_3 - Q_1)$ 以上の値を外れ値とみな",
+      "first_appeared_in": "第15講 データの分析 PART5 外れ値"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "異常値ではない外れ値の分析意義",
+      "summary_snippet": "測定ミスや入力ミスによる異常値とは異なり、正しい測定に基づく外れ値の観測対象を分析することで、問題解決や業務改善の示唆を得られるという考察の枠組み。",
+      "first_appeared_in": "第15講 データの分析 PART5 外れ値"
+    }
+  ],
+  "8451503413000000": [
+    {
+      "branch_code": "_K001",
+      "name": "仮説検定",
+      "summary_snippet": "ある仮説を立てて、それが成り立つかどうかを統計的に検証する手法。",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "基準となる確率",
+      "summary_snippet": "仮説検定において、ある事象の発生が極めて珍しいかどうかを判断するためにあらかじめ設定する基準の確率（0.05や0.01など）。",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    }
+  ],
+  "8451503423000000": [
+    {
+      "branch_code": "_K001",
+      "name": "基準となる確率との大小比較による判断基準",
+      "summary_snippet": "検証対象の事象が起こる確率を計算し、あらかじめ定めた基準となる確率より小さいか大きいかによって反する仮説の正誤を判断する思考の枠組み。",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "仮説検定による主張の妥当性評価",
+      "summary_snippet": "主張したい仮説とそれに反する仮説を立て、確率の比較を通して反する仮説が棄却できる場合にのみ主張したい仮説が正しいと判断する結論の解釈知識。",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "観測事象以上の極端な結果を含めた確率集計条件",
+      "summary_snippet": "検証対象となる結果の珍しさを評価する際、その結果の発生確率だけでなく、それ以上に極端な（珍しい）結果が起こる確率も含めて合計（累積）して判定基準とする条件。",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "帰無仮説の棄却失敗における判定保留の原則",
+      "summary_snippet": "算出された確率が基準となる確率より大きく、反する仮説（仮説②）を棄却できない場合であっても、仮説②が正しいと証明されたわけではなく、主張したい仮説（仮説①）の正否を判定保留（判断できない）とする解釈の",
+      "first_appeared_in": "第15講 データの分析 PART6 仮説検定"
+    }
+  ],
+  "8451503221000000": [
+    {
+      "branch_code": "_K001",
+      "name": "有名角（30°, 45°, 60°）の直角三角形の辺の比への着目",
+      "summary_snippet": "与えられた角が30°, 45°, 60°のときは、対応する直角三角形を描き、その3辺の比（1:2:\\sqrt{3} や 1:1:\\sqrt{2}）に着目する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "有名角をもつ直角三角形の正方形・正三角形からの構成への着目",
+      "summary_snippet": "30°, 60°, 90°の直角三角形を正三角形の半分の図形、45°, 45°, 90°の直角二等辺三角形を正方形の半分の図形として捉え、各辺の比を導出する視点。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "斜辺の長さと1つの鋭角に着目する条件",
+      "summary_snippet": "直角三角形において斜辺の長さと1つの鋭角の大きさが既知である状況。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "底辺の長さと1つの鋭角に着目する条件",
+      "summary_snippet": "直角三角形において底辺（角に隣接する辺）の長さと1つの鋭角の大きさが既知である状況。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    }
+  ],
+  "8451503222000000": [
+    {
+      "branch_code": "_K001",
+      "name": "三角比の表における近似値の比較・着目",
+      "summary_snippet": "計算した三角比の値に最も近い値を三角比の表から探し出し、対応する角度を特定する。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART2 有名角の三角比，三角比の表"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "仰角と水平線",
+      "summary_snippet": "視線と水平線とのなす角のうち、水平線より上を見上げる角度（仰角）。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "三角比の近似値と端数処理",
+      "summary_snippet": "三角比の表や与えられた小数値を用いて計算し、指定された桁数（小数第2位など）で四捨五入を行う処理。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "目の高さを考慮した直角三角形のモデル化視点",
+      "summary_snippet": "実生活の測定対象（木の高さ等）を、目の高さを基準とする水平線で分け、直角三角形と目の高さの和として捉える思考枠組み。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "目の高さを加算した景観の高さ算出公式",
+      "summary_snippet": "測量対象の全体の高さ = (水平距離 $\\times \\tan \\theta$) + 目の高さ。",
+      "first_appeared_in": "第11講 鋭角の三角比 PART3 三角比の利用"
     }
   ]
 }
