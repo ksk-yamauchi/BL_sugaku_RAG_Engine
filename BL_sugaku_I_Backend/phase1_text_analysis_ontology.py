@@ -139,8 +139,10 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
     if not mext_code: mext_code = "UNKNOWN"
     if mext_code not in master_data: master_data[mext_code] = []
 
+    # 🌟 修正: MEXTコードと枝番を結合したグローバル一意なIDを返す
     for item in master_data[mext_code]:
-        if item["name"] == node_name: return item["branch_code"]
+        if item["name"] == node_name: 
+            return f"{mext_code}{item['branch_code']}"
 
     existing_nums = []
     for item in master_data[mext_code]:
@@ -161,7 +163,8 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
     with open(master_path, "w", encoding="utf-8") as f:
         json.dump(master_data, f, ensure_ascii=False, indent=2)
 
-    return new_branch_code
+    # 🌟 修正: MEXTコードと枝番を結合したグローバル一意なIDを返す
+    return f"{mext_code}{new_branch_code}"
 
 # =========================================================
 # 🧠 Phase 1 / Step 1: オントロジー抽出
@@ -275,7 +278,7 @@ def execute_step2_alignment(mapped_step1_data):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.1.1 GNN-KT両立・グラウンディング＆タスク分割ルール追加】Phase 1 起動 ===")
+    print("=== 🏁 【Ver 13.1.2 グローバルID対応版】Phase 1 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
 
     textbook_content, mext_master_dict, bundle_name = load_and_prepare_inputs()
@@ -311,7 +314,7 @@ def main():
     step2_output = execute_step2_alignment(step1_output)
 
     final_knowledge_graph = {
-        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.1_gnn_kt_dual_engine", "model_used": MODEL_NAME},
+        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.2_gnn_kt_dual_engine", "model_used": MODEL_NAME},
         "nodes": step1_output.get("nodes", {}),
         "edges": step1_output.get("edges", []),
         "questions": step1_output.get("questions", []),

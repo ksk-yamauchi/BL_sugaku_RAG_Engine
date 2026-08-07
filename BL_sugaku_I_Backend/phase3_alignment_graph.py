@@ -130,8 +130,10 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
     if not mext_code: mext_code = "UNKNOWN"
     if mext_code not in master_data: master_data[mext_code] = []
 
+    # 🌟 修正: MEXTコードと枝番を結合したグローバル一意なIDを返す
     for item in master_data[mext_code]:
-        if item["name"] == node_name: return item["branch_code"]
+        if item["name"] == node_name: 
+            return f"{mext_code}{item['branch_code']}"
 
     existing_nums = []
     for item in master_data[mext_code]:
@@ -152,7 +154,8 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
     with open(master_path, "w", encoding="utf-8") as f:
         json.dump(master_data, f, ensure_ascii=False, indent=2)
 
-    return new_branch_code
+    # 🌟 修正: MEXTコードと枝番を結合したグローバル一意なIDを返す
+    return f"{mext_code}{new_branch_code}"
 
 # =========================================================
 # 🧠 動的補完 ＆ アライメント実行
@@ -235,7 +238,7 @@ Phase 2の動画データには `role` が付与されています。
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.2 ロール連動・ダイナミック粒度吸収版】Phase 3 起動 ===")
+    print("=== 🏁 【Ver 13.2.1 グローバルID対応版】Phase 3 起動 ===")
     
     phase1_data = load_json(PHASE1_FILE)
     phase2_data = load_json(PHASE2_FILE)
@@ -280,7 +283,7 @@ def main():
             edge["target_id"] = id_map.get(edge.get("target_id"), edge.get("target_id"))
             phase1_data.setdefault("edges", []).append(edge)
 
-        # 🌟 動画紐付け側のIDも更新 (NEW_K1 -> _K008 など)
+        # 🌟 動画紐付け側のIDも更新
         updated_node_alignments = {}
         for nid, videos in node_alignments.items():
             updated_node_alignments[id_map.get(nid, nid)] = videos
@@ -326,7 +329,7 @@ def main():
             q["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
 
         final_graph = phase1_data
-        final_graph["metadata"]["engine_version"] = "13.2_dynamic_ontology_completed"
+        final_graph["metadata"]["engine_version"] = "13.2.1_dynamic_ontology_completed"
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(final_graph, f, ensure_ascii=False, indent=2)
