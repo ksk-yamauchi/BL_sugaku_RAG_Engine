@@ -849,6 +849,108 @@
       "name": "$y$軸切片が描画範囲外となる場合の代替点選択",
       "summary_snippet": "$y$ 軸との交点の $y$ 座標が大きすぎてグラフの枠内に収まらない場合、頂点や軸に近い整数座標の点（$x=-2$ など）を計算して代替の補助点とする視点。",
       "first_appeared_in": "第7講 2次関数とグラフ PART4 $y=a(x-p)^2+q$ のグラフ"
+    },
+    {
+      "branch_code": "_K023",
+      "name": "一般形",
+      "summary_snippet": "$y=ax^2+bx+c$ の形で表される2次関数の式。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
+    },
+    {
+      "branch_code": "_K024",
+      "name": "標準形",
+      "summary_snippet": "$y=a(x-p)^2+q$ の形で表される2次関数の式。グラフの軸や頂点を直接読み取ることができる。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
+    },
+    {
+      "branch_code": "_K025",
+      "name": "平方完成",
+      "summary_snippet": "2次式 $ax^2+bx+c$ を $a(x-p)^2+q$ の形に変形すること。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
+    },
+    {
+      "branch_code": "_K026",
+      "name": "2次関数の軸と頂点",
+      "summary_snippet": "2次関数 $y=a(x-p)^2+q$ のグラフの軸は直線 $x=p$、頂点は点 $(p, q)$ である。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
+    },
+    {
+      "branch_code": "_K027",
+      "name": "$x^2$ の係数が1の場合の平方完成公式",
+      "summary_snippet": "$x^2+bx+c = \\\\left(x+\\\\frac{b}{2}\\\\right)^2 - \\\\frac{b^2}{4} + c$ と変形する公式。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
+    },
+    {
+      "branch_code": "_K028",
+      "name": "一般形 $y=ax^2+bx+c$ の平方完成と頂点・軸の公式",
+      "summary_snippet": "$y=ax^2+bx+c = a\\\\left(x+\\\\frac{b}{2a}\\\\right)^2 - \\\\frac{b^2-4ac}{4a}$ であり、軸は $x=-\\\\frac{b}{2a}$、頂点",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
+    },
+    {
+      "branch_code": "_K029",
+      "name": "一般形におけるy切片(0, c)の着目視点",
+      "summary_snippet": "2次関数の一般形 $y=ax^2+bx+c$ から、$x=0$ のときの $y$ の値である定数項 $c$（$y$切片 $(0, c)$）を読み取り、グラフ描画やグラフ選択の補助として活用する視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
+    },
+    {
+      "branch_code": "_K030",
+      "name": "中かっこ $\\{\\}$ を用いた分配法則のミス防止視点",
+      "summary_snippet": "$x^2$ の係数 $a$ ($a \\neq 1$) で括った後の平方完成において、新たに生じる小括弧と全体を区別するために中かっこ $\\{\\}$ を導入し、$a$ の分配忘れを防ぐ視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
+    },
+    {
+      "branch_code": "_K031",
+      "name": "分数係数の括り出しにおける逆数計算の視点",
+      "summary_snippet": "$x^2$ の係数が分数（例: $\\frac{1}{2}$）である場合、その係数で括る操作を「係数の逆数（例: $2$）を1次項の係数に掛ける」操作として捉えて計算を正確に行う視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
+    },
+    {
+      "branch_code": "_K032",
+      "name": "放物線の方程式",
+      "summary_snippet": "放物線を表す2次関数の方程式 $y = ax^2 + bx + c$ のこと。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART6 放物線の平行移動"
+    },
+    {
+      "branch_code": "_K033",
+      "name": "放物線の頂点",
+      "summary_snippet": "放物線とその軸との交点の座標。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART6 放物線の平行移動"
+    },
+    {
+      "branch_code": "_K034",
+      "name": "放物線の平行移動",
+      "summary_snippet": "$x^2$ の係数が同じ2つの放物線は、一方を平行移動するともう一方に重ね合わせることができるという性質。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART6 放物線の平行移動"
+    },
+    {
+      "branch_code": "_K035",
+      "name": "頂点の移動への着目",
+      "summary_snippet": "放物線の平行移動を捉える際、形状を決定する頂点がどのように移動したかに着目する視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART6 放物線の平行移動"
+    },
+    {
+      "branch_code": "_K036",
+      "name": "平行移動における $x^2$ の係数の不変性",
+      "summary_snippet": "放物線を平行移動しても、グラフの開き具合や向きを決定する $x^2$ の係数 $a$ は変化しないという条件。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART6 放物線の平行移動"
+    },
+    {
+      "branch_code": "_K037",
+      "name": "頂点の移動による放物線の平行移動",
+      "summary_snippet": "放物線の平行移動は頂点の平行移動と一致し、$x^2$ の係数を維持したまま移動後の頂点座標を用いて平行移動後の放物線を表すことができるという知識。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART6 放物線の平行移動"
+    },
+    {
+      "branch_code": "_K038",
+      "name": "放物線の方程式における標準形（平方完成形）での解答許容",
+      "summary_snippet": "平行移動後の放物線の方程式を答える際、頂点の位置が直ちに把握できる $y = a(x - p)^2 + q$ の形式（標準形）のまま答えても正解とされるという視点・条件。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART6 放物線の平行移動"
+    },
+    {
+      "branch_code": "_K039",
+      "name": "平行移動量の記述における表現形式",
+      "summary_snippet": "軸方向への移動量を記述回答する際、「$x$軸方向に $m$、$y$軸方向に $n$ だけ平行移動する」というように「だけ」を補って表現する記述上の条件・作法。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART6 放物線の平行移動"
     }
   ],
   "8451503312000000": [
@@ -919,6 +1021,18 @@
       "name": "否定表現を含む命題に対する対偶利用の視点",
       "summary_snippet": "「$\\neq$」や「$<$」などの否定・条件が複雑な命題の真偽判定において、対偶をとることで「$=$」や「$\\leqq$」などの扱いやすい肯定表現に変換して判定する視点。",
       "first_appeared_in": "第6講 命題と論証 PART1 逆・裏・対偶"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "$x^2$ の係数が1である2次式",
+      "summary_snippet": "$x^2$ の係数が $1$ である2次式 $x^2+bx+c$ に着目する視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "$x^2$ の係数 $a$ でのくくり出し",
+      "summary_snippet": "$x^2$ の係数が $1$ ではない場合、定数項以外の項を $x^2$ の係数 $a$ でくくって変形する視点。",
+      "first_appeared_in": "第7講 2次関数とグラフ PART5 平方完成と $y=ax^2+bx+c$ のグラフ"
     }
   ],
   "8451503111000000": [

@@ -1,215 +1,354 @@
 import os
 import json
-import requests
 import time
+import requests
+from glob import glob
 from dotenv import load_dotenv
+from google import genai
+from google.genai import errors, types
 
 # =========================================================
-# ⚙️ 設定・初期化
+# ⚙️ 設定・初期化 (.env 複数APIキー対応)
 # =========================================================
-load_dotenv()
-API_KEY = os.environ.get("GEMINI_API_KEY")
-if not API_KEY:
-    raise ValueError("❌ .env ファイルに GEMINI_API_KEY が設定されていません。")
+ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+load_dotenv(dotenv_path=ENV_PATH, override=True)
 
-PARENT_DIR = os.path.dirname(os.path.abspath(__file__))
-GLOBAL_DB_PATH = os.path.join(PARENT_DIR, "global_vector_db_cache.json")
-MEXT_DICT_PATH = os.path.join(PARENT_DIR, "mext_master_dict.json")
+def clean_key(k_str):
+    if not k_str:
+        return ""
+    return k_str.strip().strip("'\"").replace('\ufeff', '')
+
+raw_keys = os.environ.get("GEMINI_API_KEYS", "") or os.environ.get("GEMINI_API_KEY", "")
+API_KEYS = [clean_key(k) for k in raw_keys.split(",") if clean_key(k)]
+
+if not API_KEYS:
+    raise ValueError("❌ .env ファイルに GEMINI_API_KEYS または GEMINI_API_KEY が設定されていません。")
+
+current_key_index = 0
+MODEL_NAME = "text-embedding-004" # デフォルト値（後で自動上書きされます）
+
+def get_client():
+    global current_key_index
+    return genai.Client(api_key=API_KEYS[current_key_index])
+
+def rotate_key():
+    global current_key_index
+    if len(API_KEYS) <= 1:
+        return False
+    current_key_index = (current_key_index + 1) % len(API_KEYS)
+    masked_key = f"{API_KEYS[current_key_index][:6]}...{API_KEYS[current_key_index][-4:]}" if len(API_KEYS[current_key_index]) > 10 else "INVALID"
+    print(f"      🔄 APIキーを切り替えました (Key {current_key_index + 1}/{len(API_KEYS)}: {masked_key})")
+    return True
 
 # =========================================================
-# 🧠 ベクトル化 (API通信)
+# 🔍 埋め込みモデル自動探索
 # =========================================================
 def discover_embed_model(api_key):
+    """利用可能な最新の埋め込みモデルをAPIから動的に取得する"""
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
     res = requests.get(url, proxies={"http": None, "https": None}, timeout=10)
+    res.raise_for_status()
+    
     embed_models = [m["name"] for m in res.json().get("models", []) if "embedContent" in m.get("supportedGenerationMethods", [])]
     if not embed_models: 
         raise RuntimeError("❌ 利用可能な埋め込みモデルが見つかりません。")
+        
     target_model = embed_models[-1]
     for m in embed_models:
         if "text-embedding" in m: 
             target_model = m
             break
+            
+    # genai SDKの model 引数に合わせて "models/" プレフィックスを除去
+    if target_model.startswith("models/"):
+        target_model = target_model.replace("models/", "")
+        
     return target_model
 
-def get_embedding(text, model_name, api_key):
-    url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:embedContent?key={api_key}"
-    payload = {"model": model_name, "content": {"parts": [{"text": text}]}}
-    try:
-        res = requests.post(url, json=payload, proxies={"http": None, "https": None}, timeout=15)
-        res.raise_for_status()
-        return res.json()["embedding"]["values"]
-    except Exception as e:
-        print(f"❌ ベクトル化通信エラー: {e}")
-        return None
+# =========================================================
+# 🧠 ベクトル（Embedding）取得関数 (堅牢化・ローテーション対応)
+# =========================================================
+def get_embedding(text, max_retries=None):
+    if not text.strip():
+        return []
+    
+    if max_retries is None:
+        max_retries = max(5, len(API_KEYS) * 2)
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            client = get_client()
+            result = client.models.embed_content(
+                model=MODEL_NAME,
+                contents=text
+            )
+            return result.embeddings[0].values
+            
+        except errors.APIError as e:
+            err_str = str(e).lower()
+            if any(k in err_str for k in ["429", "quota", "resource_exhausted"]):
+                if rotate_key(): continue
+                else: time.sleep(10)
+            else:
+                if attempt == max_retries: raise e
+                time.sleep(5)
+        except Exception as e:
+            if attempt == max_retries: raise e
+            time.sleep(5)
+    return []
 
 # =========================================================
-# 🏗️ グローバルDBの構築
+# 🏁 メイン実行パイプライン
 # =========================================================
-def build_global_vector_db():
-    print("\n📦 【グローバルDB構築】デュアル・ベクトル空間（GNN-KT階層概念 ＆ 問題）を構築中...")
+def main():
+    global MODEL_NAME
     
-    selected_model = discover_embed_model(API_KEY)
-    print(f"   ✅ 使用ベクトルモデル: {selected_model}")
+    print("=== 🏁 【Ver 13.x デュアルエンジン・三つの柱 対応】グローバルDB構築プロセス起動 ===")
+    print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
+    first_key_masked = f"{API_KEYS[0][:6]}...{API_KEYS[0][-4:]}" if len(API_KEYS[0]) > 10 else "INVALID"
+    print(f"   👉 現在使用中のキー: {first_key_masked}")
     
-    if not os.path.exists(MEXT_DICT_PATH):
-        raise FileNotFoundError("❌ mext_master_dict.json が見つかりません。先に生成してください。")
-    with open(MEXT_DICT_PATH, "r", encoding="utf-8") as f:
+    print("   🔍 利用可能な最新の埋め込みモデルを探索中...")
+    try:
+        MODEL_NAME = discover_embed_model(API_KEYS[0])
+        print(f"   ✅ 使用ベクトルモデル: {MODEL_NAME}\n")
+    except Exception as e:
+        print(f"   ⚠️ モデルの探索に失敗しました（{e}）。デフォルトモデルを使用します。\n")
+    
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+    OUTPUT_FILE = os.path.join(CURRENT_DIR, "global_vector_db_cache.json")
+    
+    # 🌟 MEXTマスターV2の読み込み
+    mext_paths = [
+        os.path.join(CURRENT_DIR, "mext_master_dict.v2.json"),
+        os.path.join(CURRENT_DIR, "mext_master_dict_v2.json"),
+        os.path.join(CURRENT_DIR, "mext_master_dict.json")
+    ]
+    mext_dict_path = next((p for p in mext_paths if os.path.exists(p)), None)
+    
+    if not mext_dict_path:
+        raise FileNotFoundError("❌ mext_master_dict.v2.json (または相当ファイル) が見つかりません。")
+        
+    print(f"   📖 MEXTマスター読み込み: {os.path.basename(mext_dict_path)}")
+    with open(mext_dict_path, "r", encoding="utf-8") as f:
         mext_dict_list = json.load(f).get("mext_dictionary", [])
         mext_dict = {item["mext_code"]: item for item in mext_dict_list}
 
-    sub_dirs = [os.path.join(PARENT_DIR, d) for d in os.listdir(PARENT_DIR) if os.path.isdir(os.path.join(PARENT_DIR, d)) and "BL_sugaku" in d]
+    sub_dirs = [os.path.join(CURRENT_DIR, d) for d in os.listdir(CURRENT_DIR) if os.path.isdir(os.path.join(CURRENT_DIR, d)) and "BL_sugaku" in d]
     sub_dirs.sort()
 
-    global_concept_nodes = {}
-    global_question_nodes = {}
+    global_nodes_map = {}
+    global_questions_map = {}
     global_mext_index = {}
+    global_edges = []
+    global_alignments = []
     global_timeline_counter = 0
 
+    print(f"🔍 対象フォルダを探索し、ノードとエッジをマージします...")
+
+    # 1. データの収集とマージ
     for s_dir in sub_dirs:
-        kg_path = os.path.join(s_dir, "output_result", "final_knowledge_graph_complete.json")
-        if not os.path.exists(kg_path):
-            kg_path = os.path.join(s_dir, "output_result", "final_knowledge_graph.json")
-            if not os.path.exists(kg_path): 
-                continue
+        file_path = os.path.join(s_dir, "output_result", "final_knowledge_graph_complete.json")
+        if not os.path.exists(file_path):
+            continue
             
-        print(f"   📂 読み込み中: {os.path.basename(s_dir)}")
-        with open(kg_path, "r", encoding="utf-8") as f: 
-            kg_data = json.load(f)
-
-        bundle_name = kg_data.get("metadata", {}).get("bundle_name", os.path.basename(s_dir))
-        concepts_map = {c["concept_name"]: c for c in kg_data.get("extracted_concepts", [])}
-        
-        for c in kg_data.get("extracted_concepts", []):
-            c_name = c["concept_name"]
-            global_c_id = f"{bundle_name}_Concept_{c_name}"
-            mext_code = c.get("mext_code", "")
-            branch_code = c.get("branch_code", "")
-            competency = c.get("competency", "")
-            mext_info = mext_dict.get(mext_code, {})
-            
-            parent_concept = c.get("parent_concept", "未分類")
-            
-            prereqs_raw = c.get("prerequisite_concepts", [])
-            prereqs_list = []
-            prereqs_text_items = []
-            for p in prereqs_raw:
-                if isinstance(p, dict):
-                    p_name = p.get("concept_name", "")
-                    p_type = "必須" if p.get("dependency_type") == "mandatory" else "補足"
-                    if p_name:
-                        prereqs_list.append(p_name)
-                        prereqs_text_items.append(f"{p_name}({p_type})")
-                elif isinstance(p, str) and p:
-                    prereqs_list.append(p)
-                    prereqs_text_items.append(p)
-
-            prereqs_text = ", ".join(prereqs_text_items) if prereqs_text_items else "特になし"
-
-            comp_label = "知識・技能" if competency == "knowledge_skill" else ("思考力・判断力等" if competency == "thinking_judgment" else "一般")
-            c_composite = f"【単元】{bundle_name}\n【数理概念(アクション)】{c_name}\n【親概念】{parent_concept}\n【学習観点】{comp_label}\n【前提知識】{prereqs_text}\n【要約・公式】{c.get('summary', '')}\n"
-            
-            for v in c.get("aligned_videos", []):
-                if v.get("blackboard_ocr"): c_composite += f"【板書OCR】{v['blackboard_ocr']}\n"
-                if v.get("explanation_summary"): c_composite += f"【動画要約】{v['explanation_summary']}\n"
-
-            if mext_info:
-                c_composite += f"【指導要領階層】{mext_info.get('hierarchy', '')}\n"
-                c_composite += f"【指導要領テキスト】{mext_info.get('official_text', '')}\n"
-                c_composite += f"【解説要約】{mext_info.get('explanation_summary', '')}\n"
-
-            if global_c_id not in global_concept_nodes:
-                print(f"      🧠 [概念ベクトル化] {c_name}")
-                c_vector = get_embedding(c_composite, selected_model, API_KEY)
-                time.sleep(0.5)
+        part_name = os.path.basename(s_dir)
+        with open(file_path, "r", encoding="utf-8") as f:
+            try: data = json.load(f)
+            except json.JSONDecodeError: continue
                 
-                if c_vector:
-                    if mext_code:
-                        global_mext_index.setdefault(mext_code, []).append(global_c_id)
+        # 🛡️ バージョン・フィルター
+        engine_version = data.get("metadata", {}).get("engine_version", "")
+        if not str(engine_version).startswith("13."):
+            print(f"  ⏭️ [スキップ] {part_name} (旧バージョン: {engine_version})")
+            continue
+            
+        print(f"  📥 [読み込み中] {part_name} (Ver: {engine_version})")
+        bundle_name = data.get("metadata", {}).get("bundle_name", part_name)
+        
+        # --- アライメント情報の抽出 (タスクと問題の紐付け用) ---
+        part_alignments = data.get("alignments", [])
+        for align in part_alignments:
+            align["bundle_name"] = bundle_name
+            global_alignments.append(align)
 
-                    global_concept_nodes[global_c_id] = {
-                        "global_c_id": global_c_id,
-                        "bundle_name": bundle_name,
-                        "concept_name": c_name,
-                        "parent_concept": parent_concept,
-                        "competency": competency,
-                        "prerequisite_concepts": prereqs_raw,
-                        "prerequisite_concepts_list": prereqs_list,
-                        "summary": c.get("summary", ""),
-                        "concept_vector": c_vector,
+        # --- ノードの抽出とマージ (三つの柱と役割の定義) ---
+        node_categories = {
+            "foundation_knowledge": {"label": "基礎知識", "pillar": "知識及び技能", "role": "条件によって揺らがない純粋な数学的定義・用語（体系化の土台）"},
+            "perspective_condition": {"label": "視点・条件", "pillar": "思考力，判断力，表現力等", "role": "事象の本質を捉え直す視点・条件・思考の枠組み（レンズ）"},
+            "derived_knowledge": {"label": "再構成知識", "pillar": "思考の変容プロセス", "role": "基礎知識に視点を通した結果得られる新たな気付き（パラダイムシフト）"},
+            "tasks": {"label": "タスク（技能）", "pillar": "技能", "role": "生徒が知識を用いて実際に行う計算手順・操作アクション（問題解決のゴール）"}
+        }
+        
+        empty_edges_template = {
+            "part_of": [], "is_a": [], "subsumes": [], "relative_to": [], 
+            "applies_condition": [], "requires_logical": [], "applied_to": [], 
+            "explanation": [], "prerequisite": []
+        }
+
+        for k_type, meta_def in node_categories.items():
+            for node in data.get("nodes", {}).get(k_type, []):
+                n_id = node.get("node_id")
+                if not n_id: continue
+                
+                if n_id not in global_nodes_map:
+                    mext_code = node.get("mext_code", "")
+                    mext_info = mext_dict.get(mext_code, {})
+                    
+                    global_nodes_map[n_id] = {
+                        "global_c_id": n_id,
+                        "id": n_id,
+                        "type": k_type,
+                        "type_label": meta_def["label"],
+                        "pillar": meta_def["pillar"],
+                        "role_desc": meta_def["role"],
+                        "name": node.get("name", ""),
+                        "parent_concept": node.get("parent_concept", ""),
+                        "summary": node.get("summary", ""),
                         "mext_code": mext_code,
-                        "branch_code": branch_code,
-                        "mext_hierarchy": mext_info.get("hierarchy", "不明な階層"),
+                        "mext_hierarchy": mext_info.get("hierarchy_text", "不明な階層"),
                         "mext_official_text": mext_info.get("official_text", ""),
                         "mext_explanation": mext_info.get("explanation_summary", "解説なし"),
-                        "aligned_videos": c.get("aligned_videos", []),
+                        "aligned_videos": node.get("aligned_videos", []),
+                        "aligned_questions_text": [], 
+                        "incoming_edges": {k: [] for k in empty_edges_template},
+                        "outgoing_edges": {k: [] for k in empty_edges_template},
                         "global_timeline_index": global_timeline_counter
                     }
-                    global_timeline_counter += 1  
+                    global_timeline_counter += 1
+                else:
+                    existing_videos = [v.get("video_file") for v in global_nodes_map[n_id]["aligned_videos"]]
+                    for new_v in node.get("aligned_videos", []):
+                        if new_v.get("video_file") not in existing_videos:
+                            global_nodes_map[n_id]["aligned_videos"].append(new_v)
+                            existing_videos.append(new_v.get("video_file"))
 
-        alignments = {str(a["question_number"]): a for a in kg_data.get("alignments", [])}
-        questions = kg_data.get("questions_with_video_alignment", kg_data.get("questions", []))
-
-        for q in questions:
+        # --- 問題の抽出 ---
+        for q in data.get("questions", []):
             q_num = str(q.get("question_number", ""))
-            global_q_id = f"{bundle_name}_Q{q_num}"
-            q_text = q.get("question_text", q.get("question_text_snippet", ""))
+            q_id = f"Q_{bundle_name}_{q_num}"
             
-            align_info = alignments.get(q_num, {})
-            matched_c_name = align_info.get("matched_concept", "")
-            
-            concept_info = concepts_map.get(matched_c_name, {})
-            mext_code = concept_info.get("mext_code", "")
-            branch_code = concept_info.get("branch_code", "")
-            mext_info = mext_dict.get(mext_code, {})
-            
-            parent_concept = concept_info.get("parent_concept", "未分類")
-            q_composite = f"【単元】{bundle_name}\n【問題文】{q_text}\n【対象概念】{matched_c_name}\n【親概念】{parent_concept}\n"
-            
-            for v in q.get("aligned_videos", []):
-                if v.get("blackboard_ocr"): q_composite += f"【板書OCR】{v['blackboard_ocr']}\n"
-            
-            print(f"      📝 [問題ベクトル化] {global_q_id}")
-            q_vector = get_embedding(q_composite, selected_model, API_KEY)
-            time.sleep(0.5)
-            
-            if q_vector:
-                global_question_nodes[global_q_id] = {
-                    "global_q_id": global_q_id,
-                    "bundle_name": bundle_name,
-                    "local_q_num": q_num,
-                    "question_text": q_text,
-                    "question_vector": q_vector,
-                    "matched_concept": matched_c_name,
-                    "mext_code": mext_code,
-                    "branch_code": branch_code,
-                    "mext_hierarchy": mext_info.get("hierarchy", "不明な階層"),
-                    "mext_official_text": mext_info.get("official_text", ""),
-                    "mext_explanation": mext_info.get("explanation_summary", "解説なし"),
-                    "aligned_videos": q.get("aligned_videos", []),
-                    "global_timeline_index": global_timeline_counter
-                }
-                global_timeline_counter += 1  
+            global_questions_map[q_id] = {
+                "global_q_id": q_id,
+                "id": q_id,
+                "type": "question",
+                "bundle_name": bundle_name,
+                "question_number": q_num,
+                "question_text": q.get("question_text", ""),
+                "answer_text": q.get("answer_text", ""),
+                "aligned_videos": q.get("aligned_videos", []),
+                "global_timeline_index": global_timeline_counter
+            }
+            global_timeline_counter += 1
 
+        # --- エッジの抽出 ---
+        for edge in data.get("edges", []):
+            global_edges.append(edge)
+
+    # 2. エッジ情報の構造化紐付け
+    for edge in global_edges:
+        src = edge.get("source_id")
+        tgt = edge.get("target_id")
+        rel = edge.get("relation_type", "prerequisite")
+        reason = edge.get("reasoning", "")
+        
+        edge_data_out = {"target_id": tgt, "reasoning": reason}
+        edge_data_in = {"source_id": src, "reasoning": reason}
+
+        if src in global_nodes_map:
+            if rel not in global_nodes_map[src]["outgoing_edges"]: global_nodes_map[src]["outgoing_edges"][rel] = []
+            global_nodes_map[src]["outgoing_edges"][rel].append(edge_data_out)
+            
+        if tgt in global_nodes_map:
+            if rel not in global_nodes_map[tgt]["incoming_edges"]: global_nodes_map[tgt]["incoming_edges"][rel] = []
+            global_nodes_map[tgt]["incoming_edges"][rel].append(edge_data_in)
+
+    # 3. アライメント情報から、タスク(技能)に具体的な「問題文」を紐付け
+    for align in global_alignments:
+        b_name = align.get("bundle_name")
+        q_num = align.get("question_number")
+        q_id = f"Q_{b_name}_{q_num}"
+        
+        q_data = global_questions_map.get(q_id)
+        if not q_data: continue
+        
+        q_text_snippet = f"[問題] {q_data['question_text']}\n[解説] {q_data['answer_text']}"
+        
+        for t_id in align.get("linked_task_ids", []):
+            if t_id in global_nodes_map and global_nodes_map[t_id]["type"] == "tasks":
+                global_nodes_map[t_id]["aligned_questions_text"].append(q_text_snippet)
+
+    # 4. ベクトル化 (Embedding) 実行
+    total_items = len(global_nodes_map) + len(global_questions_map)
+    print(f"\n🧠 合計 {total_items} 件のデータをベクトル空間に埋め込みます...")
+    
+    current_count = 0
+    
+    for n_id, meta in global_nodes_map.items():
+        current_count += 1
+        print(f"  [{current_count}/{total_items}] Embedding Node: {meta['name']} ({meta['type_label']})")
+        
+        c_composite = f"【ノード分類】{meta['type_label']}\n【役割】{meta['role_desc']}\n【三つの柱】{meta['pillar']}\n【名称】{meta['name']}\n【上位概念】{meta['parent_concept']}\n【概要】{meta['summary']}\n"
+        
+        if meta.get("mext_code"):
+            c_composite += f"【指導要領階層】{meta['mext_hierarchy']}\n【指導要領解説】{meta['mext_explanation']}\n"
+        
+        if meta["incoming_edges"]:
+            prereqs = [f"理由: {e['reasoning']}" for e in meta["incoming_edges"].get("prerequisite", []) + meta["incoming_edges"].get("applies_condition", [])]
+            if prereqs: c_composite += f"【前提条件】{' / '.join(prereqs)}\n"
+        
+        if meta["type"] != "tasks":
+            for v in meta["aligned_videos"]:
+                if v.get("explanation_summary"): c_composite += f"【講義要約】{v['explanation_summary']}\n"
+        
+        if meta["type"] == "tasks":
+            for q_text in meta["aligned_questions_text"]:
+                c_composite += f"【関連する演習問題】\n{q_text}\n"
+            for v in meta["aligned_videos"]:
+                if v.get("blackboard_ocr"): c_composite += f"【解説板書(数式)】{v['blackboard_ocr']}\n"
+
+        vector = get_embedding(c_composite)
+        meta["concept_vector"] = vector
+        meta["vector"] = vector
+        
+        if meta.get("mext_code"):
+            global_mext_index.setdefault(meta["mext_code"], []).append(n_id)
+
+        time.sleep(0.5)
+
+    for q_id, meta in global_questions_map.items():
+        current_count += 1
+        print(f"  [{current_count}/{total_items}] Embedding Question: {meta['bundle_name']} 問題 {meta['question_number']}")
+        
+        q_composite = f"【単元】{meta['bundle_name']}\n【問題・演習】\n問題文: {meta['question_text']}\n解説: {meta['answer_text']}\n"
+        for v in meta["aligned_videos"]:
+            if v.get("blackboard_ocr"): q_composite += f"【板書OCR】{v['blackboard_ocr']}\n"
+
+        vector = get_embedding(q_composite)
+        meta["question_vector"] = vector
+        meta["vector"] = vector
+        time.sleep(0.5)
+
+    # 5. 出力保存
     db_payload = {
-        "embed_model": selected_model,
+        "embed_model": MODEL_NAME,
         "metadata": {
-            "engine_version": "12.0_gnn_kt_vector_db",
-            "embed_model": selected_model
+            "engine_version": "13.3_ontology_pillar_vector_db",
+            "embed_model": MODEL_NAME
         },
-        "global_concept_nodes": global_concept_nodes,
-        "global_question_nodes": global_question_nodes,
+        "global_concept_nodes": global_nodes_map,
+        "global_question_nodes": global_questions_map,
         "global_mext_index": global_mext_index
     }
     
-    with open(GLOBAL_DB_PATH, "w", encoding="utf-8") as f: 
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(db_payload, f, ensure_ascii=False, indent=2)
-    print(f"\n✅ デュアル・ベクトル空間DBの構築完了！ 💾 {GLOBAL_DB_PATH}")
 
-def main():
-    print("🚀 [スタサプRAG] バックエンドDB構築ツール起動 (Ver 12.0 GNN-KT対応)...")
-    build_global_vector_db()
-    print("🎉 すべての処理が完了しました。フロントエンド (app.py) を起動して検索をお試しください。")
+    print("\n=========================================================")
+    print(f"🎉 グローバルベクトルDB (Ver 13.x 究極オントロジー体現版) の構築完了！")
+    print(f"💾 保存先: {OUTPUT_FILE}")
+    print(f"📊 登録ノード: {len(global_nodes_map)} 件 / 登録問題: {len(global_questions_map)} 件")
+    print("=========================================================")
 
 if __name__ == "__main__":
     main()
