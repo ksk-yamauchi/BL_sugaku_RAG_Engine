@@ -1,14 +1,16 @@
 # 🎓 スタサプ RAG ナレッジエンジン ＆ 次世代AIチューター
 
-**〜 国の学習指導要領と4階層オントロジー（GNN-KT）に基づく、個別最適なAI指導・学習アシスタントパートナー 〜**
+**〜 「GNN-KT（動詞）」×「オントロジー（名詞）」のデュアルエンジンが実現する、個別最適なAI指導・学習アシスタントパートナー 〜**
 
 ---
 
 ## 🌟 プロジェクト概要
 
-本プロジェクトは、スタディサプリの各種教材データ（PDF、講義動画、字幕、文部科学省学習指導要領コード）を統合解析し、**4階層オントロジー（指導要領 ➔ 単元 ➔ 親概念 ➔ 具体的学習アクション）** および **GNN-KT（Graph Neural Network - Knowledge Tracing）** に基づく次世代の教育コンテンツ基盤を構築するプロジェクトです。
+本プロジェクトは、スタディサプリの各種教材データ（PDF、講義動画、字幕、文部科学省学習指導要領コード）を統合解析し、**「GNN-KT（知識追跡）の計算対象となるタスク（動詞）」**と**「意味ネットワークを構成する知識・視点（名詞）」**を完全に両立させた【デュアルエンジン・オントロジー】を構築するプロジェクトです。
 
-単なるテキスト類似度による検索を超え、「なぜその問題で躓いているのか」「前提となるどの概念に戻って復習すべきか」をグラフ構造上で推論し、先生（for Teachers：FT）と生徒（Learn）双方に最高品質の教育体験を提供します。
+さらに、テキスト教材の静的な知識にとどまらず、動画内の先生の「口頭解説」や「板書」から暗黙知をAIが動的に発見し、自己増殖（Dynamic Ontology）する次世代の教育コンテンツ基盤を実現しています。
+
+単なるテキスト類似度による検索を超え、「なぜその問題で躓いているのか」「前提となるどの概念や見方に戻って復習すべきか」をグラフ構造上で推論し、先生（for Teachers：FT）と生徒（Learn）双方に最高品質の教育体験を提供します。
 
 ---
 
@@ -16,7 +18,7 @@
 
 ### 🏫 教員向け機能（FT: for Teachers）
 * **習熟度の可視化（Semantic Zoom ＆ GNN-KT）**:
-  クラス全体の学習ログから、単元レベル（マクロ）から極小な躓きアクション（ミクロ）までGoogleマップのように自在にズームイン・アウトして真の不理解原因を特定。「知識・技能」「思考・判断・表現」の観点タグを用いた多角的な分析も可能。
+  クラス全体の学習ログから、単元レベル（マクロ）から極小な躓きアクション（ミクロ）までGoogleマップのように自在にズームイン・アウトして真の不理解原因を特定。
 * **年間学習計画（シラバス）マッチング**:
   校内の年間指導計画表（PDF/テキスト）を流し込むだけで、シラバス特有の省略表現を自動補完し、毎週の授業に対応する最適教材プレイリストを自動生成。
 * **マルチモーダル画像RAG（自作プリントマッチング）**:
@@ -49,22 +51,19 @@ BL_sugaku/
 │   ├── 📄 05_frontend_applications.md       # フロントエンドUI詳細仕様書
 │   ├── 📄 06_image_rag_prompt_design.md     # マルチモーダル画像RAG 専用プロンプト仕様書
 │   ├── 📄 07_syllabus_mapping_prompt.md     # シラバスマッチング 専用プロンプト仕様書
-│   ├── 📄 08_mock_log_simulation_spec.md    # ダミー学習ログ生成 ＆ GNN-KTシミュレーション仕様書
-│   ├── 📄 GNN-KTを見据えたバックエンド改修.md  # GNN-KT開発ロードマップ
-│   ├── 📄 RAG化をベースとした次世代機能構想(FT).md
-│   ├── 📄 RAG化をベースとした次世代機能構想(Learn).md
-│   └── 📄 RAG化をベースとした次世代機能構想(FT&Learn同時).md
+│   └── 📄 08_mock_log_simulation_spec.md    # ダミー学習ログ生成 ＆ GNN-KTシミュレーション仕様書
 │
 ├── 🏭 BL_sugaku_I_Backend/                  # バックエンド (解析エンジン ＆ DB構築)
 │   ├── 📄 .env                             # バックエンド用 APIキー設定 (複数キー自動ローテーション対応)
-│   ├── 📄 mext_master_dict.json            # 指導要領マスター辞書
-│   ├── 📄 concept_branch_master.json       # 全講共通 独自概念枝番マスター
+│   ├── 📄 mext_master_dict.json            # 【自動生成】統合指導要領マスター辞書
+│   ├── 📄 knowledge_master.json            # 【自動生成】全講共通 独自知識マスター
+│   ├── 📄 task_master.json                 # 【自動生成】全講共通 独自タスクマスター
 │   ├── 📄 lecture_index_master.json        # 全講共通 目次マスター
 │   ├── 📜 build_mext_master_dict.py        # 指導要領辞書生成スクリプト
 │   ├── 📜 build_index_master.py            # 目次マスター生成スクリプト
 │   ├── 📜 run_single_part_batch.py         # PART一括解析バッチ処理スクリプト
-│   ├── 📜 build_vector_db.py               # グローバルベクトルDB構築スクリプト (Ver 12.0 GNN-KT対応)
-│   ├── 📜 export_global_obsidian_vault_mext.py # Obsidian用ZIPパッケージ出力スクリプト (Ver 12.0)
+│   ├── 📜 build_vector_db.py               # グローバルベクトルDB構築スクリプト
+│   ├── 📜 export_global_obsidian_vault_mext.py # Obsidian用ZIPパッケージ出力スクリプト
 │   ├── 📜 generate_mock_logs.py            # GNN-KT検証用 ダミー学習ログ生成スクリプト
 │   ├── 📜 visualize_syllabus_content.py    # シラバス ➔ コンテンツ可視化テストスクリプト (対話型CLI)
 │   ├── 📄 global_vector_db_cache.json      # 【成果物】統合ベクトルキャッシュDB
@@ -73,10 +72,10 @@ BL_sugaku/
 │   └── 📁 BL_sugaku_Ⅰ_XX-Y/                # PART単位の素材データ＆個別解析スクリプト
 │       ├── 📄 BL_sugaku_I_XX-Y.pdf
 │       ├── 📄 *.mp4 / *.vtt
-│       ├── 📜 phase0_pdf_to_md.py          # Phase 0: PDF変換 (Ver 1.2 動的再アップロード対応)
-│       ├── 📜 phase1_text_analysis_ontology.py # Phase 1: 階層オントロジー解析 (Ver 12.1 自動修復パース対応)
-│       ├── 📜 phase2_video_analysis.py     # Phase 2: 動画解析 (Ver 2.5.4 403リカバリー対応) 
-│       └── 📜 phase3_alignment_graph.py    # Phase 3: データ結合 (Ver 12.1 ファジーマッチ・自動修復パース対応)
+│       ├── 📜 phase0_pdf_to_md.py          # Phase 0: PDF変換 (動的再アップロード対応)
+│       ├── 📜 phase1_text_analysis_ontology.py # Phase 1: デュアルエンジン・オントロジー解析 (Ver 13.x)
+│       ├── 📜 phase2_video_analysis.py     # Phase 2: 動画解析 (403リカバリー対応) 
+│       └── 📜 phase3_alignment_graph.py    # Phase 3: 動的補完 & 粒度吸収アライメント (Ver 13.x)
 │
 └── 📱 BL_sugaku_I_Frontend/                 # フロントエンド (Streamlit Web UI)
     ├── 📄 .env                             # フロントエンド用 APIキー設定
@@ -151,7 +150,7 @@ streamlit run app_ft.py
 より詳細な仕様や設計思想については、`docs/` フォルダー内の各種仕様書をご参照ください。
 
 1. [🏛️ システムアーキテクチャ & オントロジー構造 (`docs/01_system_architecture.md`)](docs/01_system_architecture.md)
-   * 4階層オントロジーモデル、GNN-KT用データ拡張仕様（前提知識の重み付け・観点タグ）、全体のディレクトリ詳細
+   * デュアルエンジン（GNN-KT×オントロジー）モデル、動的オントロジー補完仕様、全体のディレクトリ詳細
 2. [🔍 検索エンジンの仕組み (`docs/02_search_engine.md`)](docs/02_search_engine.md)
    * サニタイズ処理、ハイブリッドスコアリング、Graph RAG探索アルゴリズム
 3. [🔄 パイプライン処理フロー & セットアップ手順 (`docs/03_pipeline_and_setup.md`)](docs/03_pipeline_and_setup.md)
@@ -161,8 +160,8 @@ streamlit run app_ft.py
 5. [📱 フロントエンドアプリケーション（UI）詳細仕様 (`docs/05_frontend_applications.md`)](docs/05_frontend_applications.md)
    * 生徒向けAIチューター(`app.py`)と教員向けダッシュボード(`app_ft.py`)のUI/UX設計思想および詳細機能仕様
 6. [📸 マルチモーダル画像RAG 専用プロンプト設計書 (`docs/06_image_rag_prompt_design.md`)](docs/06_image_rag_prompt_design.md)
-   * 画像解析からスタサプオントロジー（Level 3推論・前提知識・エラー分析）へ変換するGemini Vision用システムプロンプト
+   * 画像解析からスタサプオントロジーへ変換するGemini Vision用システムプロンプト
 7. [📅 シラバスマッチング 専用プロンプト設計書 (`docs/07_syllabus_mapping_prompt.md`)](docs/07_syllabus_mapping_prompt.md)
-   * 学校独自のシラバス表記（省略・並列表記）を補完し、スタサプオントロジー（Level 3）に正確に翻訳・紐付けするためのシステムプロンプト
+   * 学校独自のシラバス表記を補完し、スタサプオントロジーに正確に翻訳・紐付けするためのシステムプロンプト
 8. [📝 ダミー学習ログ生成 ＆ GNN-KTシミュレーション仕様書 (`docs/08_mock_log_simulation_spec.md`)](docs/08_mock_log_simulation_spec.md)
    * ペルソナ定義、必須/補足前提関係に基づく連鎖ペナルティのアルゴリズム、シミュレーション出力データのスキーマ
