@@ -38,7 +38,7 @@ TYPE_PREFIX = {
 }
 
 def main():
-    print("🚀 [Ver 13.4.1 スマートリンク・エンティティ統合対応] Obsidian Vault パッケージ化を開始します...")
+    print("🚀 [Ver 13.4.2 動画ノードリッチ復元版] Obsidian Vault パッケージ化を開始します...")
 
     if not os.path.exists(DB_PATH):
         raise FileNotFoundError(f"❌ {DB_PATH} が見つかりません。先に build_vector_db.py を実行してください。")
@@ -70,6 +70,7 @@ def main():
     for qid, qdata in questions.items():
         b_name = clean_filename(qdata.get('bundle_name', 'Unknown'))
         q_num = qdata.get('question_number', 'X')
+        # 🌟 "_Q" を除去し、アンダースコアで直接繋ぐ
         base_name = f"[問題] {b_name}_{q_num}"
         id_to_filename[qid] = base_name
 
@@ -98,12 +99,16 @@ def main():
                     global_parent_concepts[p_name] = set()
                 global_parent_concepts[p_name].add(filename)
 
+        # 🌟 動画の集計 (リッチな分類に対応)
         for v in ndata.get("aligned_videos", []):
             v_file = v.get("video_file")
             if v_file:
                 if v_file not in global_videos:
-                    global_videos[v_file] = {"nodes": set(), "questions": set()}
-                global_videos[v_file]["nodes"].add(filename)
+                    global_videos[v_file] = {"bundles": set(), "concepts": set(), "tasks": set(), "questions_direct": set(), "questions_prereq": set()}
+                if ndata.get("type") == "tasks":
+                    global_videos[v_file]["tasks"].add(f"[[{filename}]]")
+                else:
+                    global_videos[v_file]["concepts"].add(f"[[{filename}]]")
 
         pillar_tag = clean_tag_name(ndata.get("pillar", "未定義"))
         node_type = ndata.get("type", "unknown")
@@ -203,13 +208,20 @@ def main():
     print("   📝 問題ノードのMarkdownを生成中...")
     for qid, qdata in questions.items():
         filename = id_to_filename[qid]
-        
+        b_name = qdata.get("bundle_name", "Unknown_Bundle")
+
+        # 🌟 動画ノードの情報をリッチに収集
         for v in qdata.get("aligned_videos", []):
             v_file = v.get("video_file")
+            align_type = v.get("alignment_type", "")
             if v_file:
                 if v_file not in global_videos:
-                    global_videos[v_file] = {"nodes": set(), "questions": set()}
-                global_videos[v_file]["questions"].add(filename)
+                    global_videos[v_file] = {"bundles": set(), "concepts": set(), "tasks": set(), "questions_direct": set(), "questions_prereq": set()}
+                global_videos[v_file]["bundles"].add(b_name)
+                if align_type in ["direct_explanation", "task_walkthrough"]:
+                    global_videos[v_file]["questions_direct"].add(f"[[{filename}]]")
+                else:
+                    global_videos[v_file]["questions_prereq"].add(f"[[{filename}]]")
 
         # 🌟 JSON上の \n をMarkdownの改行に変換
         q_text = qdata.get('question_text', '').replace('\\n', '\n')
@@ -244,6 +256,41 @@ def main():
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
             f.write(content)
 
+    # 🌟 動画ノードをリッチに復元 (Ver 12.0 互換の表示レイアウト)
+    for v_file, v_data in global_videos.items():
+        filename = f"【動画】{clean_filename(v_file)}"
+        content = f"---\ntags:\n  - node/video\n---\n# {filename}\n\n"
+        
+        if v_data.get("bundles"):
+            content += "## 🏛️ 所属単元\n"
+            for b in sorted(list(v_data["bundles"])):
+                content += f"- [[{clean_filename(b)}]]\n"
+            content += "\n"
+            
+        if v_data.get("concepts") or v_data.get("tasks"):
+            content += "## 🧠 📘 関連する知識・タスク（インプット講義）\n"
+            for n in sorted(list(v_data.get("concepts", set()))): 
+                content += f"- {n}\n"
+            for n in sorted(list(v_data.get("tasks", set()))): 
+                content += f"- {n}\n"
+            content += "\n"
+            
+        if v_data.get("questions_direct") or v_data.get("questions_prereq"):
+            content += "## 📝 紐付けられた確認問題\n"
+            if v_data.get("questions_direct"):
+                content += "### 📗 【例題演習】（直接解説している問題）\n"
+                for q in sorted(list(v_data["questions_direct"])):
+                    content += f"- {q}\n"
+                content += "\n"
+            if v_data.get("questions_prereq"):
+                content += "### 📘 【概念理解】（前提概念として紐づく問題）\n"
+                for q in sorted(list(v_data["questions_prereq"])):
+                    content += f"- {q}\n"
+                content += "\n"
+        
+        with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
+            f.write(content)
+
     print("   📦 ZIPパッケージに圧縮中...")
     zip_path = os.path.join(PARENT_DIR, f"{VAULT_DIR_NAME}.zip")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -253,7 +300,7 @@ def main():
                 arcname = os.path.relpath(file_path, PARENT_DIR)
                 zipf.write(file_path, arcname)
 
-    print(f"🎉 🎉 【成功】Obsidian Vault（スマートリンク対応・完全版）の生成完了！\n💾 保存先: {zip_path}")
+    print(f"🎉 🎉 【成功】Obsidian Vault（動画ノードリッチ情報復元版）の生成完了！\n💾 保存先: {zip_path}")
 
 if __name__ == "__main__":
     main()
