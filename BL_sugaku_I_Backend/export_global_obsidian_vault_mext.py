@@ -1,5 +1,3 @@
-### 💻 `export_global_obsidian_vault_mext.py` (読みやすさ整形・完全互換版)
-
 import os
 import re
 import json
@@ -20,7 +18,6 @@ def clean_tag_name(name):
     cleaned = re.sub(r'_+', '_', cleaned).strip('_')
     return cleaned if cleaned else "untitled"
 
-# 9つのエッジの日本語ラベル定義
 EDGE_LABELS = {
     "part_of": "🧩 構成要素 (part_of)",
     "is_a": "🏷️ 特殊例・分類 (is_a)",
@@ -57,7 +54,6 @@ def main():
     nodes = db.get("global_concept_nodes", {})
     questions = db.get("global_question_nodes", {})
 
-    # IDから安全なファイル名へのマッピングを作成
     id_to_filename = {}
     name_to_id = {}
     used_names = set()
@@ -74,7 +70,6 @@ def main():
     for qid, qdata in questions.items():
         b_name = clean_filename(qdata.get('bundle_name', 'Unknown'))
         q_num = qdata.get('question_number', 'X')
-        # 🌟 "_Q" を除去し、アンダースコアで直接繋ぐ
         base_name = f"[問題] {b_name}_{q_num}"
         id_to_filename[qid] = base_name
 
@@ -82,7 +77,6 @@ def main():
     global_videos = {}
     node_children = {nid: set() for nid in nodes}
 
-    # 🌟 子ノードの逆引きリストを集計
     for nid, ndata in nodes.items():
         p_name = ndata.get("parent_concept", "未分類")
         if p_name in name_to_id:
@@ -94,20 +88,16 @@ def main():
         p_name = ndata.get("parent_concept", "未分類")
         parent_link_str = ""
 
-        # 親概念リンクの生成（スマートリンク）
         if p_name != "未分類":
             if p_name in name_to_id:
-                # 実体ノードが存在する場合は直接リンク（重複ダミーハブを防止）
                 parent_link_str = f"[[{id_to_filename[name_to_id[p_name]]}]]"
             else:
-                # 実体がない場合のみダミーハブを作成
                 p_filename = f"【親概念】{clean_filename(p_name)}"
                 parent_link_str = f"[[{p_filename}]]"
                 if p_name not in global_parent_concepts:
                     global_parent_concepts[p_name] = set()
                 global_parent_concepts[p_name].add(filename)
 
-        # 動画の集計
         for v in ndata.get("aligned_videos", []):
             v_file = v.get("video_file")
             if v_file:
@@ -115,7 +105,6 @@ def main():
                     global_videos[v_file] = {"nodes": set(), "questions": set()}
                 global_videos[v_file]["nodes"].add(filename)
 
-        # Markdown生成
         pillar_tag = clean_tag_name(ndata.get("pillar", "未定義"))
         node_type = ndata.get("type", "unknown")
         
@@ -133,7 +122,7 @@ def main():
         if parent_link_str:
             content += f"- **上位概念**: {parent_link_str}\n"
         
-        # \n を実際の改行に変換
+        # 🌟 JSON上の \n をMarkdownの改行に変換
         summary_text = ndata.get('summary', '').replace('\\n', '\n')
         content += f"\n> **【概要】**\n> {summary_text}\n\n"
 
@@ -144,7 +133,6 @@ def main():
             content += f"\n> **【公式テキスト】**\n> {ndata.get('mext_official_text', '')}\n"
             content += f"\n> **【解説要約】**\n> {ndata.get('mext_explanation', '')}\n\n"
 
-        # 🌟 逆引き：子ノード一覧を表示
         if node_children[nid]:
             content += f"## 🔽 属する知識・タスク (下位概念)\n"
             for child in sorted(list(node_children[nid])):
@@ -153,7 +141,6 @@ def main():
 
         content += f"## 🔗 思考の軌跡 (ネットワーク)\n"
         
-        # ⬅️ Incoming Edges
         content += f"### ⬅️ 入ってくる関係 (前提・適用される条件など)\n"
         in_edges = ndata.get("incoming_edges", {})
         has_in = False
@@ -166,12 +153,11 @@ def main():
                     src_name = id_to_filename.get(src_id, src_id)
                     content += f"- [[{src_name}]]\n"
                     if item.get("reasoning"):
-                        content += f"  - 💡 理由: {item['reasoning']}\n"
+                        content += f"  - 💡 理由: {item['reasoning'].replace('\\n', '\n')}\n"
         if not has_in:
             content += "- 特記なし\n"
         content += "\n"
 
-        # ➡️ Outgoing Edges
         content += f"### ➡️ 出ていく関係 (応用・適用先など)\n"
         out_edges = ndata.get("outgoing_edges", {})
         has_out = False
@@ -184,12 +170,11 @@ def main():
                     tgt_name = id_to_filename.get(tgt_id, tgt_id)
                     content += f"- [[{tgt_name}]]\n"
                     if item.get("reasoning"):
-                        content += f"  - 💡 理由: {item['reasoning']}\n"
+                        content += f"  - 💡 理由: {item['reasoning'].replace('\\n', '\n')}\n"
         if not has_out:
             content += "- 特記なし\n"
         content += "\n"
 
-        # 動画リンク
         if ndata.get("aligned_videos"):
             content += f"## 🎬 紐づく講義・解説動画\n"
             for v in ndata["aligned_videos"]:
@@ -197,15 +182,14 @@ def main():
                 time_str = f"`{v.get('start_time', '')}`〜`{v.get('end_time', '')}`"
                 content += f"- **[[【動画】{clean_filename(v_file)}]]** ({time_str})\n"
                 if v.get("blackboard_ocr"):
-                    # 🌟 箇条書きが崩れないように <br> で改行
-                    ocr_text = v['blackboard_ocr'].replace('\\n', '<br>')
+                    # 🌟 JSON上の \n をMarkdownの行末スペース2つを用いた改行に変換
+                    ocr_text = v['blackboard_ocr'].replace('\\n', '  \n    ')
                     content += f"  - 📝 板書OCR: {ocr_text}\n"
                 if v.get("explanation_summary"):
-                    exp_text = v['explanation_summary'].replace('\\n', '<br>')
+                    exp_text = v['explanation_summary'].replace('\\n', '  \n    ')
                     content += f"  - 💬 解説要約: {exp_text}\n"
             content += "\n"
 
-        # 演習問題リンク
         q_texts = ndata.get("aligned_questions_text", [])
         if q_texts:
             content += f"## 📝 関連する演習問題\n"
@@ -227,6 +211,7 @@ def main():
                     global_videos[v_file] = {"nodes": set(), "questions": set()}
                 global_videos[v_file]["questions"].add(filename)
 
+        # 🌟 JSON上の \n をMarkdownの改行に変換
         q_text = qdata.get('question_text', '').replace('\\n', '\n')
         a_text = qdata.get('answer_text', '').replace('\\n', '\n')
 
@@ -244,7 +229,7 @@ def main():
                 time_str = f"`{v.get('start_time', '')}`〜`{v.get('end_time', '')}`"
                 content += f"- **[[【動画】{clean_filename(v_file)}]]** ({time_str})\n"
                 if v.get("blackboard_ocr"):
-                    ocr_text = v['blackboard_ocr'].replace('\\n', '<br>')
+                    ocr_text = v['blackboard_ocr'].replace('\\n', '  \n    ')
                     content += f"  - 📝 板書OCR: {ocr_text}\n"
 
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
@@ -256,19 +241,6 @@ def main():
         content = f"---\ntags:\n  - node/parent_concept\n---\n# {filename}\n\n## 🔽 属する知識・タスク\n"
         for child in sorted(list(children)):
             content += f"- [[{child}]]\n"
-        with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
-            f.write(content)
-
-    for v_file, v_data in global_videos.items():
-        filename = f"【動画】{clean_filename(v_file)}"
-        content = f"---\ntags:\n  - node/video\n---\n# {filename}\n\n"
-        content += f"## 🧠 紐づく知識・タスク\n"
-        for n in sorted(list(v_data["nodes"])):
-            content += f"- [[{n}]]\n"
-        content += f"\n## 📝 紐づく問題\n"
-        for q in sorted(list(v_data["questions"])):
-            content += f"- [[{q}]]\n"
-        
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
             f.write(content)
 
