@@ -1,5 +1,3 @@
-### 💻 `phase2_video_analysis.py` (Ver 2.5.9 LaTeXエスケープ徹底版)
-
 import json
 import os
 import re
@@ -221,7 +219,7 @@ def detect_video_role(vtt_content, video_name, textbook_content=""):
 # 🏁 メイン実行パイプライン
 # =========================================================
 def main():
-    print(f"=== 🎬 [Phase 2 Ver 2.5.9] LaTeXエスケープ徹底版 起動 ===")
+    print(f"=== 🎬 [Phase 2 Ver 2.5.11] 中問・小問対応アセンブリ強化版 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
 
     first_key_masked = f"{API_KEYS[0][:6]}...{API_KEYS[0][-4:]}" if len(API_KEYS[0]) > 10 else "INVALID"
@@ -369,9 +367,11 @@ def main():
                     print(f"  ├─ ✂️ 末尾のノイズセグメントを自動カット: '{last_seg.get('topic')}'")
                     segments.pop(-1)
 
-        # 5. トピック名の正規化処理 (🌟 全ロール対応・クレンジング強化)
+        # 5. トピック名の正規化処理 (🌟 中問・小問対応アセンブリ強化)
+        current_chumon = ""
         current_shomon = ""
         current_edamon = ""
+
         for seg in segments:
             original_topic = seg.get("topic", "")
             
@@ -383,34 +383,47 @@ def main():
             cleaned_topic = re.sub(r"^\[?例題\]?\s*", "", cleaned_topic)
             cleaned_topic = re.sub(r"^大問\s*\d+\s*", "", cleaned_topic)
             cleaned_topic = re.sub(r"【?問題\s*\d*】?\s*", "", cleaned_topic)
+            cleaned_topic = re.sub(r"問\s*\d+\s*", "", cleaned_topic)
             cleaned_topic = re.sub(r"要点\s*[①②③④⑤⑥⑦⑧⑨⑩\d]*\s*[:：]?\s*", "", cleaned_topic)
             cleaned_topic = re.sub(r"Point\s*Pickup\s*[:：]?\s*", "", cleaned_topic, flags=re.IGNORECASE)
             
-            cleaned_topic = re.sub(r"\[\d+\]", "", cleaned_topic)
             cleaned_topic = re.sub(r"^[\]\}><\-\s:\x2d\u2010-\u2015\u2212]+", "", cleaned_topic)
             cleaned_topic = re.sub(r"\s+", " ", cleaned_topic).strip()
 
             if role == "exercise_walkthrough":
+                # 🌟 中問、小問、枝問の抽出 (文脈保持のために current 変数を更新)
+                chumon_match = re.search(r"\[([1-9]\d*)\]", original_topic)
                 shomon_match = re.search(r"\(([1-9]\d*)\)", original_topic)
                 edamon_match = re.search(r"\(([ivx]+)\)|小問\(([ivx]+)\)", original_topic, re.IGNORECASE)
 
+                if chumon_match:
+                    new_chumon = f"[{chumon_match.group(1)}]"
+                    if new_chumon != current_chumon:
+                        current_chumon = new_chumon
+                        current_shomon = ""
+                        current_edamon = ""
+                
                 if shomon_match:
                     new_shomon = f"({shomon_match.group(1)})"
                     if new_shomon != current_shomon:
                         current_shomon = new_shomon
                         current_edamon = ""
+                        
                 if edamon_match:
                     val = edamon_match.group(1) or edamon_match.group(2)
                     current_edamon = f"({val.lower()})"
                 
+                # 🌟 本文から番号要素を完全に削除
                 topic_body = cleaned_topic
+                topic_body = re.sub(r"\[[1-9]\d*\]", "", topic_body)
                 topic_body = re.sub(r"\([1-9]\d*\)", "", topic_body)
                 topic_body = re.sub(r"\([ivx]+\)", "", topic_body, flags=re.IGNORECASE)
-                topic_body = re.sub(r"^\s*", "", topic_body)
+                topic_body = re.sub(r"^\s*", "", topic_body).strip()
 
-                # 🌟 [例題] プレフィックスを完全に排除し、大問ベースの組み立てに統一
-                parts = []
+                # 🌟 順番通りに再組み立て（アセンブリ）
+                parts = ["[例題]"]
                 if question_number: parts.append(f"大問{question_number}")
+                if current_chumon: parts.append(current_chumon)
                 if current_shomon: parts.append(current_shomon)
                 if current_edamon: parts.append(current_edamon)
                 if topic_body: parts.append(topic_body)
@@ -428,7 +441,7 @@ def main():
         time.sleep(3)
 
     output_data = {
-        "engine_version": "2.5.9_latex_escaped",
+        "engine_version": "2.5.11_topic_hierarchy_assembled",
         "videos": all_video_maps
     }
 

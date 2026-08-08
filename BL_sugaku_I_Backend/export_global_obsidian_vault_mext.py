@@ -1,4 +1,4 @@
-### 💻 `export_global_obsidian_vault_mext.py` (改行反映 ＆ _Q除去版)
+### 💻 `export_global_obsidian_vault_mext.py` (読みやすさ整形・完全互換版)
 
 import os
 import re
@@ -41,7 +41,7 @@ TYPE_PREFIX = {
 }
 
 def main():
-    print("🚀 [Ver 13.x 新オントロジー完全対応] Obsidian Vault パッケージ化を開始します...")
+    print("🚀 [Ver 13.4.1 スマートリンク・エンティティ統合対応] Obsidian Vault パッケージ化を開始します...")
 
     if not os.path.exists(DB_PATH):
         raise FileNotFoundError(f"❌ {DB_PATH} が見つかりません。先に build_vector_db.py を実行してください。")
@@ -59,6 +59,7 @@ def main():
 
     # IDから安全なファイル名へのマッピングを作成
     id_to_filename = {}
+    name_to_id = {}
     used_names = set()
 
     for nid, ndata in nodes.items():
@@ -68,6 +69,7 @@ def main():
             base_name = f"{base_name}_{nid}"
         used_names.add(base_name)
         id_to_filename[nid] = base_name
+        name_to_id[ndata['name']] = nid
 
     for qid, qdata in questions.items():
         b_name = clean_filename(qdata.get('bundle_name', 'Unknown'))
@@ -78,17 +80,32 @@ def main():
 
     global_parent_concepts = {}
     global_videos = {}
+    node_children = {nid: set() for nid in nodes}
+
+    # 🌟 子ノードの逆引きリストを集計
+    for nid, ndata in nodes.items():
+        p_name = ndata.get("parent_concept", "未分類")
+        if p_name in name_to_id:
+            node_children[name_to_id[p_name]].add(id_to_filename[nid])
 
     print("   🧠 ノード群 (4つの分類) のMarkdownを生成中...")
     for nid, ndata in nodes.items():
         filename = id_to_filename[nid]
-        
-        # 親概念の集計
         p_name = ndata.get("parent_concept", "未分類")
+        parent_link_str = ""
+
+        # 親概念リンクの生成（スマートリンク）
         if p_name != "未分類":
-            if p_name not in global_parent_concepts:
-                global_parent_concepts[p_name] = set()
-            global_parent_concepts[p_name].add(filename)
+            if p_name in name_to_id:
+                # 実体ノードが存在する場合は直接リンク（重複ダミーハブを防止）
+                parent_link_str = f"[[{id_to_filename[name_to_id[p_name]]}]]"
+            else:
+                # 実体がない場合のみダミーハブを作成
+                p_filename = f"【親概念】{clean_filename(p_name)}"
+                parent_link_str = f"[[{p_filename}]]"
+                if p_name not in global_parent_concepts:
+                    global_parent_concepts[p_name] = set()
+                global_parent_concepts[p_name].add(filename)
 
         # 動画の集計
         for v in ndata.get("aligned_videos", []):
@@ -113,10 +130,10 @@ def main():
         content += f"- **役割分類**: {ndata.get('type_label', '')}\n"
         content += f"- **役割定義**: {ndata.get('role_desc', '')}\n"
         content += f"- **三つの柱**: {ndata.get('pillar', '')}\n"
-        if p_name != "未分類":
-            content += f"- **上位概念**: [[【親概念】{clean_filename(p_name)}]]\n"
+        if parent_link_str:
+            content += f"- **上位概念**: {parent_link_str}\n"
         
-        # 🌟 \n を実際の改行に変換
+        # \n を実際の改行に変換
         summary_text = ndata.get('summary', '').replace('\\n', '\n')
         content += f"\n> **【概要】**\n> {summary_text}\n\n"
 
@@ -126,6 +143,13 @@ def main():
             content += f"- **コード**: `{ndata['mext_code']}`\n"
             content += f"\n> **【公式テキスト】**\n> {ndata.get('mext_official_text', '')}\n"
             content += f"\n> **【解説要約】**\n> {ndata.get('mext_explanation', '')}\n\n"
+
+        # 🌟 逆引き：子ノード一覧を表示
+        if node_children[nid]:
+            content += f"## 🔽 属する知識・タスク (下位概念)\n"
+            for child in sorted(list(node_children[nid])):
+                content += f"- [[{child}]]\n"
+            content += "\n"
 
         content += f"## 🔗 思考の軌跡 (ネットワーク)\n"
         
@@ -143,7 +167,8 @@ def main():
                     content += f"- [[{src_name}]]\n"
                     if item.get("reasoning"):
                         content += f"  - 💡 理由: {item['reasoning']}\n"
-        if not has_in: content += "- 特記なし\n"
+        if not has_in:
+            content += "- 特記なし\n"
         content += "\n"
 
         # ➡️ Outgoing Edges
@@ -160,7 +185,8 @@ def main():
                     content += f"- [[{tgt_name}]]\n"
                     if item.get("reasoning"):
                         content += f"  - 💡 理由: {item['reasoning']}\n"
-        if not has_out: content += "- 特記なし\n"
+        if not has_out:
+            content += "- 特記なし\n"
         content += "\n"
 
         # 動画リンク
@@ -170,16 +196,20 @@ def main():
                 v_file = v.get("video_file", "")
                 time_str = f"`{v.get('start_time', '')}`〜`{v.get('end_time', '')}`"
                 content += f"- **[[【動画】{clean_filename(v_file)}]]** ({time_str})\n"
-                if v.get("blackboard_ocr"): content += f"  - 📝 板書OCR: {v['blackboard_ocr']}\n"
-                if v.get("explanation_summary"): content += f"  - 💬 解説要約: {v['explanation_summary']}\n"
+                if v.get("blackboard_ocr"):
+                    # 🌟 箇条書きが崩れないように <br> で改行
+                    ocr_text = v['blackboard_ocr'].replace('\\n', '<br>')
+                    content += f"  - 📝 板書OCR: {ocr_text}\n"
+                if v.get("explanation_summary"):
+                    exp_text = v['explanation_summary'].replace('\\n', '<br>')
+                    content += f"  - 💬 解説要約: {exp_text}\n"
             content += "\n"
 
-        # 演習問題リンク (タスクノード用)
+        # 演習問題リンク
         q_texts = ndata.get("aligned_questions_text", [])
         if q_texts:
             content += f"## 📝 関連する演習問題\n"
             for q_text in q_texts:
-                # 🌟 \n を実際の改行に変換
                 clean_q_text = q_text.replace('\\n', '\n')
                 content += f"```text\n{clean_q_text}\n```\n"
 
@@ -197,7 +227,6 @@ def main():
                     global_videos[v_file] = {"nodes": set(), "questions": set()}
                 global_videos[v_file]["questions"].add(filename)
 
-        # 🌟 取得したテキストの \n を実際の改行に置換
         q_text = qdata.get('question_text', '').replace('\\n', '\n')
         a_text = qdata.get('answer_text', '').replace('\\n', '\n')
 
@@ -214,7 +243,9 @@ def main():
                 v_file = v.get("video_file", "")
                 time_str = f"`{v.get('start_time', '')}`〜`{v.get('end_time', '')}`"
                 content += f"- **[[【動画】{clean_filename(v_file)}]]** ({time_str})\n"
-                if v.get("blackboard_ocr"): content += f"  - 📝 板書OCR: {v['blackboard_ocr']}\n"
+                if v.get("blackboard_ocr"):
+                    ocr_text = v['blackboard_ocr'].replace('\\n', '<br>')
+                    content += f"  - 📝 板書OCR: {ocr_text}\n"
 
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
             f.write(content)
@@ -232,9 +263,11 @@ def main():
         filename = f"【動画】{clean_filename(v_file)}"
         content = f"---\ntags:\n  - node/video\n---\n# {filename}\n\n"
         content += f"## 🧠 紐づく知識・タスク\n"
-        for n in sorted(list(v_data["nodes"])): content += f"- [[{n}]]\n"
+        for n in sorted(list(v_data["nodes"])):
+            content += f"- [[{n}]]\n"
         content += f"\n## 📝 紐づく問題\n"
-        for q in sorted(list(v_data["questions"])): content += f"- [[{q}]]\n"
+        for q in sorted(list(v_data["questions"])):
+            content += f"- [[{q}]]\n"
         
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
             f.write(content)
@@ -248,7 +281,7 @@ def main():
                 arcname = os.path.relpath(file_path, PARENT_DIR)
                 zipf.write(file_path, arcname)
 
-    print(f"🎉 🎉 【成功】Obsidian Vault（新オントロジー完全対応）の生成完了！\n💾 保存先: {zip_path}")
+    print(f"🎉 🎉 【成功】Obsidian Vault（スマートリンク対応・完全版）の生成完了！\n💾 保存先: {zip_path}")
 
 if __name__ == "__main__":
     main()

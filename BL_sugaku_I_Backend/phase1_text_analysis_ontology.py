@@ -135,7 +135,6 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
             with open(master_path, "r", encoding="utf-8") as f: master_data = json.load(f)
         except: pass
 
-    # 🌟 修正: MEXTコードに関係なく、マスター全体を横串で名前検索
     for m_code, items in master_data.items():
         for item in items:
             if item["name"] == node_name: 
@@ -166,26 +165,48 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
 
     return f"{mext_code}{new_branch_code}"
 
+# 🌟 既存のオントロジーリストを取得する関数を追加
+def get_existing_ontology_names():
+    names = set()
+    for p in [KNOWLEDGE_MASTER_PATH, TASK_MASTER_PATH]:
+        if os.path.exists(p):
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    master = json.load(f)
+                    for items in master.values():
+                        for item in items:
+                            names.add(item["name"])
+            except: pass
+    if names:
+        return ", ".join(sorted(list(names)))
+    else:
+        return "まだありません（この単元が最初の処理です）"
+
 # =========================================================
 # 🧠 Phase 1 / Step 1: オントロジー抽出
 # =========================================================
 def execute_step1_extraction(textbook_content, mext_master_dict, bundle_name):
     print(f"\n🚀 [Phase 1 / Step 1] 概念・タスク抽出を実行中（対象: {bundle_name}）...")
 
+    existing_names = get_existing_ontology_names()
+
     prompt = f"""あなたは高等学校数学科の教材分析・学習オントロジー構築のエキスパートです。
 以下の「教材データ」と「指導要領マスター辞書」を解析し、GNN-KT（学習状態推論）およびGraph RAGに最適化されたナレッジグラフ（ノードとエッジ）を構築してください。
 
 【対象単元】: {bundle_name}
 
-【★最重要：用語抽出とグラウンディング（根拠）のルール★】
-ノード名や親概念名（parent_concept）がブレたり、高校数学の範囲外の大学用語などが混入するのを防ぐため、日本の高校数学（検定教科書レベル）の標準的な名称にグラウンディングさせてください。自分の独自の造語は禁止です。
+【★最重要：用語と親概念の統一（表記揺れの絶対防止）★】
+過去の単元解析で、以下の概念が既にシステムに登録されています。
+■ 登録済み概念リスト: [{existing_names}]
+
+新しく抽出するノードの `name`（名称）や `parent_concept`（上位概念）が、上記のリストにある概念と同じ意味・同義語である場合は、絶対に新語（造語や揺らぎ）を作らず、リストにある名称と【一言一句同じ名称】を優先して使用・継承してください。
 
 【ノードの分類】
 1. foundation_knowledge (基礎知識): 単元のベースとなる静的な知識。
 2. perspective_condition (視点・条件): 「特定の文字に着目する」など、思考の枠組み（レンズ）。
 3. derived_knowledge (再構成知識): 基礎と視点が組み合わさった結果の知識。
 4. tasks (技能・タスク): 「〜を特定する」「展開する」など、生徒が実行する具体的な学習アクション。※これがGNN-KTの確率計算の主役となります。
-   ★【重要: タスク抽出の細分化ルール】: 行行うタスクが同じでも、対象となる数式や図形（例：「単項式」と「多項式」）が異なる場合は、GNN-KTで別々の技能として追跡するため、必ず別々のタスクノードとして分割して抽出してください。
+   ★【重要: タスク抽出の細分化ルール】: 行うタスクが同じでも、対象となる数式や図形（例：「単項式」と「多項式」）が異なる場合は、GNN-KTで別々の技能として追跡するため、必ず別々のタスクノードとして分割して抽出してください。
 ※ 一時的なIDとして "K1", "T1" などの文字列を `node_id` に指定してください。
 
 【出力JSONフォーマット】:
@@ -194,8 +215,8 @@ def execute_step1_extraction(textbook_content, mext_master_dict, bundle_name):
     "foundation_knowledge": [
       {{
         "node_id": "K1",
-        "name": "抽出した用語（テキスト通り）",
-        "parent_concept": "属する一般的な用語",
+        "name": "抽出した用語（テキストまたは既存リスト通り）",
+        "parent_concept": "属する用語（既存リスト優先）",
         "summary": "要約",
         "extracted_from": "テキストの該当箇所をそのまま引用",
         "mext_code": "16桁コード"
@@ -224,12 +245,19 @@ def execute_step1_extraction(textbook_content, mext_master_dict, bundle_name):
   ],
   "questions": [
     {{
-      "question_number": "問題番号",
+      "question_number": "問題番号（例: 大問1 (1) または 確認問題 1）",
       "question_text": "問題文（LaTeXエスケープ厳守）",
       "answer_text": "[正解] ... \\n[解説] ..."
     }}
   ]
 }}
+
+【★重要：問題（questions）抽出と番号フォーマットの絶対ルール★】
+教材テキストに含まれる「大問（本文中の見出し）」と「確認問題」を【すべて漏れなく】抽出してください。
+※ テキスト上で `**1**` や `### 4` のように数字だけで見出しになっている部分は「大問」です。部分的な見落としがないように必ず抽出してください。
+`question_number` は以下のフォーマットに厳格に統一してください。
+- 大問の場合: `大問X (Y) (Z)` （例: `大問1 (1)`, `大問4 (2) (i)`）
+- 確認問題の場合: `確認問題 X` （例: `確認問題 1`, `確認問題 8`）
 
 【★最重要: LaTeXエスケープ★】
 数式を含める場合は、必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\subset）してください。
@@ -247,7 +275,6 @@ def execute_step1_extraction(textbook_content, mext_master_dict, bundle_name):
 def execute_step2_alignment(mapped_step1_data):
     print("\n🧠 [Phase 1 / Step 2] 問題とGNN-KTタスクの精密アライメントを実行中...")
     
-    # トークン節約のため、マスター辞書や不要な情報は落として渡す
     prompt_data = {
         "nodes": mapped_step1_data["nodes"],
         "questions": mapped_step1_data["questions"]
@@ -278,7 +305,7 @@ def execute_step2_alignment(mapped_step1_data):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.1.2 グローバルID対応版】Phase 1 起動 ===")
+    print("=== 🏁 【Ver 13.1.5 記憶継承・表記揺れ防止版】Phase 1 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
 
     textbook_content, mext_master_dict, bundle_name = load_and_prepare_inputs()
@@ -310,11 +337,11 @@ def main():
         edge["source_id"] = id_map.get(edge.get("source_id"), edge.get("source_id"))
         edge["target_id"] = id_map.get(edge.get("target_id"), edge.get("target_id"))
 
-    # [Step 2] アライメント (正式なIDに置換されたデータを使用)
+    # [Step 2] アライメント
     step2_output = execute_step2_alignment(step1_output)
 
     final_knowledge_graph = {
-        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.2_gnn_kt_dual_engine", "model_used": MODEL_NAME},
+        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.5_gnn_kt_dual_engine", "model_used": MODEL_NAME},
         "nodes": step1_output.get("nodes", {}),
         "edges": step1_output.get("edges", []),
         "questions": step1_output.get("questions", []),

@@ -71,7 +71,7 @@ def generate_content_and_parse_json(prompt, max_retries=None):
                 try:
                     return json.loads(fixed_text)
                 except json.JSONDecodeError as je:
-                    print(f"      ⚠️ AI出力のJSON形式エラー(LaTeX等起因)。再生成します... (試行 {attempt}/{max_retries})")
+                    print(f"      ⚠️ AI出力のJSON形式エラー。再生成します... (試行 {attempt}/{max_retries})")
                     if attempt == max_retries:
                         raise RuntimeError(f"❌ JSONパース失敗: {je}")
                     time.sleep(3)
@@ -107,6 +107,7 @@ PHASE2_FILE = os.path.join(OUTPUT_DIR, "lecture_map.json")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "final_knowledge_graph_complete.json")
 
 KNOWLEDGE_MASTER_PATH = os.path.join(PARENT_DIR, "knowledge_master.json")
+TASK_MASTER_PATH = os.path.join(PARENT_DIR, "task_master.json")
 
 def load_json(filepath):
     if not os.path.exists(filepath): return None
@@ -126,7 +127,6 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
             with open(master_path, "r", encoding="utf-8") as f: master_data = json.load(f)
         except: pass
 
-    # 🌟 修正: MEXTコードに関係なく、マスター全体を横串で名前検索
     for m_code, items in master_data.items():
         for item in items:
             if item["name"] == node_name: 
@@ -157,6 +157,23 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
 
     return f"{mext_code}{new_branch_code}"
 
+# 🌟 既存のオントロジーリストを取得する関数を追加
+def get_existing_ontology_names():
+    names = set()
+    for p in [KNOWLEDGE_MASTER_PATH, TASK_MASTER_PATH]:
+        if os.path.exists(p):
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    master = json.load(f)
+                    for items in master.values():
+                        for item in items:
+                            names.add(item["name"])
+            except: pass
+    if names:
+        return ", ".join(sorted(list(names)))
+    else:
+        return "まだありません"
+
 # =========================================================
 # 🧠 動的補完 ＆ アライメント実行
 # =========================================================
@@ -166,26 +183,32 @@ def execute_dynamic_alignment(phase1_data, phase2_data, bundle_name):
     nodes = phase1_data.get("nodes", {})
     questions = phase1_data.get("questions", [])
     video_segments = phase2_data.get("videos", [])
+    
+    existing_names = get_existing_ontology_names()
 
     prompt = f"""あなたは教育工学とカリキュラム・アライメントのエキスパートです。
 以下の【Phase 1: テキスト抽出グラフ】と【Phase 2: 動画タイムライン・板書データ】を読み込み、以下の2つのミッションを実行してください。
 
+【★最重要：用語と親概念の統一（表記揺れの絶対防止）★】
+過去の単元解析で、以下の概念が既にシステムに登録されています。
+■ 登録済み概念リスト: [{existing_names}]
+
+新しく補完するノードの `name`（名称）や `parent_concept`（上位概念）が、上記のリストにある概念と同じ意味・同義語である場合は、絶対に新語（造語）を作らず、リストにある名称と【一言一句同じ名称】を優先して使用してください。
+
 【ミッション1：暗黙知の可視化とグラフの動的補完（差分抽出）】
 動画の「口頭解説（explanation_summary）」や「板書（blackboard_ocr）」から、テキストには書かれていない『暗黙の知識』や『新しい視点・条件（レンズ）』が発見された場合、Phase 1のグラフに新しいノードとエッジを【動的に追加・補完】してください。
 - 追加できるノードは `foundation_knowledge`, `perspective_condition`, `derived_knowledge` のみです。一時的なID（NEW_K1等）を付与してください。
-★【絶対ルール: タスク追加の禁止】GNN-KTの確率計算を保護するため、動画から新しい `tasks` (技能) を追加することは【絶対に禁止】します。
+★【絶対ルール: タスク追加の禁止】動画から新しい `tasks` (技能) を追加することは【絶対に禁止】します。
 
 【ミッション2：三位一体アライメントと粒度の吸収】
 既存のノード、新たに追加した知識ノード、および確認問題に対して、解説している「動画セグメント」を紐づけてください。
 - alignment_type は "concept_input" (概念解説), "task_walkthrough" (タスク解説), "direct_explanation" (例題の直接解説), "prerequisite" (前提解説) を使用。
 
-★【最重要: 動画ロール(role)に応じた細かいセグメントの束ね方】
-Phase 2の動画データには `role` が付与されています。
-`role` が "exercise_walkthrough" または "concept_application" の動画は、UI上の頭出しのために非常に細かい計算ステップ（方針、立式、計算など）ごとにセグメント分割されています。
-これらについては、動画をばらばらにして新しいタスクを作るのではなく、「Phase 1 で抽出済みの既存のタスク」や「確認問題」の `aligned_videos` の中に、一連のプロセスとして複数個（配列として）まとめて紐付けて吸収させてください。
+★【最重要: 動画ロールに応じた細かいセグメントの束ね方】
+`exercise_walkthrough` などの動画は、方針、立式、計算ごとにセグメント分割されています。これらをばらばらにして新しいタスクを作るのではなく、「Phase 1の既存のタスク」や「確認問題」の `aligned_videos` の中に、一連のプロセスとして複数個まとめて紐付けて吸収させてください。
 
-【★最重要: LaTeXとJSONエスケープの絶対ルール】
-`reasoning`等にLaTeX数式を含める場合は、必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\subset）してください。
+【★最重要: LaTeXエスケープ★】
+`reasoning`等にLaTeX数式を含める場合は、必ずバックスラッシュを二重にエスケープ（例: \\\\frac）してください。
 
 ---
 ■ 【Phase 1】テキスト抽出ベースグラフ:
@@ -238,7 +261,7 @@ Phase 2の動画データには `role` が付与されています。
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.2.1 グローバルID対応版】Phase 3 起動 ===")
+    print("=== 🏁 【Ver 13.2.2 記憶継承・表記揺れ防止版】Phase 3 起動 ===")
     
     phase1_data = load_json(PHASE1_FILE)
     phase2_data = load_json(PHASE2_FILE)
@@ -283,7 +306,6 @@ def main():
             edge["target_id"] = id_map.get(edge.get("target_id"), edge.get("target_id"))
             phase1_data.setdefault("edges", []).append(edge)
 
-        # 🌟 動画紐付け側のIDも更新
         updated_node_alignments = {}
         for nid, videos in node_alignments.items():
             updated_node_alignments[id_map.get(nid, nid)] = videos
@@ -329,7 +351,7 @@ def main():
             q["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
 
         final_graph = phase1_data
-        final_graph["metadata"]["engine_version"] = "13.2.1_dynamic_ontology_completed"
+        final_graph["metadata"]["engine_version"] = "13.2.2_dynamic_ontology_completed"
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(final_graph, f, ensure_ascii=False, indent=2)
