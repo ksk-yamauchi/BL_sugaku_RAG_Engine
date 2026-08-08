@@ -1,3 +1,5 @@
+### 💻 `phase2_video_analysis.py` (Ver 2.5.9 LaTeXエスケープ徹底版)
+
 import json
 import os
 import re
@@ -11,17 +13,13 @@ from google.genai import errors, types
 # ⚙️ 設定・初期化 (.env 複数APIキー対応 ＆ 強制上書き)
 # =========================================================
 ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
-
-# 🌟 override=True を指定してターミナル内の古い環境変数を強制上書き
 load_dotenv(dotenv_path=ENV_PATH, override=True)
 
-# 不可視文字(BOM等)や引用符を除去するクレンジング関数
 def clean_key(k_str):
     if not k_str:
         return ""
     return k_str.strip().strip("'\"").replace('\ufeff', '')
 
-# GEMINI_API_KEYS と GEMINI_API_KEY の両方に対応し、どちらでもカンマで分割する
 raw_keys = os.environ.get("GEMINI_API_KEYS", "") or os.environ.get("GEMINI_API_KEY", "")
 API_KEYS = [clean_key(k) for k in raw_keys.split(",") if clean_key(k)]
 
@@ -48,7 +46,6 @@ def rotate_key():
     print(f"      🔄 APIキーを切り替えました (Key {current_key_index + 1}/{len(API_KEYS)}: {masked_key})")
     return True
 
-# フォルダ内の _clean.md を自動検知（教材テキスト連動）
 md_files = glob("*_clean.md")
 if not md_files:
     raise FileNotFoundError("❌ 教材Markdown(*_clean.md)が見つかりません。フォルダ内を確認してください。")
@@ -64,7 +61,6 @@ OUTPUT_FILE = os.path.join(OUTPUT_DIR, "lecture_map.json")
 # =========================================================
 def generate_content_and_parse_json(contents, response_schema=None, max_retries=None):
     if max_retries is None:
-        # キーの数の2倍までリトライを許可する（8キーなら16回）
         max_retries = max(5, len(API_KEYS) * 2)
 
     config_kwargs = {
@@ -87,12 +83,10 @@ def generate_content_and_parse_json(contents, response_schema=None, max_retries=
             )
             print("      [通信完了]")
             
-            # Markdownブロックの除去
             text = response.text
             text = re.sub(r'^```json\s*', '', text.strip(), flags=re.IGNORECASE)
             text = re.sub(r'\s*```$', '', text)
             
-            # JSONのパースと自動修復
             try:
                 return json.loads(text)
             except json.JSONDecodeError:
@@ -100,7 +94,7 @@ def generate_content_and_parse_json(contents, response_schema=None, max_retries=
                 try:
                     return json.loads(fixed_text)
                 except json.JSONDecodeError as je:
-                    print(f"      ⚠️ AI出力のJSON形式エラー(LaTeXエスケープ起因等)。安全に再生成します... (試行 {attempt}/{max_retries})")
+                    print(f"      ⚠️ AI出力のJSON形式エラー。安全に再生成します... (試行 {attempt}/{max_retries})")
                     if attempt == max_retries:
                         raise RuntimeError(f"❌ JSONパースが{max_retries}回失敗しました: {je}")
                     time.sleep(3)
@@ -114,9 +108,6 @@ def generate_content_and_parse_json(contents, response_schema=None, max_retries=
                 print(f"      ⚠️ API制限/無効キーを検知しました (Key: {masked_k}, 試行 {attempt}/{max_retries})")
                 if rotate_key():
                     print("      ⏩ 新しいAPIキーで即座にリトライします...")
-                    
-                    # 🌟 [重要] 渡されたcontentsにFileオブジェクトが含まれている場合、
-                    # キーが変わると100% 403エラーになるため、APIを叩かずに再アップロードを要求する
                     has_file = False
                     if isinstance(contents, list):
                         for c in contents:
@@ -124,13 +115,12 @@ def generate_content_and_parse_json(contents, response_schema=None, max_retries=
                                 has_file = True
                     if has_file:
                         raise Exception("NEED_REUPLOAD")
-                    
                     continue
                 else:
                     print("      ⏳ 40秒待機後にリトライします...")
                     time.sleep(40)
             elif "403" in err_str or "permission_denied" in err_str:
-                print(f"      ⚠️ 403アクセス拒否エラーを検知。別アカウントでのアップロードが必要なため再アップロードを要求します。")
+                print(f"      ⚠️ 403アクセス拒否エラーを検知。再アップロードを要求します。")
                 raise Exception("NEED_REUPLOAD")
             elif "503" in err_str or "unavailable" in err_str:
                 print(f"      ⚠️ 503サーバーエラー (試行 {attempt}/{max_retries}): 30秒待機後リトライ...")
@@ -140,7 +130,6 @@ def generate_content_and_parse_json(contents, response_schema=None, max_retries=
                 print(f"      ⚠️ API通信エラー ({e}) (試行 {attempt}/{max_retries}): 20秒待機後リトライ...")
                 time.sleep(20)
         except Exception as e:
-            # NEED_REUPLOAD 例外はそのまま上に投げる
             if "NEED_REUPLOAD" in str(e):
                 raise e
             if attempt == max_retries: raise e
@@ -167,7 +156,7 @@ def extract_question_number(textbook_content):
     return match.group(1) if match else ""
 
 # =========================================================
-# 🤖 動的役割推論 (🌟 教材MD照合 ＆ 大問検知強化)
+# 🤖 動的役割推論
 # =========================================================
 def detect_video_role(vtt_content, video_name, textbook_content=""):
     if not vtt_content:
@@ -192,8 +181,7 @@ def detect_video_role(vtt_content, video_name, textbook_content=""):
    - 新しい公式、定理、用語の導入や証明、基礎的な意味の解説が「動画全体のメインテーマ」である場合。
    - 🌟【重要ルール】タイトルや単元名に「〜の利用」「〜の応用」と含まれていても、「概念・条件・公式の理論的な説明」に終始している場合は、必ず `concept_lecture` に分類してください。
 
-# -------------------- 修正後 --------------------
-2. `exercise_walkthrough` (例題演習)
+2. `exercise_walkthrough` (大問・問題演習)
    - 教材内の具体的な「大問」「確認問題」「問題」の計算手順・解法解説を行っている場合。
    - 🌟【重要ルール】動画の冒頭で概念や用語の復習（Point Pickup等）を長く行っていたとしても、「大問〇の(1)を見ていきましょう」「問題〇番」といった具体的な問題演習の開始を告げる言及が少しでも含まれている場合は、迷わず `exercise_walkthrough` に分類してください。
 
@@ -211,7 +199,7 @@ def detect_video_role(vtt_content, video_name, textbook_content=""):
 【字幕データ (冒頭3000文字)】:
 {vtt_content[:3000]}
 """
-    print(f"  ├─ 🔍 [事前推論] 動画 '{video_name}' の役割を教材MDと照合して自動判定中...")
+    print(f"  ├─ 🔍 [事前推論] 動画 '{video_name}' の役割を判定中...")
     
     try:
         result = generate_content_and_parse_json([prompt], schema)
@@ -220,21 +208,22 @@ def detect_video_role(vtt_content, video_name, textbook_content=""):
         
         role_label = ""
         if role == "concept_lecture": role_label = "概念講義"
-        elif role == "exercise_walkthrough": role_label = "例題演習"
+        elif role == "exercise_walkthrough": role_label = "大問・問題演習"
         elif role == "concept_application": role_label = "概念の応用・利用"
         
         print(f"  ├─ 🎯 判定結果: {role_label} [{role}] (理由: {reason})")
         return role
     except Exception as e:
-        print(f"  ├─ ⚠️ 事前推論に失敗しました({e})。安全のため「例題演習(exercise_walkthrough)」として処理を続行します。")
+        print(f"  ├─ ⚠️ 事前推論に失敗しました({e})。安全のため「大問・問題演習(exercise_walkthrough)」として処理を続行します。")
         return "exercise_walkthrough"
 
 # =========================================================
 # 🏁 メイン実行パイプライン
 # =========================================================
 def main():
-    print(f"=== 🎬 [Phase 2 Ver 2.5.4] 403検知・動的再アップロード対応版 起動 ===")
+    print(f"=== 🎬 [Phase 2 Ver 2.5.9] LaTeXエスケープ徹底版 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
+
     first_key_masked = f"{API_KEYS[0][:6]}...{API_KEYS[0][-4:]}" if len(API_KEYS[0]) > 10 else "INVALID"
     print(f"   👉 現在使用中のキー: {first_key_masked}")
 
@@ -258,12 +247,8 @@ def main():
             with open(vtt_path, "r", encoding="utf-8", errors="ignore") as f:
                 vtt_content = f.read()
 
-        # 1. ロールの自動判定 (テキストのみなのでキー切替の巻き添えを食わない)
         role = detect_video_role(vtt_content, mp4_path, textbook_content)
 
-        # ---------------------------------------------------------
-        # 2. 動画アップロードと解析ループ (APIキー切り替え・403対策)
-        # ---------------------------------------------------------
         max_upload_retries = max(5, len(API_KEYS) * 2)
         upload_attempt = 0
         segments = []
@@ -290,7 +275,7 @@ def main():
                     time.sleep(5)
                     uploaded_video = upload_client.files.get(name=uploaded_video.name)
             except Exception as e:
-                pass # 一時的な通信エラーは無視してステータスチェックを続行
+                pass 
 
             if uploaded_video.state.name == "FAILED":
                 print(f"❌ 動画処理に失敗しました: {mp4_path}")
@@ -298,7 +283,6 @@ def main():
 
             print("  ├─ 🟢 動画の準備完了 (ACTIVE)")
 
-            # 3. 解析プロンプトの出し分け
             if role == "concept_lecture":
                 granularity_instruction = "【概念理解特化・極細分割】: 1〜3分単位のミクロな解説ステップ（公式の導入、意味、証明、注意点など）を細かく分割してください。"
             else:
@@ -310,8 +294,8 @@ def main():
 - 指示された通りの極細粒度（{granularity_instruction}）で網羅して作成してください。
 - 各セグメントの開始時間（`start_time`）と終了時間（`end_time`）を MM:SS 形式で正確に記録してください。
 
-【★最重要：黒板・スライドのLaTeX書き起こし (blackboard_ocr) とJSONエスケープ★】
-- 動画内の数式・図の情報を読み取り、`blackboard_ocr` 項目や `explanation_summary` へLaTeX形式（$...$ または $$...$$）で書き起こしてください。
+【★絶対ルール★】 数式、記号、変数は**必ず** LaTeX 形式で記述し、**必ず** `$` または `$$` 記号で囲んでください（例: `$x^2 + y^2$`）。`$` 記号がないとシステムがエラーを起こします。
+- 動画内の数式・図の情報を読み取り、`blackboard_ocr` 項目や `explanation_summary` へ必ず上記のLaTeX形式で書き起こしてください。
 - 出力はJSONフォーマットとなります。JSON内でLaTeXを記述する際は、**必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\sqrt）** してください。
 
 【出力ルール】
@@ -354,18 +338,15 @@ def main():
                     upload_client.files.delete(name=uploaded_video.name)
                     print("  └─ 🧹 クラウド上の動画一時ファイルを削除しました。")
                 except: pass
-                
-                break # 解析大成功！whileループを抜ける
+                break
 
             except Exception as e:
-                # 🌟 APIキーが切り替わった事によるファイルアクセスエラーを捕捉
                 if "NEED_REUPLOAD" in str(e):
-                    print("  ├─ 🔄 APIキーが切り替わりました。別アカウントとなるため、動画を新しいキーで再アップロードして解析を再開します...")
+                    print("  ├─ 🔄 APIキーが切り替わりました。動画を再アップロードして解析を再開します...")
                     try:
-                        # 念のため古いキーのクライアントで消去を試みる
                         upload_client.files.delete(name=uploaded_video.name)
                     except: pass
-                    continue # whileループの最初（アップロード）に戻る
+                    continue
                 else:
                     print(f"  ├─ ❌ 予期せぬ解析エラー: {e}")
                     try:
@@ -373,7 +354,6 @@ def main():
                     except: pass
                     break
 
-        # 4. ノイズカット処理
         if segments:
             first_seg = segments[0]
             first_topic = first_seg.get("topic", "").lower()
@@ -389,21 +369,30 @@ def main():
                     print(f"  ├─ ✂️ 末尾のノイズセグメントを自動カット: '{last_seg.get('topic')}'")
                     segments.pop(-1)
 
-        # 5. トピック名の正規化処理
-        if role == "exercise_walkthrough":
-            current_shomon = ""
-            current_edamon = ""
-            for seg in segments:
-                original_topic = seg.get("topic", "")
-                if "schema says" in original_topic.lower():
-                    match = re.search(r"schema says\s*(.*)$", original_topic, re.IGNORECASE)
-                    if match: original_topic = match.group(1).strip()
+        # 5. トピック名の正規化処理 (🌟 全ロール対応・クレンジング強化)
+        current_shomon = ""
+        current_edamon = ""
+        for seg in segments:
+            original_topic = seg.get("topic", "")
+            
+            if "schema says" in original_topic.lower():
+                match = re.search(r"schema says\s*(.*)$", original_topic, re.IGNORECASE)
+                if match: original_topic = match.group(1).strip()
 
-                raw_text = re.sub(r"^\[?例題\]?\s*", "", original_topic)
-                raw_text = re.sub(r"^大問\s*\d+\s*", "", raw_text)
+            cleaned_topic = original_topic
+            cleaned_topic = re.sub(r"^\[?例題\]?\s*", "", cleaned_topic)
+            cleaned_topic = re.sub(r"^大問\s*\d+\s*", "", cleaned_topic)
+            cleaned_topic = re.sub(r"【?問題\s*\d*】?\s*", "", cleaned_topic)
+            cleaned_topic = re.sub(r"要点\s*[①②③④⑤⑥⑦⑧⑨⑩\d]*\s*[:：]?\s*", "", cleaned_topic)
+            cleaned_topic = re.sub(r"Point\s*Pickup\s*[:：]?\s*", "", cleaned_topic, flags=re.IGNORECASE)
+            
+            cleaned_topic = re.sub(r"\[\d+\]", "", cleaned_topic)
+            cleaned_topic = re.sub(r"^[\]\}><\-\s:\x2d\u2010-\u2015\u2212]+", "", cleaned_topic)
+            cleaned_topic = re.sub(r"\s+", " ", cleaned_topic).strip()
 
-                shomon_match = re.search(r"\(([1-9]\d*)\)", raw_text)
-                edamon_match = re.search(r"\(([ivx]+)\)|小問\(([ivx]+)\)", raw_text, re.IGNORECASE)
+            if role == "exercise_walkthrough":
+                shomon_match = re.search(r"\(([1-9]\d*)\)", original_topic)
+                edamon_match = re.search(r"\(([ivx]+)\)|小問\(([ivx]+)\)", original_topic, re.IGNORECASE)
 
                 if shomon_match:
                     new_shomon = f"({shomon_match.group(1)})"
@@ -413,22 +402,22 @@ def main():
                 if edamon_match:
                     val = edamon_match.group(1) or edamon_match.group(2)
                     current_edamon = f"({val.lower()})"
+                
+                topic_body = cleaned_topic
+                topic_body = re.sub(r"\([1-9]\d*\)", "", topic_body)
+                topic_body = re.sub(r"\([ivx]+\)", "", topic_body, flags=re.IGNORECASE)
+                topic_body = re.sub(r"^\s*", "", topic_body)
 
-                cleaned_topic = raw_text
-                cleaned_topic = re.sub(r"\[\d+\]", "", cleaned_topic)
-                cleaned_topic = re.sub(r"\([1-9]\d*\)", "", cleaned_topic)
-                cleaned_topic = re.sub(r"小問\([ivx]+\)", "", cleaned_topic, flags=re.IGNORECASE)
-                cleaned_topic = re.sub(r"\([ivx]+\)", "", cleaned_topic, flags=re.IGNORECASE)
-                cleaned_topic = re.sub(r"^[\]\}><\-\s:\x2d\u2010-\u2015\u2212]+", "", cleaned_topic)
-                cleaned_topic = re.sub(r"\s+", " ", cleaned_topic).strip()
-
-                parts = ["[例題]"]
+                # 🌟 [例題] プレフィックスを完全に排除し、大問ベースの組み立てに統一
+                parts = []
                 if question_number: parts.append(f"大問{question_number}")
                 if current_shomon: parts.append(current_shomon)
                 if current_edamon: parts.append(current_edamon)
-                parts.append(cleaned_topic)
+                if topic_body: parts.append(topic_body)
 
                 seg["topic"] = " ".join(parts)
+            else:
+                seg["topic"] = cleaned_topic
 
         all_video_maps.append({
             "video_file": os.path.basename(mp4_path),
@@ -439,7 +428,7 @@ def main():
         time.sleep(3)
 
     output_data = {
-        "engine_version": "2.5.4_403_reupload_robust",
+        "engine_version": "2.5.9_latex_escaped",
         "videos": all_video_maps
     }
 

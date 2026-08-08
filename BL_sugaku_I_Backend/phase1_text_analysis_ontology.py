@@ -135,14 +135,15 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
             with open(master_path, "r", encoding="utf-8") as f: master_data = json.load(f)
         except: pass
 
+    # 🌟 修正: MEXTコードに関係なく、マスター全体を横串で名前検索
+    for m_code, items in master_data.items():
+        for item in items:
+            if item["name"] == node_name: 
+                return f"{m_code}{item['branch_code']}"
+
     mext_code = str(mext_code).strip()
     if not mext_code: mext_code = "UNKNOWN"
     if mext_code not in master_data: master_data[mext_code] = []
-
-    # 🌟 修正: MEXTコードと枝番を結合したグローバル一意なIDを返す
-    for item in master_data[mext_code]:
-        if item["name"] == node_name: 
-            return f"{mext_code}{item['branch_code']}"
 
     existing_nums = []
     for item in master_data[mext_code]:
@@ -163,7 +164,6 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
     with open(master_path, "w", encoding="utf-8") as f:
         json.dump(master_data, f, ensure_ascii=False, indent=2)
 
-    # 🌟 修正: MEXTコードと枝番を結合したグローバル一意なIDを返す
     return f"{mext_code}{new_branch_code}"
 
 # =========================================================
