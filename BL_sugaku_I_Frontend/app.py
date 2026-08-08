@@ -386,6 +386,26 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
     return result_data
 
 
+# 🌟 【UI共通化】動画アイテム（XAI対応）を描画するヘルパー関数
+def render_video_item(v, unique_key):
+    with st.container(border=True):
+        col_info, col_btn = st.columns([4, 1])
+        with col_info:
+            st.markdown(f"📺 **{v.get('video_file')}** (`{v.get('start_time')}`〜)")
+            if v.get('reasoning'):
+                st.markdown(f"**🤔 なぜこの動画？:** `{v.get('reasoning')}`")
+            if v.get('explanation_summary'):
+                st.markdown(f"**💬 先生の解説の狙い:** {v.get('explanation_summary')}")
+        with col_btn:
+            if st.button("📑 チャプター", key=f"cat_btn_{unique_key}", use_container_width=True):
+                st.session_state.history.append({
+                    "result": st.session_state.current_result,
+                    "query": st.session_state.display_query,
+                    "image_choices": st.session_state.pending_image_choices,
+                })
+                st.session_state.selected_video = v.get("video_file")
+                st.rerun()
+
 # =========================================================
 # 🎨 画面描画 (UI)
 # =========================================================
@@ -399,21 +419,59 @@ def main():
         )
         return
 
-    # 🌟 サイドバーにバージョン情報を表示
     engine_ver = db.get("metadata", {}).get("engine_version", "バージョン情報なし")
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{engine_ver}`")
 
-    if "history" not in st.session_state:
-        st.session_state.history = []
-    if "current_result" not in st.session_state:
-        st.session_state.current_result = None
-    if "display_query" not in st.session_state:
-        st.session_state.display_query = ""
-    if "pending_image_choices" not in st.session_state:
-        st.session_state.pending_image_choices = None
-    if "last_clicked_node" not in st.session_state:
-        st.session_state.last_clicked_node = None
+    # 🌟 State初期化に selected_video を追加
+    for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
+        if key not in st.session_state:
+            st.session_state[key] = [] if key == "history" else None
 
+    # ==========================================
+    # 🎬 タイムスタンプ（チャプター）表示 UI
+    # ==========================================
+    if st.session_state.get("selected_video"):
+        v_file = st.session_state.selected_video
+        catalog = db.get("global_video_catalog", {})
+        v_data = catalog.get(v_file)
+        
+        if st.button("🔙 検索結果に戻る", use_container_width=True):
+            st.session_state.selected_video = None
+            st.rerun()
+            
+        st.markdown(f"## 📺 動画プレイヤー: `{v_file}`")
+        if v_data:
+            st.caption(f"📚 所属単元: {v_data.get('bundle_name', '')} | 🏷️ 授業タイプ: {v_data.get('role', '')}")
+            
+            # ダミーの動画プレイヤー枠
+            st.video("https://www.w3schools.com/html/mov_bbb.mp4")
+            
+            st.markdown("### 📑 タイムライン・チャプター (解説要約つき)")
+            st.info("💡 先生の解説の狙い（要約）を事前に確認して、見たいチャプターから再生できます。")
+            
+            for idx, seg in enumerate(v_data.get("segments", [])):
+                start = seg.get('start_time', '00:00')
+                end = seg.get('end_time', '00:00')
+                topic = seg.get('topic', '無題')
+                
+                with st.expander(f"⏱️ {start} 〜 {end} | 📌 {topic}", expanded=(idx==0)):
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.markdown(f"**💬 先生の解説の狙い:**\n> {seg.get('explanation_summary', 'データなし')}")
+                        if seg.get("blackboard_ocr"):
+                            st.markdown(f"**📝 黒板の数式・板書:**\n$$ {seg.get('blackboard_ocr')} $$")
+                    with col2:
+                        if st.button("▶️ ここから再生", key=f"play_{v_file}_{idx}", use_container_width=True):
+                            st.toast(f"{start} から再生を開始しました！（モック機能）")
+        else:
+            st.warning("⚠️ この動画の詳細なチャプターカタログデータがデータベースに見つかりません。")
+            
+        return  # プレイヤーを描画したら他のUIは出さずに終了
+
+
+    # ==========================================
+    # 📸 画像アップロード複数候補 UI
+    # ==========================================
     if st.session_state.pending_image_choices:
         st.info(
             "📸 画像から複数の項目が検出されました。学習したい問題を1つ選択してください。"
@@ -456,6 +514,10 @@ def main():
                 st.session_state.last_clicked_node = None
                 st.rerun()
 
+
+    # ==========================================
+    # 🔍 検索結果 UI
+    # ==========================================
     elif st.session_state.current_result:
         res = st.session_state.current_result
         
@@ -552,25 +614,17 @@ def main():
                 if res["intent"] == "concept":
                     st.markdown("#### 🎬 第一アクション (概念インプット講義)")
                     c_videos = node.get("aligned_videos", [])
-                    for v in c_videos:
-                        st.markdown(
-                            f"- 📺 **{v.get('video_file')}**"
-                            f" (`{v.get('start_time')}`〜)  \n  └ 💡"
-                            f" {v.get('reasoning')}"
-                        )
+                    for idx, v in enumerate(c_videos):
+                        render_video_item(v, f"action1_{node.get('global_c_id')}_{idx}")
                     if not c_videos:
                         st.write("該当なし")
 
                     st.markdown("#### 📗 第二アクション (この概念の例題解説動画)")
                     e_videos_found = False
                     for q in res.get("linked_questions", []):
-                        for edge in q.get("aligned_videos", []):
+                        for idx, edge in enumerate(q.get("aligned_videos", [])):
                             if edge.get("alignment_type") == "direct_explanation":
-                                st.markdown(
-                                    f"- 📺 **{edge.get('video_file')}**"
-                                    f" (`{edge.get('start_time')}`〜)  \n  └"
-                                    f" 💡 {edge.get('reasoning')}"
-                                )
+                                render_video_item(edge, f"action2_{q.get('global_q_id')}_{idx}")
                                 e_videos_found = True
                     if not e_videos_found:
                         st.write("該当なし")
@@ -609,11 +663,8 @@ def main():
                     st.markdown("#### 🎬 第一アクション (例題直接解説動画)")
                     edges = node.get("aligned_videos", [])
                     direct_edges = [e for e in edges if e.get("alignment_type") == "direct_explanation"]
-                    for e in direct_edges:
-                        st.markdown(
-                            f"- 📺 **{e.get('video_file')}**"
-                            f" (`{e.get('start_time')}`〜)  \n  └ 💡 {e.get('reasoning')}"
-                        )
+                    for idx, e in enumerate(direct_edges):
+                        render_video_item(e, f"action1_q_{node.get('global_q_id')}_{idx}")
                     if not direct_edges:
                         st.write("該当なし")
 
@@ -698,6 +749,7 @@ def main():
 
             st.divider()
 
+            # 🌟 Graph RAG ネットワーク (知識群の視覚的表現)
             if res.get("graph_prerequisites") or res.get("graph_siblings") or res.get("graph_next_steps"):
                 st.subheader("🧭 Graph RAG: オントロジー探索 (学習の繋がり)")
                 
@@ -709,25 +761,40 @@ def main():
                     graph_edges = []
                     node_ids = set()
 
-                    def add_graph_node(nid, label, color, size, tooltip=None):
+                    def add_graph_node(nid, label, node_type, tooltip=None, is_current=False):
                         if nid not in node_ids and nid:
                             display_tooltip = tooltip if tooltip else f"👆 クリックして「{label}」を検索"
                             
                             clean_label = clean_math_for_label(label)
-                            max_len = 12
+                            max_len = 15
                             if clean_label.startswith("親: "):
                                 raw_name = clean_label.replace("親: ", "")
-                                display_label = "親: " + (raw_name[:10] + "..." if len(raw_name) > 10 else raw_name)
+                                display_label = "親: " + (raw_name[:12] + "..." if len(raw_name) > 12 else raw_name)
                             else:
                                 display_label = clean_label[:max_len] + "..." if len(clean_label) > max_len else clean_label
 
-                            graph_nodes.append(Node(id=nid, label=display_label, size=size, color=color, title=display_tooltip))
+                            # 🌟 知識群（グループ）を「形」と「色」で表現
+                            if is_current:
+                                color, shape = "#FFD700", "star" # 現在地: 星(金)
+                            elif node_type == "foundation_knowledge":
+                                color, shape = "#4682B4", "box" # 基礎知識: 四角(青)
+                            elif node_type == "perspective_condition":
+                                color, shape = "#9370DB", "hexagon" # 視点: 六角形(紫)
+                            elif node_type == "derived_knowledge":
+                                color, shape = "#3CB371", "box" # 再構成知識: 四角(緑)
+                            elif node_type == "tasks":
+                                color, shape = "#191970", "box" # タスク: 四角(紺)
+                            else:
+                                color, shape = "#A9A9A9", "ellipse" # その他: 楕円(灰)
+
+                            graph_nodes.append(Node(id=nid, label=display_label, size=30, color=color, shape=shape, title=display_tooltip))
                             node_ids.add(nid)
 
-                    add_graph_node(c_name_target, c_name_target, "#FFD700", 35, tooltip="📍 現在地（クリックしても遷移しません）") 
+                    target_node_obj = next((c for c in db.get("global_concept_nodes", {}).values() if c.get("concept_name") == c_name_target), {})
+                    add_graph_node(c_name_target, c_name_target, target_node_obj.get("type", "unknown"), tooltip="📍 現在地", is_current=True) 
                     
                     if p_name_target and p_name_target != "未分類":
-                        add_graph_node(p_name_target, f"親: {p_name_target}", "#FF8C00", 30)
+                        add_graph_node(p_name_target, f"親: {p_name_target}", "unknown")
                         graph_edges.append(Edge(source=p_name_target, target=c_name_target, dashes=True, arrows=""))
 
                     for pre_info in res.get("graph_prerequisites", []):
@@ -738,37 +805,37 @@ def main():
                         
                         if pre_name:
                             is_mandatory = (dep_type == "mandatory")
-                            node_color = "#1E90FF" if is_mandatory else "#00BFFF"
                             badge_str = "🔵 [必須前提]" if is_mandatory else "🟡 [補足前提]"
                             tt_text = f"{badge_str} {pre_name}\n💡 理由: {reasoning}" if reasoning else f"{badge_str} {pre_name}"
                             
-                            add_graph_node(pre_name, pre_name, node_color, 25, tooltip=tt_text)
-                            graph_edges.append(Edge(source=pre_name, target=c_name_target, dashes=not is_mandatory))
+                            add_graph_node(pre_name, pre_name, pre_node.get("type", "unknown"), tooltip=tt_text)
+                            graph_edges.append(Edge(source=pre_name, target=c_name_target, label=dep_type, dashes=not is_mandatory))
 
                     for sib in res.get("graph_siblings", []):
                         sib_name = sib.get("concept_name")
                         if sib_name:
-                            add_graph_node(sib_name, sib_name, "#32CD32", 25)
+                            add_graph_node(sib_name, sib_name, sib.get("type", "unknown"))
                             if p_name_target and p_name_target != "未分類":
                                 graph_edges.append(Edge(source=p_name_target, target=sib_name, dashes=True, arrows=""))
                                 
                     for nxt in res.get("graph_next_steps", []):
                         nxt_name = nxt.get("concept_name")
                         if nxt_name:
-                            add_graph_node(nxt_name, nxt_name, "#FF69B4", 25) 
-                            graph_edges.append(Edge(source=c_name_target, target=nxt_name, dashes=True))
+                            add_graph_node(nxt_name, nxt_name, nxt.get("type", "unknown")) 
+                            graph_edges.append(Edge(source=c_name_target, target=nxt_name, label="requires", dashes=True))
 
+                    # 🌟 階層化レイアウトを強制し、上から下への流れを表現
                     config = Config(
                         width="100%",
                         height=400,
                         directed=True,
-                        physics=True,
-                        hierarchical=False,
+                        physics=False,
+                        hierarchical={"enabled": True, "direction": "UD", "sortMethod": "directed"},
                     )
 
-                    with st.expander("🗺️ 学習スキルツリーを開く (クリックで探索可能)", expanded=True):
+                    with st.expander("🗺️ 学習スキルツリーを開く (知識群の可視化)", expanded=True):
                         st.info("💡 **ヒント**: 気になるノードにカーソルを合わせるか、クリックするとその概念の世界へワープして探索を続けられます！")
-                        st.caption("🟡: 現在地 | 🟠: 親ハブ | 🔵: 必須前提(実線) | 🟦: 補足前提(点線) | 🟢: 次に進むべき横展開 | 🟣: 次のステップ(応用先)")
+                        st.caption("🟦 基礎知識 | 🟪 視点・条件(六角形) | 🟩 再構成知識 | ⬛ タスク(技能) | ⭐️ 現在地")
                         clicked_node_id = agraph(nodes=graph_nodes, edges=graph_edges, config=config)
                         
                         if clicked_node_id and clicked_node_id != c_name_target:
@@ -803,8 +870,8 @@ def main():
                                 if reasoning:
                                     st.info(f"💡 **前提となる理由:** {reasoning}")
                                 st.write(p_node.get("summary", ""))
-                                for v in p_node.get("aligned_videos", []):
-                                    st.markdown(f"- 📺 **{v.get('video_file')}** (`{v.get('start_time')}`〜) \n  └ 💡 {v.get('reasoning')}")
+                                for idx, v in enumerate(p_node.get("aligned_videos", [])):
+                                    render_video_item(v, f"pre_{p_node.get('global_c_id')}_{idx}")
                                 if st.button("🔍 学ぶ", key=f"g_pre_{p_node.get('global_c_id')}", use_container_width=True):
                                     st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
                                     st.session_state.display_query = f"{p_node.get('concept_name', '')} について詳しく知りたい"
@@ -821,8 +888,8 @@ def main():
                             with st.expander(f"🧠 {s_node.get('concept_name', '')}"):
                                 st.caption(f"🔼 親ハブ: {s_node.get('parent_concept', '')}")
                                 st.write(s_node.get("summary", ""))
-                                for v in s_node.get("aligned_videos", []):
-                                    st.markdown(f"- 📺 **{v.get('video_file')}** (`{v.get('start_time')}`〜) \n  └ 💡 {v.get('reasoning')}")
+                                for idx, v in enumerate(s_node.get("aligned_videos", [])):
+                                    render_video_item(v, f"sib_{s_node.get('global_c_id')}_{idx}")
                                 
                                 if st.button("🔍 学ぶ", key=f"g_sib_{s_node.get('global_c_id')}", use_container_width=True):
                                     st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
@@ -840,8 +907,8 @@ def main():
                             with st.expander(f"🧠 {n_node.get('concept_name', '')}"):
                                 st.caption(f"🔼 親ハブ: {n_node.get('parent_concept', '')}")
                                 st.write(n_node.get("summary", ""))
-                                for v in n_node.get("aligned_videos", []):
-                                    st.markdown(f"- 📺 **{v.get('video_file')}** (`{v.get('start_time')}`〜) \n  └ 💡 {v.get('reasoning')}")
+                                for idx, v in enumerate(n_node.get("aligned_videos", [])):
+                                    render_video_item(v, f"nxt_{n_node.get('global_c_id')}_{idx}")
                                 
                                 if st.button("🔍 学ぶ", key=f"g_nxt_{n_node.get('global_c_id')}", use_container_width=True):
                                     st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
@@ -852,6 +919,9 @@ def main():
                     else:
                         st.write("該当なし")
 
+    # ==========================================
+    # トップ検索画面
+    # ==========================================
     else:
         with st.container(border=True):
             col1, col2 = st.columns(2)
