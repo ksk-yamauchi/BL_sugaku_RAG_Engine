@@ -38,7 +38,7 @@ TYPE_PREFIX = {
 }
 
 def main():
-    print("🚀 [Ver 13.4.2 動画ノードリッチ復元版] Obsidian Vault パッケージ化を開始します...")
+    print("🚀 [Ver 13.4.1 解説要約表示・スマートリンク対応] Obsidian Vault パッケージ化を開始します...")
 
     if not os.path.exists(DB_PATH):
         raise FileNotFoundError(f"❌ {DB_PATH} が見つかりません。先に build_vector_db.py を実行してください。")
@@ -70,7 +70,6 @@ def main():
     for qid, qdata in questions.items():
         b_name = clean_filename(qdata.get('bundle_name', 'Unknown'))
         q_num = qdata.get('question_number', 'X')
-        # 🌟 "_Q" を除去し、アンダースコアで直接繋ぐ
         base_name = f"[問題] {b_name}_{q_num}"
         id_to_filename[qid] = base_name
 
@@ -99,7 +98,6 @@ def main():
                     global_parent_concepts[p_name] = set()
                 global_parent_concepts[p_name].add(filename)
 
-        # 🌟 動画の集計 (リッチな分類に対応)
         for v in ndata.get("aligned_videos", []):
             v_file = v.get("video_file")
             if v_file:
@@ -127,7 +125,6 @@ def main():
         if parent_link_str:
             content += f"- **上位概念**: {parent_link_str}\n"
         
-        # 🌟 JSON上の \n をMarkdownの改行に変換
         summary_text = ndata.get('summary', '').replace('\\n', '\n')
         content += f"\n> **【概要】**\n> {summary_text}\n\n"
 
@@ -186,10 +183,6 @@ def main():
                 v_file = v.get("video_file", "")
                 time_str = f"`{v.get('start_time', '')}`〜`{v.get('end_time', '')}`"
                 content += f"- **[[【動画】{clean_filename(v_file)}]]** ({time_str})\n"
-                if v.get("blackboard_ocr"):
-                    # 🌟 JSON上の \n をMarkdownの行末スペース2つを用いた改行に変換
-                    ocr_text = v['blackboard_ocr'].replace('\\n', '  \n    ')
-                    content += f"  - 📝 板書OCR: {ocr_text}\n"
                 if v.get("explanation_summary"):
                     exp_text = v['explanation_summary'].replace('\\n', '  \n    ')
                     content += f"  - 💬 解説要約: {exp_text}\n"
@@ -210,7 +203,6 @@ def main():
         filename = id_to_filename[qid]
         b_name = qdata.get("bundle_name", "Unknown_Bundle")
 
-        # 🌟 動画ノードの情報をリッチに収集
         for v in qdata.get("aligned_videos", []):
             v_file = v.get("video_file")
             align_type = v.get("alignment_type", "")
@@ -223,7 +215,6 @@ def main():
                 else:
                     global_videos[v_file]["questions_prereq"].add(f"[[{filename}]]")
 
-        # 🌟 JSON上の \n をMarkdownの改行に変換
         q_text = qdata.get('question_text', '').replace('\\n', '\n')
         a_text = qdata.get('answer_text', '').replace('\\n', '\n')
 
@@ -240,9 +231,11 @@ def main():
                 v_file = v.get("video_file", "")
                 time_str = f"`{v.get('start_time', '')}`〜`{v.get('end_time', '')}`"
                 content += f"- **[[【動画】{clean_filename(v_file)}]]** ({time_str})\n"
-                if v.get("blackboard_ocr"):
-                    ocr_text = v['blackboard_ocr'].replace('\\n', '  \n    ')
-                    content += f"  - 📝 板書OCR: {ocr_text}\n"
+                
+                # 🌟 【変更点】 板書OCRではなく「解説要約」を表示するように変更
+                if v.get("explanation_summary"):
+                    exp_text = v['explanation_summary'].replace('\\n', '  \n    ')
+                    content += f"  - 💬 解説要約: {exp_text}\n"
 
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
             f.write(content)
@@ -256,7 +249,6 @@ def main():
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
             f.write(content)
 
-    # 🌟 動画ノードをリッチに復元 (Ver 12.0 互換の表示レイアウト)
     for v_file, v_data in global_videos.items():
         filename = f"【動画】{clean_filename(v_file)}"
         content = f"---\ntags:\n  - node/video\n---\n# {filename}\n\n"
@@ -300,7 +292,7 @@ def main():
                 arcname = os.path.relpath(file_path, PARENT_DIR)
                 zipf.write(file_path, arcname)
 
-    print(f"🎉 🎉 【成功】Obsidian Vault（動画ノードリッチ情報復元版）の生成完了！\n💾 保存先: {zip_path}")
+    print(f"🎉 🎉 【成功】Obsidian Vault（解説要約表示版）の生成完了！\n💾 保存先: {zip_path}")
 
 if __name__ == "__main__":
     main()

@@ -219,7 +219,7 @@ def detect_video_role(vtt_content, video_name, textbook_content=""):
 # 🏁 メイン実行パイプライン
 # =========================================================
 def main():
-    print(f"=== 🎬 [Phase 2 Ver 2.5.11] 中問・小問対応アセンブリ強化版 起動 ===")
+    print(f"=== 🎬 [Phase 2 Ver 2.5.11 ベース + プロンプト制御版] 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
 
     first_key_masked = f"{API_KEYS[0][:6]}...{API_KEYS[0][-4:]}" if len(API_KEYS[0]) > 10 else "INVALID"
@@ -292,9 +292,12 @@ def main():
 - 指示された通りの極細粒度（{granularity_instruction}）で網羅して作成してください。
 - 各セグメントの開始時間（`start_time`）と終了時間（`end_time`）を MM:SS 形式で正確に記録してください。
 
-【★絶対ルール★】 数式、記号、変数は**必ず** LaTeX 形式で記述し、**必ず** `$` または `$$` 記号で囲んでください（例: `$x^2 + y^2$`）。`$` 記号がないとシステムがエラーを起こします。
-- 動画内の数式・図の情報を読み取り、`blackboard_ocr` 項目や `explanation_summary` へ必ず上記のLaTeX形式で書き起こしてください。
-- 出力はJSONフォーマットとなります。JSON内でLaTeXを記述する際は、**必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\sqrt）** してください。
+【★絶対ルール: テキスト抽出とLaTeXのノイズ防止★】
+1. 数式、記号、変数は**必ず** LaTeX 形式で記述し、文章中であっても**必ず** `$` または `$$` 記号で囲んでください（例: `$x$ に着目すると...`）。
+2. 板書や解説に含まれる穴埋め記号は、`\\\\text{{[ア]}}` や `\\\\[ア]` といった表記にせず、必ずシンプルに `[ア]` と記述してください。
+3. 文字化けの原因となるため、文末や行末に不要なバックスラッシュ（`\\\\` や `￥`）を絶対に残さないでください。
+- 動画内の数式・図の情報を読み取り、`blackboard_ocr` 項目や `explanation_summary` へ必ず上記のルールで書き起こしてください。
+- JSON内でLaTeXを記述する際は、**必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\sqrt）** してください。
 
 【出力ルール】
 1. 日本語出力
@@ -441,7 +444,7 @@ def main():
         time.sleep(3)
 
     output_data = {
-        "engine_version": "2.5.11_topic_hierarchy_assembled",
+        "engine_version": "2.5.11_prompt_cleansed",
         "videos": all_video_maps
     }
 

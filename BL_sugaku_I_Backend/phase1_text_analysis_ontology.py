@@ -165,7 +165,7 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
 
     return f"{mext_code}{new_branch_code}"
 
-# 🌟 既存のオントロジーリストを取得する関数を追加
+# 🌟 既存のオントロジーリストを取得する関数
 def get_existing_ontology_names():
     names = set()
     for p in [KNOWLEDGE_MASTER_PATH, TASK_MASTER_PATH]:
@@ -200,6 +200,11 @@ def execute_step1_extraction(textbook_content, mext_master_dict, bundle_name):
 ■ 登録済み概念リスト: [{existing_names}]
 
 新しく抽出するノードの `name`（名称）や `parent_concept`（上位概念）が、上記のリストにある概念と同じ意味・同義語である場合は、絶対に新語（造語や揺らぎ）を作らず、リストにある名称と【一言一句同じ名称】を優先して使用・継承してください。
+
+【★最重要: テキスト抽出とLaTeXの絶対ルール（ノイズ防止）★】
+1. 問題文や解説の穴埋め記号は、`\\\\text{{[ア]}}` や `\\\\[ア]` といった複雑なLaTeX表記にせず、必ずシンプルに `[ア]` と記述してください。
+2. 日本語のテキスト内に数式や変数（x, y, aなど）を含める場合は、文章中であっても必ず `$` で囲んでください（例: `$x$ に着目すると...`）。
+3. 文字化けの原因となるため、文末や行末に不要なバックスラッシュ（`\\\\` や `￥`）を絶対に残さないでください。
 
 【ノードの分類】
 1. foundation_knowledge (基礎知識): 単元のベースとなる静的な知識。
@@ -305,7 +310,7 @@ def execute_step2_alignment(mapped_step1_data):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.1.5 記憶継承・表記揺れ防止版】Phase 1 起動 ===")
+    print("=== 🏁 【Ver 13.1.7 知能復元・プロンプト制御版】Phase 1 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
 
     textbook_content, mext_master_dict, bundle_name = load_and_prepare_inputs()
@@ -341,7 +346,7 @@ def main():
     step2_output = execute_step2_alignment(step1_output)
 
     final_knowledge_graph = {
-        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.5_gnn_kt_dual_engine", "model_used": MODEL_NAME},
+        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.7_gnn_kt_dual_engine", "model_used": MODEL_NAME},
         "nodes": step1_output.get("nodes", {}),
         "edges": step1_output.get("edges", []),
         "questions": step1_output.get("questions", []),

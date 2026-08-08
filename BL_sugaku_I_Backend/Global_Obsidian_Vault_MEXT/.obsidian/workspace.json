@@ -1,0 +1,213 @@
+{
+  "main": {
+    "id": "91b5cbc9b68d90e4",
+    "type": "split",
+    "children": [
+      {
+        "id": "8fe1041214cb82ab",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2d46b85a9f05cd76",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "グラフビュー"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "b208230e98d245d7",
+    "type": "split",
+    "children": [
+      {
+        "id": "33a7a378331e623c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "833e147aae9d4f7f",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "ファイルエクスプローラ"
+            }
+          },
+          {
+            "id": "193412cf333ed4a5",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "検索"
+            }
+          },
+          {
+            "id": "9e3dda010a4f79e3",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "ブックマーク"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 446.5
+  },
+  "right": {
+    "id": "34076714841411b9",
+    "type": "split",
+    "children": [
+      {
+        "id": "9820ea36d54622b0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7ffe35808358e268",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "バックリンク"
+            }
+          },
+          {
+            "id": "10cfe241d699d6c9",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "アウトゴーイングリンク"
+            }
+          },
+          {
+            "id": "2c522afb59fd2047",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "タグ"
+            }
+          },
+          {
+            "id": "60e73f640434b2eb",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "すべてのプロパティ"
+            }
+          },
+          {
+            "id": "09dc83a5f36990fe",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "アウトライン"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:クイックスイッチャーを開く": false,
+      "graph:グラフビューを開く": false,
+      "canvas:新規キャンバスを作成": false,
+      "daily-notes:今日のデイリーノートを開く": false,
+      "templates:テンプレートを挿入": false,
+      "command-palette:コマンドパレットを開く": false,
+      "bases:新規ベースを作成": false
+    }
+  },
+  "active": "2d46b85a9f05cd76",
+  "lastOpenFiles": [
+    "第1講 式の計算と展開 PART2 整式の整理.md",
+    "第1講 式の計算と展開 PART3 整式の加法と減法，乗法.md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (3) (ii).md",
+    "[知識] 累乗.md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (3) (i).md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (2) (ii).md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (2) (i).md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (1) (iv).md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (1) (iii).md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (1) (ii).md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (1) (i).md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 8.md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 7.md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 6.md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 5.md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 4.md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 3.md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 2.md",
+    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 1.md",
+    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_大問3 (3) (ii).md",
+    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_大問3 (3) (i).md",
+    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_大問3 (2) (ii).md",
+    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_大問3 (2) (i).md",
+    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_大問3 (1).md",
+    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_確認問題 7.md",
+    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_確認問題 6.md"
+  ]
+}
