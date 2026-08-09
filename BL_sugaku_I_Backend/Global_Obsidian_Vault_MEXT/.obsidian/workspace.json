@@ -11,10 +11,14 @@
             "id": "4a0c75ff8758e164",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "グラフビュー"
+              "type": "markdown",
+              "state": {
+                "file": "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1"
             }
           }
         ]
@@ -79,7 +83,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 546.5
   },
   "right": {
     "id": "d1c1cac13d9adf53",
@@ -95,6 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -113,6 +118,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -155,6 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -183,6 +190,17 @@
   },
   "active": "4a0c75ff8758e164",
   "lastOpenFiles": [
+    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1.md",
+    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 2.md",
+    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 3.md",
+    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 4.md",
+    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_大問1 (1).md",
+    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_大問1 (2).md",
+    "[タスク] 特定文字に着目して多項式の次数と定数項を特定する.md",
+    "【動画】BL_sugaku_I_01-1-2.mp4.md",
+    "【動画】BL_sugaku_I_01-1-1.mp4.md",
+    "【動画】BL_sugaku_I_01-2-2.mp4.md",
+    "[再構成] 特定文字に着目した多項式の次数と定数項.md",
     "[視点] 式の一部をひとつのかたまりとみる.md"
   ]
 }
