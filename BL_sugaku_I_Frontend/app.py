@@ -419,10 +419,11 @@ def main():
         )
         return
 
+    # 🌟 サイドバーにバージョン情報を表示
     engine_ver = db.get("metadata", {}).get("engine_version", "バージョン情報なし")
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{engine_ver}`")
 
-    # 🌟 State初期化に selected_video を追加
+    # 🌟 State初期化
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
         if key not in st.session_state:
             st.session_state[key] = [] if key == "history" else None
@@ -443,8 +444,8 @@ def main():
         if v_data:
             st.caption(f"📚 所属単元: {v_data.get('bundle_name', '')} | 🏷️ 授業タイプ: {v_data.get('role', '')}")
             
-            # ダミーの動画プレイヤー枠
-            st.video("https://www.w3schools.com/html/mov_bbb.mp4")
+            # ダミーの動画プレイヤー枠 (純粋なURL文字列で指定)
+            st.video("https://www.w3schools.com/html/mov_bbb.mp4") 
             
             st.markdown("### 📑 タイムライン・チャプター (解説要約つき)")
             st.info("💡 先生の解説の狙い（要約）を事前に確認して、見たいチャプターから再生できます。")
@@ -457,9 +458,8 @@ def main():
                 with st.expander(f"⏱️ {start} 〜 {end} | 📌 {topic}", expanded=(idx==0)):
                     col1, col2 = st.columns([3, 1])
                     with col1:
+                        # 🌟 板書OCRは削除し、解説の狙いのみをスッキリと表示
                         st.markdown(f"**💬 先生の解説の狙い:**\n> {seg.get('explanation_summary', 'データなし')}")
-                        if seg.get("blackboard_ocr"):
-                            st.markdown(f"**📝 黒板の数式・板書:**\n$$ {seg.get('blackboard_ocr')} $$")
                     with col2:
                         if st.button("▶️ ここから再生", key=f"play_{v_file}_{idx}", use_container_width=True):
                             st.toast(f"{start} から再生を開始しました！（モック機能）")
@@ -564,11 +564,13 @@ def main():
             st.subheader(f"🎯 第一候補: {intent_label}")
 
             with st.container(border=True):
+                # 🌟 問題の文言（確認問題など）の重複を解消
                 title = (
                     node.get("concept_name")
                     if res["intent"] == "concept"
-                    else f"{node.get('bundle_name', '')} 確認問題 {node.get('local_q_num', '')}"
+                    else f"{node.get('bundle_name', '')} {node.get('local_q_num', '')}"
                 )
+                
                 if res.get("is_drilldown"):
                     st.markdown(f"### {title}")
                 else:
@@ -598,7 +600,8 @@ def main():
                         st.markdown("#### 🧠 解くために必要な高校数学の概念")
                         st.info(res["required_concepts_text"])
 
-                    st.markdown(f"#### 📝 本命の確認問題 ({node.get('bundle_name', '')} 確認問題 {node.get('local_q_num', '')})")
+                    # 🌟 問題の文言の重複を解消
+                    st.markdown(f"#### 📝 本命の問題 ({node.get('bundle_name', '')} {node.get('local_q_num', '')})")
                     st.info(node.get("question_text", ""))
                     st.markdown(f"**🧠 関連概念:** {node.get('matched_concept', '')}")
 
@@ -629,13 +632,14 @@ def main():
                     if not e_videos_found:
                         st.write("該当なし")
 
-                    st.markdown("#### 📝 第三アクション (演習のための確認問題)")
+                    st.markdown("#### 📝 第三アクション (演習のための問題)")
                     if res.get("linked_questions"):
                         cols = st.columns(3)
                         for i, q in enumerate(res["linked_questions"]):
                             with cols[i % 3]:
                                 with st.container(border=True):
-                                    st.markdown(f"**📌 {q.get('bundle_name', '')} 確認問題 {q.get('local_q_num', '')}**")
+                                    # 🌟 問題の文言の重複を解消
+                                    st.markdown(f"**📌 {q.get('bundle_name', '')} {q.get('local_q_num', '')}**")
                                     st.markdown(q.get("question_text", ""))
 
                                     if st.button(
@@ -674,7 +678,8 @@ def main():
                         for i, q in enumerate(res["connected_questions"]):
                             with cols[i % 3]:
                                 with st.container(border=True):
-                                    st.markdown(f"**📌 {q.get('bundle_name', '')} 確認問題 {q.get('local_q_num', '')}**")
+                                    # 🌟 問題の文言の重複を解消
+                                    st.markdown(f"**📌 {q.get('bundle_name', '')} {q.get('local_q_num', '')}**")
                                     st.markdown(q.get("question_text", ""))
 
                                     if st.button(
@@ -713,7 +718,8 @@ def main():
                                     st.caption(f"🔼 親概念: {p_c}")
                                 st.markdown(r_node.get("summary", ""))
                             else:
-                                st.markdown(f"**📌 確認問題 {r_node.get('local_q_num', '')}**")
+                                # 🌟 問題の文言の重複を解消
+                                st.markdown(f"**📌 {r_node.get('local_q_num', '')}**")
                                 st.caption(f"📚 {r_node.get('bundle_name', '')}")
                                 st.markdown(f"**🧠 概念:** {r_node.get('matched_concept', '')}")
                                 st.markdown(r_node.get("question_text", ""))
@@ -773,19 +779,19 @@ def main():
                             else:
                                 display_label = clean_label[:max_len] + "..." if len(clean_label) > max_len else clean_label
 
-                            # 🌟 知識群（グループ）を「形」と「色」で表現
+                            # 🌟 知識群（グループ）を「形」と「色」で表現 (黒文字が読みやすいパステル調に変更)
                             if is_current:
-                                color, shape = "#FFD700", "star" # 現在地: 星(金)
+                                color, shape = "#FFECB3", "star" # 現在地: 星(明るい黄色)
                             elif node_type == "foundation_knowledge":
-                                color, shape = "#4682B4", "box" # 基礎知識: 四角(青)
+                                color, shape = "#BBDEFB", "box" # 基礎知識: 四角(薄い青)
                             elif node_type == "perspective_condition":
-                                color, shape = "#9370DB", "hexagon" # 視点: 六角形(紫)
+                                color, shape = "#E1BEE7", "hexagon" # 視点: 六角形(薄い紫)
                             elif node_type == "derived_knowledge":
-                                color, shape = "#3CB371", "box" # 再構成知識: 四角(緑)
+                                color, shape = "#C8E6C9", "box" # 再構成知識: 四角(薄い緑)
                             elif node_type == "tasks":
-                                color, shape = "#191970", "box" # タスク: 四角(紺)
+                                color, shape = "#B0BEC5", "box" # タスク: 四角(グレー/紺系)
                             else:
-                                color, shape = "#A9A9A9", "ellipse" # その他: 楕円(灰)
+                                color, shape = "#E0E0E0", "ellipse" # その他: 楕円(灰)
 
                             graph_nodes.append(Node(id=nid, label=display_label, size=30, color=color, shape=shape, title=display_tooltip))
                             node_ids.add(nid)
@@ -824,7 +830,6 @@ def main():
                             add_graph_node(nxt_name, nxt_name, nxt.get("type", "unknown")) 
                             graph_edges.append(Edge(source=c_name_target, target=nxt_name, label="requires", dashes=True))
 
-                    # 🌟 階層化レイアウトを強制し、上から下への流れを表現
                     config = Config(
                         width="100%",
                         height=400,
@@ -833,7 +838,7 @@ def main():
                         hierarchical={"enabled": True, "direction": "UD", "sortMethod": "directed"},
                     )
 
-                    with st.expander("🗺️ 学習スキルツリーを開く (知識群の可視化)", expanded=True):
+                    with st.expander("🗺️ 学習スキルツリーを開く (クリックで探索可能)", expanded=True):
                         st.info("💡 **ヒント**: 気になるノードにカーソルを合わせるか、クリックするとその概念の世界へワープして探索を続けられます！")
                         st.caption("🟦 基礎知識 | 🟪 視点・条件(六角形) | 🟩 再構成知識 | ⬛ タスク(技能) | ⭐️ 現在地")
                         clicked_node_id = agraph(nodes=graph_nodes, edges=graph_edges, config=config)

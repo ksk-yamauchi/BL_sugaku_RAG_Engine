@@ -80,7 +80,7 @@ def get_embedding(text, max_retries=None):
 def main():
     global MODEL_NAME
     
-    print("=== 🏁 【Ver 13.4.1 フロントエンド互換＆オートワイヤリング版】グローバルDB構築プロセス起動 ===")
+    print("=== 🏁 【Ver 13.5.0 動画カタログ統合版】グローバルDB構築プロセス起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
     try:
         MODEL_NAME = discover_embed_model(API_KEYS[0])
@@ -111,19 +111,38 @@ def main():
     global_mext_index = {}
     global_edges = []
     global_alignments = []
+    global_video_catalog = {}  # 🌟 動画カタログ用の辞書を新設
     global_timeline_counter = 0
 
     # 1. データの収集とマージ
     for s_dir in sub_dirs:
         file_path = os.path.join(s_dir, "output_result", "final_knowledge_graph_complete.json")
+        lecture_map_path = os.path.join(s_dir, "output_result", "lecture_map.json")  # 🌟 lecture_mapも読み込む
         if not os.path.exists(file_path): continue
         part_name = os.path.basename(s_dir)
+        
         with open(file_path, "r", encoding="utf-8") as f:
             try: data = json.load(f)
             except json.JSONDecodeError: continue
+            
         engine_version = data.get("metadata", {}).get("engine_version", "")
         if not str(engine_version).startswith("13."): continue
         bundle_name = data.get("metadata", {}).get("bundle_name", part_name)
+        
+        # 🌟 動画カタログの収集
+        if os.path.exists(lecture_map_path):
+            with open(lecture_map_path, "r", encoding="utf-8") as f:
+                try: 
+                    l_map_data = json.load(f)
+                    for v in l_map_data.get("videos", []):
+                        v_file = v.get("video_file")
+                        if v_file:
+                            global_video_catalog[v_file] = {
+                                "bundle_name": bundle_name,
+                                "role": v.get("role", "unknown"),
+                                "segments": v.get("segments", [])
+                            }
+                except json.JSONDecodeError: pass
         
         part_alignments = data.get("alignments", [])
         for align in part_alignments:
@@ -149,7 +168,7 @@ def main():
                     global_nodes_map[n_id] = {
                         "global_c_id": n_id, "id": n_id, "type": k_type, "type_label": meta_def["label"], "pillar": meta_def["pillar"], "role_desc": meta_def["role"],
                         "name": node_name, 
-                        "concept_name": node_name,  # 🌟 フロントエンド互換性：旧仕様のキー名
+                        "concept_name": node_name,
                         "parent_concept": node.get("parent_concept", ""), "summary": node.get("summary", ""),
                         "mext_code": mext_code, "mext_hierarchy": mext_info.get("hierarchy_text", "不明な階層"), "mext_official_text": mext_info.get("official_text", ""), "mext_explanation": mext_info.get("explanation_summary", "解説なし"),
                         "aligned_videos": node.get("aligned_videos", []), "aligned_questions_text": [], 
@@ -168,11 +187,11 @@ def main():
             q_num = str(q.get("question_number", ""))
             q_id = f"Q_{bundle_name}_{q_num}"
             global_questions_map[q_id] = {
-                "global_q_id": q_id, # 🌟 フロントエンド互換性
+                "global_q_id": q_id, 
                 "id": q_id, "type": "question", "bundle_name": bundle_name, "question_number": q_num, 
-                "local_q_num": q_num, # 🌟 フロントエンド互換性
+                "local_q_num": q_num, 
                 "question_text": q.get("question_text", ""), "answer_text": q.get("answer_text", ""), "aligned_videos": q.get("aligned_videos", []), 
-                "matched_concept": "", # 🌟 ここは後でアライメント情報を元に埋める
+                "matched_concept": "",
                 "global_timeline_index": global_timeline_counter
             }
             global_timeline_counter += 1
@@ -195,7 +214,7 @@ def main():
             if rel not in global_nodes_map[tgt]["incoming_edges"]: global_nodes_map[tgt]["incoming_edges"][rel] = []
             global_nodes_map[tgt]["incoming_edges"][rel].append(edge_data_in)
 
-    # 🌟 2.5 知識の実体結合 (オートワイヤリング)
+    # 2.5 知識の実体結合 (オートワイヤリング)
     name_to_node_id = {meta["name"]: n_id for n_id, meta in global_nodes_map.items()}
     for n_id, meta in global_nodes_map.items():
         p_name = meta.get("parent_concept", "")
@@ -221,21 +240,18 @@ def main():
         if not q_data: continue
         q_text_snippet = f"[問題] {q_data['question_text']}\n[解説] {q_data['answer_text']}"
         
-        # タスクノードに問題テキストを紐付け
         for t_id in align.get("linked_task_ids", []):
             if t_id in global_nodes_map and global_nodes_map[t_id]["type"] == "tasks":
                 global_nodes_map[t_id]["aligned_questions_text"].append(q_text_snippet)
                 
-        # 🌟 フロント互換対応：問題ノードに「最も関連する概念(matched_concept)」を紐付け
         k_ids = align.get("linked_knowledge_ids", [])
         if k_ids and not q_data["matched_concept"]:
-            # 最初に見つかった基礎知識または視点の名前を代表概念とする
             for k_id in k_ids:
                 if k_id in global_nodes_map:
                     q_data["matched_concept"] = global_nodes_map[k_id]["name"]
                     break
 
-    # 🌟 フロント互換対応: prerequisite_concepts (旧仕様の前提配列) を作成
+    # prerequisite_concepts (フロント仕様) の作成
     for n_id, meta in global_nodes_map.items():
         pre_list = []
         for rel in ["prerequisite", "applies_condition"]:
@@ -285,18 +301,20 @@ def main():
         meta["vector"] = vector
         time.sleep(0.5)
 
+    # 🌟 最終ペイロードに global_video_catalog を追加
     db_payload = {
         "embed_model": MODEL_NAME,
-        "metadata": {"engine_version": "13.4.1_ontology_auto_wiring_compatible", "embed_model": MODEL_NAME},
+        "metadata": {"engine_version": "13.5.0_video_catalog_integrated", "embed_model": MODEL_NAME},
         "global_concept_nodes": global_nodes_map,
         "global_question_nodes": global_questions_map,
-        "global_mext_index": global_mext_index
+        "global_mext_index": global_mext_index,
+        "global_video_catalog": global_video_catalog
     }
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(db_payload, f, ensure_ascii=False, indent=2)
 
     print("\n=========================================================")
-    print(f"🎉 グローバルベクトルDB構築完了！\n💾 保存先: {OUTPUT_FILE}")
+    print(f"🎉 グローバルベクトルDB（動画カタログ統合版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
     print("=========================================================")
 
 if __name__ == "__main__":
