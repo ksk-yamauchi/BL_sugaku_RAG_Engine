@@ -1,14 +1,14 @@
 {
   "main": {
-    "id": "91b5cbc9b68d90e4",
+    "id": "c1c86dee2a66d334",
     "type": "split",
     "children": [
       {
-        "id": "8fe1041214cb82ab",
+        "id": "4e675032d11bc127",
         "type": "tabs",
         "children": [
           {
-            "id": "2d46b85a9f05cd76",
+            "id": "4a0c75ff8758e164",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -23,15 +23,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "b208230e98d245d7",
+    "id": "9f110cef908701d0",
     "type": "split",
     "children": [
       {
-        "id": "33a7a378331e623c",
+        "id": "6be0d3ec4dba904a",
         "type": "tabs",
         "children": [
           {
-            "id": "833e147aae9d4f7f",
+            "id": "c2a08b9b7bddf6b2",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -46,7 +46,7 @@
             }
           },
           {
-            "id": "193412cf333ed4a5",
+            "id": "e2337819408be4cb",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -63,7 +63,7 @@
             }
           },
           {
-            "id": "9e3dda010a4f79e3",
+            "id": "d3eaf2dbb65e9e0e",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -79,18 +79,18 @@
       }
     ],
     "direction": "horizontal",
-    "width": 446.5
+    "width": 300
   },
   "right": {
-    "id": "34076714841411b9",
+    "id": "d1c1cac13d9adf53",
     "type": "split",
     "children": [
       {
-        "id": "9820ea36d54622b0",
+        "id": "feb2d296482efe21",
         "type": "tabs",
         "children": [
           {
-            "id": "7ffe35808358e268",
+            "id": "e4f760b2b43d05e5",
             "type": "leaf",
             "state": {
               "type": "backlink",
@@ -108,7 +108,7 @@
             }
           },
           {
-            "id": "10cfe241d699d6c9",
+            "id": "30e59207e8f5d266",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
@@ -121,7 +121,7 @@
             }
           },
           {
-            "id": "2c522afb59fd2047",
+            "id": "541b8561ada60c2f",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -136,7 +136,7 @@
             }
           },
           {
-            "id": "60e73f640434b2eb",
+            "id": "343bbebbd506b21b",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -150,7 +150,7 @@
             }
           },
           {
-            "id": "09dc83a5f36990fe",
+            "id": "67c7245f3a7813a0",
             "type": "leaf",
             "state": {
               "type": "outline",
@@ -181,33 +181,8 @@
       "bases:新規ベースを作成": false
     }
   },
-  "active": "2d46b85a9f05cd76",
+  "active": "4a0c75ff8758e164",
   "lastOpenFiles": [
-    "第1講 式の計算と展開 PART2 整式の整理.md",
-    "第1講 式の計算と展開 PART3 整式の加法と減法，乗法.md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (3) (ii).md",
-    "[知識] 累乗.md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (3) (i).md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (2) (ii).md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (2) (i).md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (1) (iv).md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (1) (iii).md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (1) (ii).md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_大問4 (1) (i).md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 8.md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 7.md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 6.md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 5.md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 4.md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 3.md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 2.md",
-    "[問題] 第1講 式の計算と展開 PART4 展開_確認問題 1.md",
-    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_大問3 (3) (ii).md",
-    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_大問3 (3) (i).md",
-    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_大問3 (2) (ii).md",
-    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_大問3 (2) (i).md",
-    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_大問3 (1).md",
-    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_確認問題 7.md",
-    "[問題] 第1講 式の計算と展開 PART3 整式の加法と減法，乗法_確認問題 6.md"
+    "[視点] 式の一部をひとつのかたまりとみる.md"
   ]
 }

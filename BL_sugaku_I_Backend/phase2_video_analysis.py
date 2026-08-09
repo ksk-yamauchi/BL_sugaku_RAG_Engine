@@ -219,7 +219,7 @@ def detect_video_role(vtt_content, video_name, textbook_content=""):
 # 🏁 メイン実行パイプライン
 # =========================================================
 def main():
-    print(f"=== 🎬 [Phase 2 Ver 2.5.11 ベース + プロンプト制御版] 起動 ===")
+    print(f"=== 🎬 [Phase 2 Ver 2.5.11 ベース + LaTeXノイズ防止版] 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
 
     first_key_masked = f"{API_KEYS[0][:6]}...{API_KEYS[0][-4:]}" if len(API_KEYS[0]) > 10 else "INVALID"

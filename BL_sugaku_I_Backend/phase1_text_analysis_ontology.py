@@ -195,11 +195,14 @@ def execute_step1_extraction(textbook_content, mext_master_dict, bundle_name):
 
 【対象単元】: {bundle_name}
 
-【★最重要：用語と親概念の統一（表記揺れの絶対防止）★】
+【★最重要：用語の統合と分離のルール★】
 過去の単元解析で、以下の概念が既にシステムに登録されています。
 ■ 登録済み概念リスト: [{existing_names}]
 
-新しく抽出するノードの `name`（名称）や `parent_concept`（上位概念）が、上記のリストにある概念と同じ意味・同義語である場合は、絶対に新語（造語や揺らぎ）を作らず、リストにある名称と【一言一句同じ名称】を優先して使用・継承してください。
+新しく抽出するノードの `name`（名称）や `parent_concept`（上位概念）を決定する際、以下の【統合と分離のルール】を厳守してください。
+
+1. 【単なる表記揺れは統合する】: 上記の登録済みリストにある概念と比較したとき、「特定の文字に着目する」と「特定文字への着目」のような、単なる言い回しや表現の違いである場合は、新語を作らず、上記の登録済みリストにある名称と【一言一句同じ名称】を優先して使用・継承してください。
+2. 【数学的定義が異なるものは厳格に分離する】: 「整式」と「多項式」、「方程式」と「恒等式」のように、高校数学の指導において数学的な定義・対象が明確に異なる用語は、一般的な意味が似ていても厳格に区別し、新しい用語として抽出してください。
 
 【★最重要: テキスト抽出とLaTeXの絶対ルール（ノイズ防止）★】
 1. 問題文や解説の穴埋め記号は、`\\\\text{{[ア]}}` や `\\\\[ア]` といった複雑なLaTeX表記にせず、必ずシンプルに `[ア]` と記述してください。
@@ -310,7 +313,7 @@ def execute_step2_alignment(mapped_step1_data):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.1.7 知能復元・プロンプト制御版】Phase 1 起動 ===")
+    print("=== 🏁 【Ver 13.1.8 数学的厳格性＆汎化防止版】Phase 1 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
 
     textbook_content, mext_master_dict, bundle_name = load_and_prepare_inputs()
@@ -346,7 +349,7 @@ def main():
     step2_output = execute_step2_alignment(step1_output)
 
     final_knowledge_graph = {
-        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.7_gnn_kt_dual_engine", "model_used": MODEL_NAME},
+        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.8_gnn_kt_dual_engine", "model_used": MODEL_NAME},
         "nodes": step1_output.get("nodes", {}),
         "edges": step1_output.get("edges", []),
         "questions": step1_output.get("questions", []),
