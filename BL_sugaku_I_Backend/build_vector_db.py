@@ -80,7 +80,7 @@ def get_embedding(text, max_retries=None):
 def main():
     global MODEL_NAME
     
-    print("=== 🏁 【Ver 14.0 動画主従関係分離・カタログ統合版】グローバルDB構築プロセス起動 ===")
+    print("=== 🏁 【Ver 14.1 知識/技能分離・カタログ統合版】グローバルDB構築プロセス起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
     try:
         MODEL_NAME = discover_embed_model(API_KEYS[0])
@@ -126,6 +126,7 @@ def main():
             except json.JSONDecodeError: continue
             
         engine_version = data.get("metadata", {}).get("engine_version", "")
+        # Ver 14.x 系データを処理対象とする
         if not str(engine_version).startswith("14."): continue
         bundle_name = data.get("metadata", {}).get("bundle_name", part_name)
         
@@ -148,8 +149,9 @@ def main():
             align["bundle_name"] = bundle_name
             global_alignments.append(align)
 
+        # 🌟 ここを変更：foundation_knowledge の pillar を「知識」に修正
         node_categories = {
-            "foundation_knowledge": {"label": "基礎知識", "pillar": "知識及び技能", "role": "条件によって揺らがない純粋な数学的定義・用語（体系化の土台）"},
+            "foundation_knowledge": {"label": "基礎知識", "pillar": "知識", "role": "条件によって揺らがない純粋な数学的定義・用語（体系化の土台）"},
             "perspective_condition": {"label": "視点・条件", "pillar": "思考力，判断力，表現力等", "role": "事象の本質を捉え直す視点・条件・思考の枠組み（レンズ）"},
             "derived_knowledge": {"label": "再構成知識", "pillar": "思考の変容プロセス", "role": "基礎知識に視点を通した結果得られる新たな気付き（パラダイムシフト）"},
             "tasks": {"label": "タスク（技能）", "pillar": "技能", "role": "生徒が知識を用いて実際に行う計算手順・操作アクション（問題解決のゴール）"}
@@ -161,7 +163,7 @@ def main():
                 n_id = node.get("node_id")
                 if not n_id: continue
                 
-                # 🌟 新規ノードの初期化（動画配列を main_videos と review_videos に分割）
+                # 新規ノードの初期化（動画配列を main_videos と review_videos に分割）
                 if n_id not in global_nodes_map:
                     mext_code = node.get("mext_code", "")
                     mext_info = mext_dict.get(mext_code, {})
@@ -178,7 +180,7 @@ def main():
                     }
                     global_timeline_counter += 1
 
-                # 🌟 動画の振り分け処理 (新規・既存問わず実行し、アライメントタイプに応じて配列を分ける)
+                # 動画の振り分け処理 (新規・既存問わず実行し、アライメントタイプに応じて配列を分ける)
                 for new_v in node.get("aligned_videos", []):
                     v_file = new_v.get("video_file")
                     a_type = new_v.get("alignment_type", "")
@@ -285,7 +287,7 @@ def main():
             prereqs = [f"理由: {e['reasoning']}" for e in meta["incoming_edges"].get("prerequisite", []) + meta["incoming_edges"].get("applies_condition", [])]
             if prereqs: c_composite += f"【前提条件】{' / '.join(prereqs)}\n"
         
-        # 🌟 main_videos と review_videos の両方から解説要約を結合
+        # main_videos と review_videos の両方から解説要約を結合
         if meta["type"] != "tasks":
             for v in meta["main_videos"] + meta["review_videos"]:
                 if v.get("explanation_summary"): c_composite += f"【講義要約】{v['explanation_summary']}\n"
@@ -311,9 +313,10 @@ def main():
         meta["vector"] = vector
         time.sleep(0.5)
 
+    # 🌟 メタデータバージョンの更新
     db_payload = {
         "embed_model": MODEL_NAME,
-        "metadata": {"engine_version": "14.0_video_catalog_integrated", "embed_model": MODEL_NAME},
+        "metadata": {"engine_version": "14.1_video_catalog_integrated", "embed_model": MODEL_NAME},
         "global_concept_nodes": global_nodes_map,
         "global_question_nodes": global_questions_map,
         "global_mext_index": global_mext_index,
@@ -323,7 +326,7 @@ def main():
         json.dump(db_payload, f, ensure_ascii=False, indent=2)
 
     print("\n=========================================================")
-    print(f"🎉 グローバルベクトルDB（動画主従関係分離・カタログ統合版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
+    print(f"🎉 グローバルベクトルDB（知識/技能分離・カタログ統合版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
     print("=========================================================")
 
 if __name__ == "__main__":
