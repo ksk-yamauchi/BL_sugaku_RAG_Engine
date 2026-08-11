@@ -19,6 +19,7 @@ mock_student_logs.json
 output_result/
 temp_processing_file.pdf
 *.crdownload
+Global_Obsidian_Vault_MEXT/
 
 # ==========================================
 # 🐍 Python・仮想環境

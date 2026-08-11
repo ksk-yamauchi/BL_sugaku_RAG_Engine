@@ -30,7 +30,7 @@
            ▼
  ─────────────────────────────────────────────────────────────
  [ バックエンド統合処理 ]
-   ├─ build_vector_db.py (Ver 14.0) ➔ ベクトルDB構築・動画の main/review 分割格納・【動画カタログ統合】
+   ├─ build_vector_db.py (Ver 14.1) ➔ ベクトルDB構築・動画の main/review 分割格納・【動画カタログ統合】
    ├─ export_global_obsidian_vault_mext.py (Ver 14.0) ➔ Obsidian Vault ZIP 出力・【主従動画の視覚的分離表示】
    ├─ generate_mock_logs.py ➔ GNN-KT検証用 ダミー学習ログ出力 (mock_student_logs.json) 出力
    └─ visualize_syllabus_content.py ➔ 対話型シラバスマッチング可視化CLI
@@ -70,8 +70,9 @@
   * タイムスタンプのずれに対してはファジーマッチ（最寄時間検索）を実行します。
   * **[堅牢化]** Phase 1同様、LaTeXエスケープ起因のJSONパースエラー自動修復に対応。
 
-* **グローバルDB構築 (`build_vector_db.py` - Ver 14.0)**:
+* **グローバルDB構築 (`build_vector_db.py` - Ver 14.1)**:
   * 全PARTの出力結果を統合し、フロントエンド用のベクトルデータベースを構築します。
+  * **[知識/技能の完全分離]** 文科省の枠組みに縛られず、`foundation_knowledge` のPillarを「知識及び技能」から「知識」へと変更。動詞である「技能（タスク）」とメタデータ上でも完全に分離し、分析基盤の純度を高めました。
   * **[DBスキーマの拡張]** 各ノードに紐づく動画を単一の `aligned_videos` ではなく、Phase 3 の判定結果に基づいて `main_videos` と `review_videos` に分割して格納・統合し、DBレベルで動画の主従関係（コンテキスト）を保持します。
   * **[動画カタログの統合]** グラフのノードに紐づかなかった（アライメント漏れした）動画も含め、すべての動画セグメント情報を `global_video_catalog` としてDBに直接格納。フロントエンドでの「タイムスタンプ・チャプター機能」を実現します。
   * **[オートワイヤリング (実体結合)]** AIが抽出漏れを起こした場合でも、子ノードの「親概念名」と既存ノードの実体が一致すれば、システム側で強制的に `subsumes` と `part_of` のエッジを自動生成し、ネットワークの断線を防ぎます。
@@ -126,6 +127,22 @@ python build_vector_db.py
 python export_global_obsidian_vault_mext.py
 
 # ⑤ GNN-KT検証用ダミーログの生成
+python generate_mock_logs.py
+```
+
+### 4. フロントエンド (AIチューター) の起動
+バックエンドで生成された `global_vector_db_cache.json` を `BL_sugaku_I_Frontend/` フォルダーへコピーします。
+
+フロントエンドディレクトリでアプリケーションを起動します。
+```bash
+cd ../BL_sugaku_I_Frontend
+
+# 生徒向け AIチューター アプリの起動
+streamlit run app.py
+
+# 教員向け Semantic Zoom ダッシュボードの起動
+streamlit run app_ft.py
+```
 python generate_mock_logs.py
 ```
 

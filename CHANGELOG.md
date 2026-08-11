@@ -5,6 +5,11 @@
 
 ---
 
+## [14.1.0] - 2026-08-11
+### 🚀 Added (追加)
+* **[DB構築] メタデータ上の知識/技能の完全分離**:
+  * `build_vector_db.py` において、`foundation_knowledge` の Pillar 属性を、文科省の枠組みである「知識及び技能」から「知識」へと変更。動詞である「技能（タスク）」と名詞である「知識」をシステムメタデータ上でも完全に分離し、Semantic Zoom 等における「知識定着度と技能発揮度」の分析基盤の純度を向上。
+
 ## [14.0.0] - 2026-08-11
 ### 🚀 Added (追加)
 * **[Phase 1] オントロジーの純化 (Paradigm Shift Extraction)**:
@@ -13,7 +18,7 @@
 * **[Phase 3] 動画アライメントの主従分離**:
   * `alignment_type` を細分化し、動画の解説内容がその概念自体の説明に終始していれば `concept_introduction`（主）、その概念を使って別のタスクを行っている過程での言及であれば `prerequisite_review`（従）として厳密に分類させるルールを追加。
 * **[DB構築] メタデータ構造の拡張 (main & review の分割)**:
-  * `build_vector_db.py` において、各ノードに紐づく動画を単一の `aligned_videos` 配列に入れるのではなく、`main_videos`（主教材）と `review_videos`（前提・復習）に分割して格納・統合するようDBスキーマを拡張。
+  * `build_vector_db.py` において、各ノードに紐づく動画を単一の `aligned_videos` 配列に入れるのではなく、Phase 3 の判定結果に基づいて `main_videos`（主教材）と `review_videos`（前提・復習）に分割して格納・統合するようDBスキーマを拡張。
 * **[Obsidian] 動画セクションの主従UI表示対応**:
   * `export_global_obsidian_vault_mext.py` において、出力されるMarkdownの動画セクションを「💡 【メイン教材】この概念・タスクを直接学ぶ動画」と「⏪ 【前提・復習】この概念を前提知識として利用している動画」に視覚的に分けて表示するよう改修。
 
