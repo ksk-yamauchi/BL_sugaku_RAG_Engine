@@ -38,7 +38,7 @@ TYPE_PREFIX = {
 }
 
 def main():
-    print("🚀 [Ver 14.0 動画主従分離・スマートリンク対応] Obsidian Vault パッケージ化を開始します...")
+    print("🚀 [Ver 14.2 スタディサプリ講義名表示版] Obsidian Vault パッケージ化を開始します...")
 
     if not os.path.exists(DB_PATH):
         raise FileNotFoundError(f"❌ {DB_PATH} が見つかりません。先に build_vector_db.py を実行してください。")
@@ -53,6 +53,7 @@ def main():
 
     nodes = db.get("global_concept_nodes", {})
     questions = db.get("global_question_nodes", {})
+    video_catalog = db.get("global_video_catalog", {}) # 🌟 動画カタログの取得
 
     id_to_filename = {}
     name_to_id = {}
@@ -98,13 +99,13 @@ def main():
                     global_parent_concepts[p_name] = set()
                 global_parent_concepts[p_name].add(filename)
 
-        # 🌟 main_videos と review_videos の両方から動画ハブへのリンクを構築
+        # 🌟 不要な逆引きロジック（bundlesの収集）を削除し、純粋に動画リストのみを生成
         all_videos = ndata.get("main_videos", []) + ndata.get("review_videos", [])
         for v in all_videos:
             v_file = v.get("video_file")
             if v_file:
                 if v_file not in global_videos:
-                    global_videos[v_file] = {"bundles": set(), "concepts": set(), "tasks": set(), "questions_direct": set(), "questions_prereq": set()}
+                    global_videos[v_file] = {"concepts": set(), "tasks": set(), "questions_direct": set(), "questions_prereq": set()}
                 if ndata.get("type") == "tasks":
                     global_videos[v_file]["tasks"].add(f"[[{filename}]]")
                 else:
@@ -124,6 +125,11 @@ def main():
         content += f"- **役割分類**: {ndata.get('type_label', '')}\n"
         content += f"- **役割定義**: {ndata.get('role_desc', '')}\n"
         content += f"- **三つの柱**: {ndata.get('pillar', '')}\n"
+        
+        # 🌟 講義名（所属単元）の表示を追加
+        bundle_name_clean = clean_filename(ndata.get('bundle_name', 'Unknown_Bundle'))
+        content += f"- **🎓 スタディサプリの講義名**: [[{bundle_name_clean}]]\n"
+        
         if parent_link_str:
             content += f"- **上位概念**: {parent_link_str}\n"
         
@@ -179,7 +185,6 @@ def main():
             content += "- 特記なし\n"
         content += "\n"
 
-        # 🌟 動画セクションの分割表示
         main_videos = ndata.get("main_videos", [])
         review_videos = ndata.get("review_videos", [])
         
@@ -221,15 +226,15 @@ def main():
     print("   📝 問題ノードのMarkdownを生成中...")
     for qid, qdata in questions.items():
         filename = id_to_filename[qid]
-        b_name = qdata.get("bundle_name", "Unknown_Bundle")
+        b_name = clean_filename(qdata.get("bundle_name", "Unknown_Bundle"))
 
+        # 🌟 逆引きロジック（bundles）を破棄
         for v in qdata.get("aligned_videos", []):
             v_file = v.get("video_file")
             align_type = v.get("alignment_type", "")
             if v_file:
                 if v_file not in global_videos:
-                    global_videos[v_file] = {"bundles": set(), "concepts": set(), "tasks": set(), "questions_direct": set(), "questions_prereq": set()}
-                global_videos[v_file]["bundles"].add(b_name)
+                    global_videos[v_file] = {"concepts": set(), "tasks": set(), "questions_direct": set(), "questions_prereq": set()}
                 if align_type in ["direct_explanation", "task_walkthrough"]:
                     global_videos[v_file]["questions_direct"].add(f"[[{filename}]]")
                 else:
@@ -242,6 +247,10 @@ def main():
         content += f"tags:\n  - node/question\n"
         content += f"---\n"
         content += f"# {filename}\n\n"
+        
+        # 🌟 講義名（所属単元）の表示を追加
+        content += f"**🎓 スタディサプリの講義名**: [[{b_name}]]\n\n"
+        
         content += f"## 📝 問題文\n{q_text}\n\n"
         content += f"## 💡 解説・解答\n{a_text}\n\n"
         
@@ -272,11 +281,12 @@ def main():
         filename = f"【動画】{clean_filename(v_file)}"
         content = f"---\ntags:\n  - node/video\n---\n# {filename}\n\n"
         
-        if v_data.get("bundles"):
-            content += "## 🏛️ 所属単元\n"
-            for b in sorted(list(v_data["bundles"])):
-                content += f"- [[{clean_filename(b)}]]\n"
-            content += "\n"
+        # 🌟 DBの動画カタログから直接 bundle_name を取得して表示
+        catalog_info = video_catalog.get(v_file, {})
+        b_name_catalog = catalog_info.get("bundle_name")
+        if b_name_catalog:
+            content += "## 🎓 スタディサプリの講義名\n"
+            content += f"- [[{clean_filename(b_name_catalog)}]]\n\n"
             
         if v_data.get("concepts") or v_data.get("tasks"):
             content += "## 🧠 📘 関連する知識・タスク（インプット講義）\n"
@@ -311,7 +321,7 @@ def main():
                 arcname = os.path.relpath(file_path, PARENT_DIR)
                 zipf.write(file_path, arcname)
 
-    print(f"🎉 🎉 【成功】Obsidian Vault（主従分離・解説要約表示版）の生成完了！\n💾 保存先: {zip_path}")
+    print(f"🎉 🎉 【成功】Obsidian Vault（スタディサプリ講義名表示版）の生成完了！\n💾 保存先: {zip_path}")
 
 if __name__ == "__main__":
     main()

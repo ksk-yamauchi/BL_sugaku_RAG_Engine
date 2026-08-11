@@ -80,7 +80,7 @@ def get_embedding(text, max_retries=None):
 def main():
     global MODEL_NAME
     
-    print("=== 🏁 【Ver 14.1 知識/技能分離・カタログ統合版】グローバルDB構築プロセス起動 ===")
+    print("=== 🏁 【Ver 14.2 所属講義ロジック付与版】グローバルDB構築プロセス起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
     try:
         MODEL_NAME = discover_embed_model(API_KEYS[0])
@@ -149,7 +149,6 @@ def main():
             align["bundle_name"] = bundle_name
             global_alignments.append(align)
 
-        # 🌟 ここを変更：foundation_knowledge の pillar を「知識」に修正
         node_categories = {
             "foundation_knowledge": {"label": "基礎知識", "pillar": "知識", "role": "条件によって揺らがない純粋な数学的定義・用語（体系化の土台）"},
             "perspective_condition": {"label": "視点・条件", "pillar": "思考力，判断力，表現力等", "role": "事象の本質を捉え直す視点・条件・思考の枠組み（レンズ）"},
@@ -163,7 +162,7 @@ def main():
                 n_id = node.get("node_id")
                 if not n_id: continue
                 
-                # 新規ノードの初期化（動画配列を main_videos と review_videos に分割）
+                # 新規ノードの初期化
                 if n_id not in global_nodes_map:
                     mext_code = node.get("mext_code", "")
                     mext_info = mext_dict.get(mext_code, {})
@@ -174,6 +173,8 @@ def main():
                         "concept_name": node_name,
                         "parent_concept": node.get("parent_concept", ""), "summary": node.get("summary", ""),
                         "mext_code": mext_code, "mext_hierarchy": mext_info.get("hierarchy_text", "不明な階層"), "mext_official_text": mext_info.get("official_text", ""), "mext_explanation": mext_info.get("explanation_summary", "解説なし"),
+                        # 🌟 ロジックベースで bundle_name を付与
+                        "bundle_name": bundle_name,
                         "main_videos": [], "review_videos": [], "aligned_questions_text": [], 
                         "incoming_edges": {k: [] for k in empty_edges_template}, "outgoing_edges": {k: [] for k in empty_edges_template},
                         "global_timeline_index": global_timeline_counter
@@ -281,13 +282,13 @@ def main():
     for n_id, meta in global_nodes_map.items():
         current_count += 1
         print(f"  [{current_count}/{total_items}] Embedding Node: {meta['name']}")
-        c_composite = f"【ノード分類】{meta['type_label']}\n【役割】{meta['role_desc']}\n【三つの柱】{meta['pillar']}\n【名称】{meta['name']}\n【上位概念】{meta['parent_concept']}\n【概要】{meta['summary']}\n"
+        # 🌟 ベクトル化テキストにも講義名を含める
+        c_composite = f"【ノード分類】{meta['type_label']}\n【役割】{meta['role_desc']}\n【三つの柱】{meta['pillar']}\n【名称】{meta['name']}\n【講義名】{meta['bundle_name']}\n【上位概念】{meta['parent_concept']}\n【概要】{meta['summary']}\n"
         if meta.get("mext_code"): c_composite += f"【指導要領階層】{meta['mext_hierarchy']}\n【指導要領解説】{meta['mext_explanation']}\n"
         if meta["incoming_edges"]:
             prereqs = [f"理由: {e['reasoning']}" for e in meta["incoming_edges"].get("prerequisite", []) + meta["incoming_edges"].get("applies_condition", [])]
             if prereqs: c_composite += f"【前提条件】{' / '.join(prereqs)}\n"
         
-        # main_videos と review_videos の両方から解説要約を結合
         if meta["type"] != "tasks":
             for v in meta["main_videos"] + meta["review_videos"]:
                 if v.get("explanation_summary"): c_composite += f"【講義要約】{v['explanation_summary']}\n"
@@ -305,7 +306,7 @@ def main():
     for q_id, meta in global_questions_map.items():
         current_count += 1
         print(f"  [{current_count}/{total_items}] Embedding Question: {meta['bundle_name']} 問題 {meta['question_number']}")
-        q_composite = f"【単元】{meta['bundle_name']}\n【問題・演習】\n問題文: {meta['question_text']}\n解説: {meta['answer_text']}\n"
+        q_composite = f"【講義名】{meta['bundle_name']}\n【問題・演習】\n問題文: {meta['question_text']}\n解説: {meta['answer_text']}\n"
         for v in meta["aligned_videos"]:
             if v.get("blackboard_ocr"): q_composite += f"【板書OCR】{v['blackboard_ocr']}\n"
         vector = get_embedding(q_composite)
@@ -313,10 +314,9 @@ def main():
         meta["vector"] = vector
         time.sleep(0.5)
 
-    # 🌟 メタデータバージョンの更新
     db_payload = {
         "embed_model": MODEL_NAME,
-        "metadata": {"engine_version": "14.1_video_catalog_integrated", "embed_model": MODEL_NAME},
+        "metadata": {"engine_version": "14.2_lecture_name_integrated", "embed_model": MODEL_NAME},
         "global_concept_nodes": global_nodes_map,
         "global_question_nodes": global_questions_map,
         "global_mext_index": global_mext_index,
@@ -326,7 +326,7 @@ def main():
         json.dump(db_payload, f, ensure_ascii=False, indent=2)
 
     print("\n=========================================================")
-    print(f"🎉 グローバルベクトルDB（知識/技能分離・カタログ統合版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
+    print(f"🎉 グローバルベクトルDB（所属講義ロジック付与版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
     print("=========================================================")
 
 if __name__ == "__main__":
