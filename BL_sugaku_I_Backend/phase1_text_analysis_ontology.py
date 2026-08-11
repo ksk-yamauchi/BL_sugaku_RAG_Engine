@@ -316,7 +316,7 @@ def execute_step2_alignment(mapped_step1_data):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.1.8 数学的厳格性＆汎化防止版】Phase 1 起動 ===")
+    print("=== 🏁 【Ver 14.0 数学的厳格性＆汎化防止版】Phase 1 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
 
     textbook_content, mext_master_dict, bundle_name = load_and_prepare_inputs()
@@ -352,7 +352,7 @@ def main():
     step2_output = execute_step2_alignment(step1_output)
 
     final_knowledge_graph = {
-        "metadata": {"bundle_name": bundle_name, "engine_version": "13.1.8_gnn_kt_dual_engine", "model_used": MODEL_NAME},
+        "metadata": {"bundle_name": bundle_name, "engine_version": "14.0_gnn_kt_dual_engine", "model_used": MODEL_NAME},
         "nodes": step1_output.get("nodes", {}),
         "edges": step1_output.get("edges", []),
         "questions": step1_output.get("questions", []),

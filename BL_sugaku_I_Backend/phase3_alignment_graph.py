@@ -268,7 +268,7 @@ def execute_dynamic_alignment(phase1_data, phase2_data, bundle_name):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 13.2.3 アライメント厳格化版】Phase 3 起動 ===")
+    print("=== 🏁 【Ver 14.0 アライメント厳格化版】Phase 3 起動 ===")
     
     phase1_data = load_json(PHASE1_FILE)
     phase2_data = load_json(PHASE2_FILE)
@@ -282,7 +282,7 @@ def main():
     if not phase2_data:
         print("⚠️ Phase 2 の動画データがありません。アライメントをスキップします。")
         final_graph = phase1_data.copy()
-        final_graph["metadata"]["engine_version"] = "13.2_video_skipped"
+        final_graph["metadata"]["engine_version"] = "14.0_video_skipped"
     else:
         result = execute_dynamic_alignment(phase1_data, phase2_data, bundle_name)
         video_segments = phase2_data.get("videos", [])
@@ -358,7 +358,7 @@ def main():
             q["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
 
         final_graph = phase1_data
-        final_graph["metadata"]["engine_version"] = "13.2.3_dynamic_ontology_completed"
+        final_graph["metadata"]["engine_version"] = "14.0_dynamic_ontology_completed"
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(final_graph, f, ensure_ascii=False, indent=2)

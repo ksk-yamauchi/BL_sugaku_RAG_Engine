@@ -80,7 +80,7 @@ def get_embedding(text, max_retries=None):
 def main():
     global MODEL_NAME
     
-    print("=== 🏁 【Ver 13.6.0 動画主従関係分離・カタログ統合版】グローバルDB構築プロセス起動 ===")
+    print("=== 🏁 【Ver 14.0 動画主従関係分離・カタログ統合版】グローバルDB構築プロセス起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
     try:
         MODEL_NAME = discover_embed_model(API_KEYS[0])
@@ -126,7 +126,7 @@ def main():
             except json.JSONDecodeError: continue
             
         engine_version = data.get("metadata", {}).get("engine_version", "")
-        if not str(engine_version).startswith("13."): continue
+        if not str(engine_version).startswith("14."): continue
         bundle_name = data.get("metadata", {}).get("bundle_name", part_name)
         
         if os.path.exists(lecture_map_path):
@@ -313,7 +313,7 @@ def main():
 
     db_payload = {
         "embed_model": MODEL_NAME,
-        "metadata": {"engine_version": "13.6.0_video_catalog_integrated", "embed_model": MODEL_NAME},
+        "metadata": {"engine_version": "14.0_video_catalog_integrated", "embed_model": MODEL_NAME},
         "global_concept_nodes": global_nodes_map,
         "global_question_nodes": global_questions_map,
         "global_mext_index": global_mext_index,

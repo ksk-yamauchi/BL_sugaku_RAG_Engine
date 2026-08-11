@@ -38,7 +38,7 @@ TYPE_PREFIX = {
 }
 
 def main():
-    print("🚀 [Ver 13.6.1 動画主従分離・スマートリンク対応] Obsidian Vault パッケージ化を開始します...")
+    print("🚀 [Ver 14.0 動画主従分離・スマートリンク対応] Obsidian Vault パッケージ化を開始します...")
 
     if not os.path.exists(DB_PATH):
         raise FileNotFoundError(f"❌ {DB_PATH} が見つかりません。先に build_vector_db.py を実行してください。")
