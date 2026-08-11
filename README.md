@@ -17,6 +17,8 @@
 ## 🚀 主な機能とアーキテクチャの特長
 
 ### 🧠 堅牢なバックエンドとデータ浄化機構
+* **オントロジーの純化 (Paradigm Shift Extraction)**: 「多項式の次数を特定する」といったタスク（動詞）の結果を単に名詞化しただけの冗長なノード生成を排除し、「定数としての文字の扱い」のような**パラダイムシフト（ゲシュタルトの変換・ルールの変化）のみを再構成知識として抽出**。知識のネットワークをシンプルかつ本質的な形に洗練させています。
+* **動画アライメントの主従分離**: 動画をノードに紐づける際、その動画が「概念をゼロから学ぶためのメイン教材（主）」なのか、「別の問題を解くための前提知識としての復習（従）」なのかをAIに厳密に分類させ、データベース上にコンテキストを保持します。
 * **記憶の継承 (Ontology Memory) & 数学的厳格性**: 単元を跨いだ解析でも、AIが過去の概念抽出履歴を参照し、表記揺れやエンティティの分裂を完全に防止。「整式」と「多項式」のような数学的定義の違いも厳格に分離・抽出します。
 * **スキーマ強制と完全浄化**: AIの出力ブレを防ぐため、JSON Schemaを用いてLaTeXエスケープや改行の保持を強制し、ノイズのない美しいデータベースを構築します。
 * **エンティティ統合とオートワイヤリング**: AIの抽出漏れがあっても、システム側が親概念との関係性を検知し、暗黙のグラフエッジ（`subsumes`, `part_of`）を自動結線します。
@@ -64,8 +66,8 @@ BL_sugaku/
 │   ├── 📜 build_mext_master_dict.py        # 指導要領辞書生成スクリプト
 │   ├── 📜 build_index_master.py            # 目次マスター生成スクリプト
 │   ├── 📜 run_single_part_batch.py         # PART一括解析バッチ処理スクリプト
-│   ├── 📜 build_vector_db.py               # グローバルベクトルDB構築スクリプト (オートワイヤリング・動画カタログ統合版)
-│   ├── 📜 export_global_obsidian_vault_mext.py # Obsidian用ZIPパッケージ出力 (スマートリンク・解説要約優先版)
+│   ├── 📜 build_vector_db.py               # グローバルベクトルDB構築スクリプト (Ver 14.x 対応)
+│   ├── 📜 export_global_obsidian_vault_mext.py # Obsidian用ZIPパッケージ出力 (Ver 14.x 対応)
 │   ├── 📜 generate_mock_logs.py            # GNN-KT検証用 ダミー学習ログ生成スクリプト
 │   ├── 📜 visualize_syllabus_content.py    # シラバス ➔ コンテンツ可視化テストスクリプト (対話型CLI)
 │   ├── 📄 global_vector_db_cache.json      # 【成果物】統合ベクトルキャッシュDB
@@ -75,9 +77,9 @@ BL_sugaku/
 │       ├── 📄 BL_sugaku_I_XX-Y.pdf
 │       ├── 📄 *.mp4 / *.vtt
 │       ├── 📜 phase0_pdf_to_md.py          # Phase 0: PDF変換 (動的再アップロード対応)
-│       ├── 📜 phase1_text_analysis_ontology.py # Phase 1: デュアルエンジン抽出 (記憶の継承・数学的厳格性版)
+│       ├── 📜 phase1_text_analysis_ontology.py # Phase 1: デュアルエンジン抽出 (Ver 14.x オントロジー純化版)
 │       ├── 📜 phase2_video_analysis.py     # Phase 2: 動画解析 (中問小問アセンブリ・LaTeXノイズ防止版) 
-│       └── 📜 phase3_alignment_graph.py    # Phase 3: 動的補完 & 粒度吸収アライメント
+│       └── 📜 phase3_alignment_graph.py    # Phase 3: 動的補完 & 粒度吸収アライメント (Ver 14.x 主従分離版)
 │
 └── 📱 BL_sugaku_I_Frontend/                 # フロントエンド (Streamlit Web UI)
     ├── 📄 .env                             # フロントエンド用 APIキー設定
