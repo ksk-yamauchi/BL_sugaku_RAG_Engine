@@ -16,22 +16,23 @@
    └─ PDFテキスト抽出・LaTeX数式変換・図形/グラフの言語化 (動的再アップロード対応)
            │
            ▼
-[ Phase 1 ] phase1_text_analysis_ontology.py (Ver 14.0)
-   └─ デュアルエンジン抽出・自動採番・【オントロジーの純化（パラダイムシフトの抽出）と重複の排除】
+[ Phase 1 ] phase1_text_analysis_ontology.py (Ver 14.4)
+   └─ デュアルエンジン抽出・自動採番・【オントロジーの純化と、lecture_name の統合】
            │
            ▼
 [ Phase 2 ] phase2_video_analysis.py (Ver 2.5.11)
    └─ 役割判定・極細チャプター分割・板書OCR生成・【中問/小問対応アセンブリ＆LaTeXノイズ防止】
            │
            ▼
-[ Phase 3 ] phase3_alignment_graph.py (Ver 14.0)
+[ Phase 3 ] phase3_alignment_graph.py (Ver 14.4)
    └─ 動的オントロジー補完・粒度吸収・【動画アライメントの主従分離（メイン/前提復習）】
            │
            ▼
  ─────────────────────────────────────────────────────────────
  [ バックエンド統合処理 ]
-   ├─ build_vector_db.py (Ver 14.1) ➔ ベクトルDB構築・動画の main/review 分割格納・【動画カタログ統合】
-   ├─ export_global_obsidian_vault_mext.py (Ver 14.0) ➔ Obsidian Vault ZIP 出力・【主従動画の視覚的分離表示】
+   ├─ build_index_master.py (Ver 14.4) ➔ 【lecture_index_master.json の生成】
+   ├─ build_vector_db.py (Ver 14.4) ➔ ベクトルDB構築・動画カタログ統合・【講義名の焼き付け】
+   ├─ export_global_obsidian_vault_mext.py (Ver 14.4) ➔ Obsidian Vault出力・【講義名ハブページの自動生成】
    ├─ generate_mock_logs.py ➔ GNN-KT検証用 ダミー学習ログ出力 (mock_student_logs.json) 出力
    └─ visualize_syllabus_content.py ➔ 対話型シラバスマッチング可視化CLI
 ```
@@ -47,7 +48,7 @@
   * 関数グラフ、数直線、ベン図、幾何図形等を `[図の説明: 〇〇]` の形でメタデータテキスト化します。
   * **[堅牢化]** API制限やアカウント変更に伴うファイルアクセス権限エラー（HTTP 403）を検知した場合、古いキャッシュを破棄し、新しいキーでPDFを自動再アップロードして解析を継続します。
 
-* **Phase 1 (`phase1_text_analysis_ontology.py` - Ver 14.0)**:
+* **Phase 1 (`phase1_text_analysis_ontology.py` - Ver 14.4)**:
   * 教材MarkdownからGNN-KTの計算対象となる「タスク（_Tノード）」と、解釈対象となる「知識・視点（_Kノード）」を厳格に分離して抽出します。
   * 知識マスター（`knowledge_master.json`）およびタスクマスター（`task_master.json`）とリアルタイム連携し、表記揺れを防ぎながら自動採番を行います。
   * **[オントロジーの純化]** `derived_knowledge` において、「タスクを単に名詞化しただけの結果論」の抽出を禁止し、「定数としての文字の扱い」のような「概念的なルールの変化・パラダイムシフト」のみを抽出するようルールを厳格化。知識ネットワークの冗長性を排除しました。
@@ -62,7 +63,7 @@
   * **[LaTeXノイズ防止]** 数式を必ず `$` で囲み、無駄な改行やバックスラッシュの残存（文字化けの原因）を絶対に防ぐための絶対ルールをプロンプトで強制。
   * **[堅牢化]** API速度制限（HTTP 429）時のキー自動切り替え、およびキー変更に伴う動画アクセス拒否エラー（HTTP 403）を検知し、動画の再アップロードと解析ループの再開を無人で行います。
 
-* **Phase 3 (`phase3_alignment_graph.py` - Ver 14.0)**:
+* **Phase 3 (`phase3_alignment_graph.py` - Ver 14.4)**:
   * Phase 1の知識グラフとPhase 2の動画タイムラインをマッチングします。
   * **[動的補完]** 動画内の解説からテキストにない「暗黙知」や「新しい視点」を発見した場合、知識ノードとしてグラフに自動追加（Dynamic Ontology）します。
   * **[動画アライメントの主従分離]** `alignment_type` を細分化し、動画の解説内容がその概念自体の説明に終始していれば `concept_introduction`（メイン）、その概念を使って別のタスクを行っている過程での言及であれば `prerequisite_review`（前提・復習）として厳密に分類させます。
@@ -70,7 +71,7 @@
   * タイムスタンプのずれに対してはファジーマッチ（最寄時間検索）を実行します。
   * **[堅牢化]** Phase 1同様、LaTeXエスケープ起因のJSONパースエラー自動修復に対応。
 
-* **グローバルDB構築 (`build_vector_db.py` - Ver 14.1)**:
+* **グローバルDB構築 (`build_vector_db.py` - Ver 14.4)**:
   * 全PARTの出力結果を統合し、フロントエンド用のベクトルデータベースを構築します。
   * **[知識/技能の完全分離]** 文科省の枠組みに縛られず、`foundation_knowledge` のPillarを「知識及び技能」から「知識」へと変更。動詞である「技能（タスク）」とメタデータ上でも完全に分離し、分析基盤の純度を高めました。
   * **[DBスキーマの拡張]** 各ノードに紐づく動画を単一の `aligned_videos` ではなく、Phase 3 の判定結果に基づいて `main_videos` と `review_videos` に分割して格納・統合し、DBレベルで動画の主従関係（コンテキスト）を保持します。
@@ -82,7 +83,8 @@
   * 選択されたPARTフォルダーに対して処理を連続実行。
   * テキストオントロジー改修時などは、Phase 2（動画解析）の再処理をスキップし、Phase 1 ➔ Phase 3 のみを選択実行してAPI費用と時間を大幅に短縮可能です。
 
-* **Obsidian出力 (`export_global_obsidian_vault_mext.py` - Ver 14.0)**:
+* **Obsidian出力 (`export_global_obsidian_vault_mext.py` - Ver 14.4)**:
+  * **[講義名ハブの自動生成]** 本番環境とのデータ統合を見据え、各講義単位で関連ノード・動画をまとめたハブページ（`node/lecture_name`）を自動生成。
   * **[主従動画の視覚的分離表示]** 出力されるMarkdownの動画セクションを「💡 【メイン教材】」と「⏪ 【前提・復習】」に視覚的に分けて表示し、オントロジーの構造理解を容易にします。
   * **[スマートリンクと重複排除]** 「親概念」として指定された名前が、既に知識ノードとして実在する場合、ダミーのハブページを生成せず、実体ノードへ直接リンクを流し込むことで、ツリーの重複を排除します。
   * **[逆引きリストの自動生成]** 実体ノード側に「自分を親概念としている子ノードたち」のリストを自動追記します。
@@ -127,22 +129,6 @@ python build_vector_db.py
 python export_global_obsidian_vault_mext.py
 
 # ⑤ GNN-KT検証用ダミーログの生成
-python generate_mock_logs.py
-```
-
-### 4. フロントエンド (AIチューター) の起動
-バックエンドで生成された `global_vector_db_cache.json` を `BL_sugaku_I_Frontend/` フォルダーへコピーします。
-
-フロントエンドディレクトリでアプリケーションを起動します。
-```bash
-cd ../BL_sugaku_I_Frontend
-
-# 生徒向け AIチューター アプリの起動
-streamlit run app.py
-
-# 教員向け Semantic Zoom ダッシュボードの起動
-streamlit run app_ft.py
-```
 python generate_mock_logs.py
 ```
 

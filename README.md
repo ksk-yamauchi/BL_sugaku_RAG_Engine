@@ -24,6 +24,7 @@
 * **エンティティ統合とオートワイヤリング**: AIの抽出漏れがあっても、システム側が親概念との関係性を検知し、暗黙のグラフエッジ（`subsumes`, `part_of`）を自動結線します。
 * **動画カタログの統合**: 抽出された動画のチャプター・セグメントを100%欠損なくグローバルDBへ統合し、フロントエンドでのタイムスタンプ連動機能を実現します。
 * **高可用性（フェイルオーバー）**: Google Gemini APIの制限（429エラー等）を検知すると、登録された複数キー間で自動ローテーションを行い、長時間のバッチ処理を停止させません。
+* **講義名（`lecture_name`）による本番環境との連携基盤**: シラバス連携や本番DBとのコンフリクトを回避するため、コンテンツの所属情報を `lecture_name` という変数に統一して自動生成し、データベース全体およびObsidianハブページにメタデータとして焼き付けています。
 
 ### 🏫 教員向け機能（FT: for Teachers）
 * **習熟度の可視化（Semantic Zoom ＆ GNN-KT）**: クラス全体の学習ログから、単元レベル（マクロ）から極小な躓きアクション（ミクロ）までGoogleマップのように自在にズームイン・アウトして真の不理解原因を特定します。
@@ -62,7 +63,7 @@ BL_sugaku/
 │   ├── 📄 mext_master_dict.v2.json         # 【自動生成】統合指導要領マスター辞書 (Pillar対応版)
 │   ├── 📄 knowledge_master.json            # 【自動生成】全講共通 独自知識マスター
 │   ├── 📄 task_master.json                 # 【自動生成】全講共通 独自タスクマスター
-│   ├── 📄 lecture_index_master.json        # 全講共通 目次マスター
+│   ├── 📄 lecture_index_master.json        # 【自動生成】全講共通 目次マスター
 │   ├── 📜 build_mext_master_dict.py        # 指導要領辞書生成スクリプト
 │   ├── 📜 build_index_master.py            # 目次マスター生成スクリプト
 │   ├── 📜 run_single_part_batch.py         # PART一括解析バッチ処理スクリプト
@@ -117,16 +118,20 @@ cd BL_sugaku_I_Backend
 # ① 既存マスターの削除（クリーンな状態から始める場合）
 rm knowledge_master.json task_master.json
 
-# ② PARTデータの一括解析パイプライン実行 (Phase 0〜3)
+# ② マスターデータの構築
+python build_mext_master_dict.py
+python build_index_master.py
+
+# ③ PARTデータの一括解析パイプライン実行 (Phase 0〜3)
 python run_single_part_batch.py
 
-# ③ 統合ベクトルDB (global_vector_db_cache.json) の構築
+# ④ 統合ベクトルDB (global_vector_db_cache.json) の構築
 python build_vector_db.py
 
-# ④ Obsidian用ナレッジグラフパッケージ (.zip) の出力
+# ⑤ Obsidian用ナレッジグラフパッケージ (.zip) の出力
 python export_global_obsidian_vault_mext.py
 
-# ⑤ ダミー学習ログの生成（GNN-KT推論・適応型ナビの検証用）
+# ⑥ ダミー学習ログの生成（GNN-KT推論・適応型ナビの検証用）
 python generate_mock_logs.py
 ```
 

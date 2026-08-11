@@ -5,6 +5,16 @@
 
 ---
 
+## [14.4.0] - 2026-08-11
+### 🚀 Added (追加)
+* **[System] 本番環境（シラバス連携）に向けた変数名の統一 (`lecture_name`)**:
+  * これまで各フェーズにおいて `bundle_name` という変数名で扱っていた「第1講 式の計算と展開 PART1 単項式と多項式」のような文字列を、本番環境のドメインモデルとのコンフリクトを回避するため、すべて `lecture_name`（講義名）という変数名およびJSONキーに統一するリファクタリングを実施。
+  * `build_index_master.py` を改修し、出力される `lecture_index_master.json` のキーを `bundle_name` から `lecture_name` に変更。
+  * `phase1_text_analysis_ontology.py`, `phase3_alignment_graph.py`, `build_vector_db.py` 内の変数名およびメタデータキーをすべて `lecture_name` に置換。ベクトル化の際の合成テキストにも「【講義名】」として埋め込むよう仕様変更。
+* **[Obsidian] 講義名ハブページの自動生成とUI改善**:
+  * `export_global_obsidian_vault_mext.py` において、`lecture_name`（スタディサプリの講義名）をタイトルとする独立したハブページ（タグ: `node/lecture_name`）を自動生成するロジックを追加。
+  * 各ノード（知識、タスク、問題、動画）のMarkdownに、このハブページへのリンク（`🎓 スタディサプリの講義名: [[...]]`）を直接出力するよう改修し、問題からの逆引きという非効率なロジックを完全破棄。これにより、Obsidian上で「ある講義に属するすべての要素」を一覧表示できる強固なネットワーク構造を実現。
+
 ## [14.1.0] - 2026-08-11
 ### 🚀 Added (追加)
 * **[DB構築] メタデータ上の知識/技能の完全分離**:
