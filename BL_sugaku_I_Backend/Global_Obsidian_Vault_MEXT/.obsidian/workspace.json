@@ -1,24 +1,20 @@
 {
   "main": {
-    "id": "c1c86dee2a66d334",
+    "id": "3141c75773b71792",
     "type": "split",
     "children": [
       {
-        "id": "4e675032d11bc127",
+        "id": "62d3cb3ea7de53dc",
         "type": "tabs",
         "children": [
           {
-            "id": "4a0c75ff8758e164",
+            "id": "2e945f794cfec57b",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1"
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "グラフビュー"
             }
           }
         ]
@@ -27,15 +23,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "9f110cef908701d0",
+    "id": "c7e573c28f9482e7",
     "type": "split",
     "children": [
       {
-        "id": "6be0d3ec4dba904a",
+        "id": "26491f4b23eb927f",
         "type": "tabs",
         "children": [
           {
-            "id": "c2a08b9b7bddf6b2",
+            "id": "f3556f83e64d9fc7",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -50,7 +46,7 @@
             }
           },
           {
-            "id": "e2337819408be4cb",
+            "id": "74756286cdae074e",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -67,7 +63,7 @@
             }
           },
           {
-            "id": "d3eaf2dbb65e9e0e",
+            "id": "85a87a4c9b9885de",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -83,23 +79,22 @@
       }
     ],
     "direction": "horizontal",
-    "width": 546.5
+    "width": 300
   },
   "right": {
-    "id": "d1c1cac13d9adf53",
+    "id": "00bc25aa07fc133e",
     "type": "split",
     "children": [
       {
-        "id": "feb2d296482efe21",
+        "id": "763002eeaa9edaef",
         "type": "tabs",
         "children": [
           {
-            "id": "e4f760b2b43d05e5",
+            "id": "08d3043727eb8003",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -113,12 +108,11 @@
             }
           },
           {
-            "id": "30e59207e8f5d266",
+            "id": "a654a181b4368461",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -127,7 +121,7 @@
             }
           },
           {
-            "id": "541b8561ada60c2f",
+            "id": "08e4bae1f90c1311",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -142,7 +136,7 @@
             }
           },
           {
-            "id": "343bbebbd506b21b",
+            "id": "e0924d7bb7e8a923",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -156,12 +150,11 @@
             }
           },
           {
-            "id": "67c7245f3a7813a0",
+            "id": "dc5dea66687416bc",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -188,19 +181,8 @@
       "bases:新規ベースを作成": false
     }
   },
-  "active": "4a0c75ff8758e164",
+  "active": "2e945f794cfec57b",
   "lastOpenFiles": [
-    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 1.md",
-    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 2.md",
-    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 3.md",
-    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_確認問題 4.md",
-    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_大問1 (1).md",
-    "[問題] 第1講 式の計算と展開 PART1 単項式と多項式_大問1 (2).md",
-    "[タスク] 特定文字に着目して多項式の次数と定数項を特定する.md",
-    "【動画】BL_sugaku_I_01-1-2.mp4.md",
-    "【動画】BL_sugaku_I_01-1-1.mp4.md",
-    "【動画】BL_sugaku_I_01-2-2.mp4.md",
-    "[再構成] 特定文字に着目した多項式の次数と定数項.md",
-    "[視点] 式の一部をひとつのかたまりとみる.md"
+    "無題のファイル.canvas"
   ]
 }

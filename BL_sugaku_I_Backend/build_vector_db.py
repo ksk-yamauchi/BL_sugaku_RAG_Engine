@@ -80,7 +80,7 @@ def get_embedding(text, max_retries=None):
 def main():
     global MODEL_NAME
     
-    print("=== 🏁 【Ver 13.5.0 動画カタログ統合版】グローバルDB構築プロセス起動 ===")
+    print("=== 🏁 【Ver 13.6.0 動画主従関係分離・カタログ統合版】グローバルDB構築プロセス起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
     try:
         MODEL_NAME = discover_embed_model(API_KEYS[0])
@@ -111,13 +111,13 @@ def main():
     global_mext_index = {}
     global_edges = []
     global_alignments = []
-    global_video_catalog = {}  # 🌟 動画カタログ用の辞書を新設
+    global_video_catalog = {}  
     global_timeline_counter = 0
 
     # 1. データの収集とマージ
     for s_dir in sub_dirs:
         file_path = os.path.join(s_dir, "output_result", "final_knowledge_graph_complete.json")
-        lecture_map_path = os.path.join(s_dir, "output_result", "lecture_map.json")  # 🌟 lecture_mapも読み込む
+        lecture_map_path = os.path.join(s_dir, "output_result", "lecture_map.json")  
         if not os.path.exists(file_path): continue
         part_name = os.path.basename(s_dir)
         
@@ -129,7 +129,6 @@ def main():
         if not str(engine_version).startswith("13."): continue
         bundle_name = data.get("metadata", {}).get("bundle_name", part_name)
         
-        # 🌟 動画カタログの収集
         if os.path.exists(lecture_map_path):
             with open(lecture_map_path, "r", encoding="utf-8") as f:
                 try: 
@@ -161,6 +160,8 @@ def main():
             for node in data.get("nodes", {}).get(k_type, []):
                 n_id = node.get("node_id")
                 if not n_id: continue
+                
+                # 🌟 新規ノードの初期化（動画配列を main_videos と review_videos に分割）
                 if n_id not in global_nodes_map:
                     mext_code = node.get("mext_code", "")
                     mext_info = mext_dict.get(mext_code, {})
@@ -171,17 +172,25 @@ def main():
                         "concept_name": node_name,
                         "parent_concept": node.get("parent_concept", ""), "summary": node.get("summary", ""),
                         "mext_code": mext_code, "mext_hierarchy": mext_info.get("hierarchy_text", "不明な階層"), "mext_official_text": mext_info.get("official_text", ""), "mext_explanation": mext_info.get("explanation_summary", "解説なし"),
-                        "aligned_videos": node.get("aligned_videos", []), "aligned_questions_text": [], 
+                        "main_videos": [], "review_videos": [], "aligned_questions_text": [], 
                         "incoming_edges": {k: [] for k in empty_edges_template}, "outgoing_edges": {k: [] for k in empty_edges_template},
                         "global_timeline_index": global_timeline_counter
                     }
                     global_timeline_counter += 1
-                else:
-                    existing_videos = [v.get("video_file") for v in global_nodes_map[n_id]["aligned_videos"]]
-                    for new_v in node.get("aligned_videos", []):
-                        if new_v.get("video_file") not in existing_videos:
-                            global_nodes_map[n_id]["aligned_videos"].append(new_v)
-                            existing_videos.append(new_v.get("video_file"))
+
+                # 🌟 動画の振り分け処理 (新規・既存問わず実行し、アライメントタイプに応じて配列を分ける)
+                for new_v in node.get("aligned_videos", []):
+                    v_file = new_v.get("video_file")
+                    a_type = new_v.get("alignment_type", "")
+                    
+                    if a_type in ["concept_introduction", "task_walkthrough"]:
+                        # main_videosに重複なく追加
+                        if not any(v.get("video_file") == v_file for v in global_nodes_map[n_id]["main_videos"]):
+                            global_nodes_map[n_id]["main_videos"].append(new_v)
+                    else:
+                        # prerequisite_review や prerequisite の場合は review_videosに重複なく追加
+                        if not any(v.get("video_file") == v_file for v in global_nodes_map[n_id]["review_videos"]):
+                            global_nodes_map[n_id]["review_videos"].append(new_v)
 
         for q in data.get("questions", []):
             q_num = str(q.get("question_number", ""))
@@ -220,12 +229,10 @@ def main():
         p_name = meta.get("parent_concept", "")
         if p_name and p_name != "未分類" and p_name in name_to_node_id:
             p_id = name_to_node_id[p_name]
-            # 親 -> 子 (subsumes)
             subsumes_edges = global_nodes_map[p_id]["outgoing_edges"].setdefault("subsumes", [])
             if not any(e["target_id"] == n_id for e in subsumes_edges):
                 subsumes_edges.append({"target_id": n_id, "reasoning": "システム自動結合 (親概念)"})
             global_nodes_map[n_id]["incoming_edges"].setdefault("subsumes", []).append({"source_id": p_id, "reasoning": "システム自動結合 (親概念)"})
-            # 子 -> 親 (part_of)
             part_of_edges = global_nodes_map[n_id]["outgoing_edges"].setdefault("part_of", [])
             if not any(e["target_id"] == p_id for e in part_of_edges):
                 part_of_edges.append({"target_id": p_id, "reasoning": "システム自動結合 (親概念)"})
@@ -277,13 +284,16 @@ def main():
         if meta["incoming_edges"]:
             prereqs = [f"理由: {e['reasoning']}" for e in meta["incoming_edges"].get("prerequisite", []) + meta["incoming_edges"].get("applies_condition", [])]
             if prereqs: c_composite += f"【前提条件】{' / '.join(prereqs)}\n"
+        
+        # 🌟 main_videos と review_videos の両方から解説要約を結合
         if meta["type"] != "tasks":
-            for v in meta["aligned_videos"]:
+            for v in meta["main_videos"] + meta["review_videos"]:
                 if v.get("explanation_summary"): c_composite += f"【講義要約】{v['explanation_summary']}\n"
         if meta["type"] == "tasks":
             for q_text in meta["aligned_questions_text"]: c_composite += f"【関連する演習問題】\n{q_text}\n"
-            for v in meta["aligned_videos"]:
+            for v in meta["main_videos"] + meta["review_videos"]:
                 if v.get("blackboard_ocr"): c_composite += f"【解説板書(数式)】{v['blackboard_ocr']}\n"
+        
         vector = get_embedding(c_composite)
         meta["concept_vector"] = vector
         meta["vector"] = vector
@@ -301,10 +311,9 @@ def main():
         meta["vector"] = vector
         time.sleep(0.5)
 
-    # 🌟 最終ペイロードに global_video_catalog を追加
     db_payload = {
         "embed_model": MODEL_NAME,
-        "metadata": {"engine_version": "13.5.0_video_catalog_integrated", "embed_model": MODEL_NAME},
+        "metadata": {"engine_version": "13.6.0_video_catalog_integrated", "embed_model": MODEL_NAME},
         "global_concept_nodes": global_nodes_map,
         "global_question_nodes": global_questions_map,
         "global_mext_index": global_mext_index,
@@ -314,7 +323,7 @@ def main():
         json.dump(db_payload, f, ensure_ascii=False, indent=2)
 
     print("\n=========================================================")
-    print(f"🎉 グローバルベクトルDB（動画カタログ統合版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
+    print(f"🎉 グローバルベクトルDB（動画主従関係分離・カタログ統合版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
     print("=========================================================")
 
 if __name__ == "__main__":

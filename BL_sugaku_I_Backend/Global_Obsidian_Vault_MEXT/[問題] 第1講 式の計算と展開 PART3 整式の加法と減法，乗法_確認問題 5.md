@@ -9,17 +9,8 @@ $$3xy^3 \times (-4x^2 y)^2 = [セソ]x^{[タ]} y^{[チ]}$$
 
 ## 💡 解説・解答
 [正解] セソ：48，タ：5，チ：5
-
 [解説]
-$$\begin{aligned}
-3xy^3 \times (-4x^2 y)^2 &= 3xy^3 \times (-4)^2 (x^2)^2 \times y^2 \\
-&= 3xy^3 \times 16x^4 y^2 \\
-&= 48x^5 y^5
-\end{aligned}$$
-指数法則
-① $a^m \times a^n = a^{m+n}$
-② $(a^m)^n = a^{mn}$
-③ $(ab)^n = a^n b^n$
+$3xy^3 \times (-4x^2 y)^2 = 3xy^3 \times (-4)^2 (x^2)^2 \times y^2 = 3xy^3 \times 16x^4 y^2 = 48x^5 y^5$
 
 ## 🎬 紐づく解説動画
 - **[[【動画】BL_sugaku_I_01-3-4.mp4]]** (`08:05`〜`09:38`)

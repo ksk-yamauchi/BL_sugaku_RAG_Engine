@@ -10,14 +10,8 @@ $2a^2 \times (-3a^3)^2$
 
 ## 💡 解説・解答
 [正解] $18a^8$
-
 [解説]
-$$\begin{aligned}
-2a^2 \times (-3a^3)^2 &= 2a^2 \times (-3)^2 (a^3)^2 \\
-&= 2a^2 \times 9a^{3 \times 2} \\
-&= 2a^2 \times 9a^6 \\
-&= 18 \times a^{2+6} = 18a^8
-\end{aligned}$$
+$2a^2 \times (-3a^3)^2 = 2a^2 \times (-3)^2 (a^3)^2 = 2a^2 \times 9a^6 = 18 \times a^{2+6} = 18a^8$
 
 ## 🎬 紐づく解説動画
 - **[[【動画】BL_sugaku_I_01-3-4.mp4]]** (`03:47`〜`05:33`)

@@ -1,24 +1,17 @@
 {
-  "collapse-filter": true,
+  "collapse-filter": false,
   "search": "",
   "showTags": false,
   "showAttachments": false,
   "hideUnresolved": false,
   "showOrphans": true,
-  "collapse-color-groups": false,
+  "collapse-color-groups": true,
   "colorGroups": [
     {
-      "query": "tag:#node/video  ",
+      "query": "tag:#node/derived_knowledge  ",
       "color": {
         "a": 1,
-        "rgb": 12697021
-      }
-    },
-    {
-      "query": "tag:#node/question  ",
-      "color": {
-        "a": 1,
-        "rgb": 14606046
+        "rgb": 65403
       }
     },
     {
@@ -29,24 +22,10 @@
       }
     },
     {
-      "query": "tag:#node/parent_concept  ",
-      "color": {
-        "a": 1,
-        "rgb": 12517606
-      }
-    },
-    {
       "query": "tag:#node/perspective_condition  ",
       "color": {
         "a": 1,
         "rgb": 16776960
-      }
-    },
-    {
-      "query": "tag:#node/derived_knowledge  ",
-      "color": {
-        "a": 1,
-        "rgb": 6141151
       }
     },
     {
@@ -55,9 +34,23 @@
         "a": 1,
         "rgb": 255
       }
+    },
+    {
+      "query": "tag:#node/question  ",
+      "color": {
+        "a": 1,
+        "rgb": 14935011
+      }
+    },
+    {
+      "query": "tag:#node/parent_concept  ",
+      "color": {
+        "a": 1,
+        "rgb": 16711914
+      }
     }
   ],
-  "collapse-display": false,
+  "collapse-display": true,
   "showArrow": false,
   "textFadeMultiplier": 0,
   "nodeSizeMultiplier": 1,
@@ -67,6 +60,6 @@
   "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 0.9999999999999937,
-  "close": true
+  "scale": 0.9999999999999992,
+  "close": false
 }

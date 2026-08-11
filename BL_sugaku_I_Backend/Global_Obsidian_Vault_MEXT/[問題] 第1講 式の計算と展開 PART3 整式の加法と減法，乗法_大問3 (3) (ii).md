@@ -10,12 +10,8 @@ $(x^2 - 3xy - 2y) \times (-xy)$
 
 ## 💡 解説・解答
 [正解] $-x^3 y + 3x^2 y^2 + 2xy^2$
-
 [解説]
-$$\begin{aligned}
-(x^2 - 3xy - 2y) \times (-xy) &= x^2 \cdot (-xy) + (-3xy) \cdot (-xy) + (-2y) \cdot (-xy) \\
-&= -x^3 y + 3x^2 y^2 + 2xy^2
-\end{aligned}$$
+$(x^2 - 3xy - 2y) \times (-xy) = x^2 \cdot (-xy) + (-3xy) \cdot (-xy) + (-2y) \cdot (-xy) = -x^3 y + 3x^2 y^2 + 2xy^2$
 
 ## 🎬 紐づく解説動画
 - **[[【動画】BL_sugaku_I_01-3-4.mp4]]** (`10:49`〜`11:46`)

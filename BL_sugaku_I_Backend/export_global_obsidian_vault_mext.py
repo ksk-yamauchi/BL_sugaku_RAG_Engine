@@ -38,7 +38,7 @@ TYPE_PREFIX = {
 }
 
 def main():
-    print("🚀 [Ver 13.4.1 解説要約表示・スマートリンク対応] Obsidian Vault パッケージ化を開始します...")
+    print("🚀 [Ver 13.6.1 動画主従分離・スマートリンク対応] Obsidian Vault パッケージ化を開始します...")
 
     if not os.path.exists(DB_PATH):
         raise FileNotFoundError(f"❌ {DB_PATH} が見つかりません。先に build_vector_db.py を実行してください。")
@@ -98,7 +98,9 @@ def main():
                     global_parent_concepts[p_name] = set()
                 global_parent_concepts[p_name].add(filename)
 
-        for v in ndata.get("aligned_videos", []):
+        # 🌟 main_videos と review_videos の両方から動画ハブへのリンクを構築
+        all_videos = ndata.get("main_videos", []) + ndata.get("review_videos", [])
+        for v in all_videos:
             v_file = v.get("video_file")
             if v_file:
                 if v_file not in global_videos:
@@ -177,16 +179,34 @@ def main():
             content += "- 特記なし\n"
         content += "\n"
 
-        if ndata.get("aligned_videos"):
-            content += f"## 🎬 紐づく講義・解説動画\n"
-            for v in ndata["aligned_videos"]:
-                v_file = v.get("video_file", "")
-                time_str = f"`{v.get('start_time', '')}`〜`{v.get('end_time', '')}`"
-                content += f"- **[[【動画】{clean_filename(v_file)}]]** ({time_str})\n"
-                if v.get("explanation_summary"):
-                    exp_text = v['explanation_summary'].replace('\\n', '  \n    ')
-                    content += f"  - 💬 解説要約: {exp_text}\n"
-            content += "\n"
+        # 🌟 動画セクションの分割表示
+        main_videos = ndata.get("main_videos", [])
+        review_videos = ndata.get("review_videos", [])
+        
+        if main_videos or review_videos:
+            content += f"## 🎬 紐づく講義・解説動画\n\n"
+            
+            if main_videos:
+                content += f"### 💡 【メイン教材】この概念・タスクを直接学ぶ動画\n"
+                for v in main_videos:
+                    v_file = v.get("video_file", "")
+                    time_str = f"`{v.get('start_time', '')}`〜`{v.get('end_time', '')}`"
+                    content += f"- **[[【動画】{clean_filename(v_file)}]]** ({time_str})\n"
+                    if v.get("explanation_summary"):
+                        exp_text = v['explanation_summary'].replace('\\n', '  \n    ')
+                        content += f"  - 💬 解説要約: {exp_text}\n"
+                content += "\n"
+                
+            if review_videos:
+                content += f"### ⏪ 【前提・復習】この概念を前提知識として利用している動画\n"
+                for v in review_videos:
+                    v_file = v.get("video_file", "")
+                    time_str = f"`{v.get('start_time', '')}`〜`{v.get('end_time', '')}`"
+                    content += f"- **[[【動画】{clean_filename(v_file)}]]** ({time_str})\n"
+                    if v.get("explanation_summary"):
+                        exp_text = v['explanation_summary'].replace('\\n', '  \n    ')
+                        content += f"  - 💬 解説要約: {exp_text}\n"
+                content += "\n"
 
         q_texts = ndata.get("aligned_questions_text", [])
         if q_texts:
@@ -232,7 +252,6 @@ def main():
                 time_str = f"`{v.get('start_time', '')}`〜`{v.get('end_time', '')}`"
                 content += f"- **[[【動画】{clean_filename(v_file)}]]** ({time_str})\n"
                 
-                # 🌟 【変更点】 板書OCRではなく「解説要約」を表示するように変更
                 if v.get("explanation_summary"):
                     exp_text = v['explanation_summary'].replace('\\n', '  \n    ')
                     content += f"  - 💬 解説要約: {exp_text}\n"
@@ -292,7 +311,7 @@ def main():
                 arcname = os.path.relpath(file_path, PARENT_DIR)
                 zipf.write(file_path, arcname)
 
-    print(f"🎉 🎉 【成功】Obsidian Vault（解説要約表示版）の生成完了！\n💾 保存先: {zip_path}")
+    print(f"🎉 🎉 【成功】Obsidian Vault（主従分離・解説要約表示版）の生成完了！\n💾 保存先: {zip_path}")
 
 if __name__ == "__main__":
     main()
