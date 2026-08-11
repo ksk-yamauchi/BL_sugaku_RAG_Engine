@@ -1,0 +1,84 @@
+{
+  "8451503110000000": [
+    {
+      "branch_code": "_K001",
+      "name": "単項式",
+      "summary_snippet": "数や文字、およびそれらを掛け合わせてできる式。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "係数",
+      "summary_snippet": "単項式における数の部分。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "次数",
+      "summary_snippet": "単項式で掛け合わされている文字の個数。多項式では最も次数が高い項の次数。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "多項式",
+      "summary_snippet": "いくつかの単項式の和で表される式。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "項",
+      "summary_snippet": "多項式を構成する各単項式。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "定数項",
+      "summary_snippet": "多項式のうち、数字だけの項（着目した文字を含まない項）。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "整式",
+      "summary_snippet": "単項式と多項式を合わせた総称。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "数だけの単項式の次数",
+      "summary_snippet": "文字を含まない数だけの単項式の次数は0とし、ただし数0の次数は考えない（定義しない）とする原則ルール。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "同類項",
+      "summary_snippet": "文字の部分が同じ項のこと。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "降べきの順",
+      "summary_snippet": "整式を整理するときに、次数の高い項から順に並べること。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "昇べきの順",
+      "summary_snippet": "整式を整理するときに、次数の低い項から順に並べること。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    }
+  ],
+  "8451503122000000": [
+    {
+      "branch_code": "_K001",
+      "name": "特定の文字に着目する",
+      "summary_snippet": "2種類以上の文字を含む式において、特定の文字に着目して思考を進める条件・視点。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "着目外の文字の定数扱い",
+      "summary_snippet": "特定の文字に着目した際、着目していない他の文字を変数ではなく数（定数）とみなす概念的ルールの変化。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    }
+  ]
+}

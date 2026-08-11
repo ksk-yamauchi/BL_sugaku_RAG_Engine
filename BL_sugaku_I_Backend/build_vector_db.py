@@ -80,7 +80,7 @@ def get_embedding(text, max_retries=None):
 def main():
     global MODEL_NAME
     
-    print("=== 🏁 【Ver 14.4 変数lecture_name統一版】グローバルDB構築プロセス起動 ===")
+    print("=== 🏁 【Ver 14.5 大問/確認問題 分離対応版】グローバルDB構築プロセス起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
     try:
         MODEL_NAME = discover_embed_model(API_KEYS[0])
@@ -126,7 +126,6 @@ def main():
             except json.JSONDecodeError: continue
             
         engine_version = data.get("metadata", {}).get("engine_version", "")
-        # Ver 14.x 系データを処理対象とする
         if not str(engine_version).startswith("14."): continue
         lecture_name = data.get("metadata", {}).get("lecture_name", part_name)
         
@@ -144,9 +143,18 @@ def main():
                             }
                 except json.JSONDecodeError: pass
         
-        part_alignments = data.get("alignments", [])
-        for align in part_alignments:
+        # 🌟 Ver 14.5: exercises と questions のアライメントを統合
+        for align in data.get("exercise_alignments", []):
             align["lecture_name"] = lecture_name
+            # キーを統一して処理しやすくする
+            align["target_number"] = align.pop("exercise_number", "")
+            align["target_type"] = "exercise"
+            global_alignments.append(align)
+
+        for align in data.get("question_alignments", []):
+            align["lecture_name"] = lecture_name
+            align["target_number"] = align.pop("question_number", "")
+            align["target_type"] = "question"
             global_alignments.append(align)
 
         node_categories = {
@@ -162,7 +170,6 @@ def main():
                 n_id = node.get("node_id")
                 if not n_id: continue
                 
-                # 新規ノードの初期化
                 if n_id not in global_nodes_map:
                     mext_code = node.get("mext_code", "")
                     mext_info = mext_dict.get(mext_code, {})
@@ -180,20 +187,32 @@ def main():
                     }
                     global_timeline_counter += 1
 
-                # 動画の振り分け処理 (新規・既存問わず実行し、アライメントタイプに応じて配列を分ける)
                 for new_v in node.get("aligned_videos", []):
                     v_file = new_v.get("video_file")
                     a_type = new_v.get("alignment_type", "")
                     
                     if a_type in ["concept_introduction", "task_walkthrough"]:
-                        # main_videosに重複なく追加
                         if not any(v.get("video_file") == v_file for v in global_nodes_map[n_id]["main_videos"]):
                             global_nodes_map[n_id]["main_videos"].append(new_v)
                     else:
-                        # prerequisite_review や prerequisite の場合は review_videosに重複なく追加
                         if not any(v.get("video_file") == v_file for v in global_nodes_map[n_id]["review_videos"]):
                             global_nodes_map[n_id]["review_videos"].append(new_v)
 
+        # 🌟 Ver 14.5: exercises のマップ統合
+        for ex in data.get("exercises", []):
+            ex_num = str(ex.get("exercise_number", ""))
+            q_id = f"EX_{lecture_name}_{ex_num}"
+            global_questions_map[q_id] = {
+                "global_q_id": q_id, 
+                "id": q_id, "type": "exercise", "lecture_name": lecture_name, "question_number": ex_num, 
+                "local_q_num": ex_num, 
+                "question_text": ex.get("exercise_text", ""), "answer_text": ex.get("answer_text", ""), "aligned_videos": ex.get("aligned_videos", []), 
+                "matched_concept": "",
+                "global_timeline_index": global_timeline_counter
+            }
+            global_timeline_counter += 1
+
+        # 🌟 Ver 14.5: questions のマップ統合
         for q in data.get("questions", []):
             q_num = str(q.get("question_number", ""))
             q_id = f"Q_{lecture_name}_{q_num}"
@@ -243,11 +262,15 @@ def main():
     # 3. アライメント情報の紐付け
     for align in global_alignments:
         l_name = align.get("lecture_name")
-        q_num = align.get("question_number")
-        q_id = f"Q_{l_name}_{q_num}"
+        target_num = align.get("target_number")
+        target_type = align.get("target_type")
+        
+        q_id = f"EX_{l_name}_{target_num}" if target_type == "exercise" else f"Q_{l_name}_{target_num}"
         q_data = global_questions_map.get(q_id)
         if not q_data: continue
-        q_text_snippet = f"[問題] {q_data['question_text']}\n[解説] {q_data['answer_text']}"
+        
+        prefix_text = "[例題/大問]" if target_type == "exercise" else "[確認問題]"
+        q_text_snippet = f"{prefix_text} {q_data['question_text']}\n[解説] {q_data['answer_text']}"
         
         for t_id in align.get("linked_task_ids", []):
             if t_id in global_nodes_map and global_nodes_map[t_id]["type"] == "tasks":
@@ -303,7 +326,7 @@ def main():
 
     for q_id, meta in global_questions_map.items():
         current_count += 1
-        print(f"  [{current_count}/{total_items}] Embedding Question: {meta['lecture_name']} 問題 {meta['question_number']}")
+        print(f"  [{current_count}/{total_items}] Embedding {'Exercise' if meta['type'] == 'exercise' else 'Question'}: {meta['lecture_name']} {meta['question_number']}")
         q_composite = f"【講義名】{meta['lecture_name']}\n【問題・演習】\n問題文: {meta['question_text']}\n解説: {meta['answer_text']}\n"
         for v in meta["aligned_videos"]:
             if v.get("blackboard_ocr"): q_composite += f"【板書OCR】{v['blackboard_ocr']}\n"
@@ -314,7 +337,7 @@ def main():
 
     db_payload = {
         "embed_model": MODEL_NAME,
-        "metadata": {"engine_version": "14.4_lecture_name_unified", "embed_model": MODEL_NAME},
+        "metadata": {"engine_version": "14.5_exercise_question_separation", "embed_model": MODEL_NAME},
         "global_concept_nodes": global_nodes_map,
         "global_question_nodes": global_questions_map,
         "global_mext_index": global_mext_index,
@@ -324,7 +347,7 @@ def main():
         json.dump(db_payload, f, ensure_ascii=False, indent=2)
 
     print("\n=========================================================")
-    print(f"🎉 グローバルベクトルDB（変数lecture_name統一版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
+    print(f"🎉 グローバルベクトルDB（大問/確認問題分離版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
     print("=========================================================")
 
 if __name__ == "__main__":

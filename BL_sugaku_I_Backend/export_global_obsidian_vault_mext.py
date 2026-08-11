@@ -38,7 +38,7 @@ TYPE_PREFIX = {
 }
 
 def main():
-    print("🚀 [Ver 14.4 変数lecture_name統一版] Obsidian Vault パッケージ化を開始します...")
+    print("🚀 [Ver 14.5 大問/確認問題 分離対応版] Obsidian Vault パッケージ化を開始します...")
 
     if not os.path.exists(DB_PATH):
         raise FileNotFoundError(f"❌ {DB_PATH} が見つかりません。先に build_vector_db.py を実行してください。")
@@ -52,6 +52,7 @@ def main():
         db = json.load(f)
 
     nodes = db.get("global_concept_nodes", {})
+    # DB側で統合された global_question_nodes を取得 (exercises と questions が混在)
     questions = db.get("global_question_nodes", {})
     video_catalog = db.get("global_video_catalog", {})
 
@@ -59,7 +60,7 @@ def main():
     name_to_id = {}
     used_names = set()
     
-    # 🌟 講義名（lecture_name）ごとに中身を集計する辞書
+    # 🌟 講義名（lecture_name）ごとに中身を集計する辞書（exercisesを分離）
     global_lectures = {}
 
     for nid, ndata in nodes.items():
@@ -71,10 +72,17 @@ def main():
         id_to_filename[nid] = base_name
         name_to_id[ndata['name']] = nid
 
+    # 🌟 大問と確認問題でプレフィックスを分ける
     for qid, qdata in questions.items():
         l_name = clean_filename(qdata.get('lecture_name', 'Unknown_Lecture'))
         q_num = qdata.get('question_number', 'X')
-        base_name = f"[問題] {l_name}_{q_num}"
+        q_type = qdata.get('type', 'question')
+        
+        if q_type == 'exercise':
+            base_name = f"[大問] {l_name}_{q_num}"
+        else:
+            base_name = f"[問題] {l_name}_{q_num}"
+            
         id_to_filename[qid] = base_name
 
     global_parent_concepts = {}
@@ -107,7 +115,7 @@ def main():
             v_file = v.get("video_file")
             if v_file:
                 if v_file not in global_videos:
-                    global_videos[v_file] = {"concepts": set(), "tasks": set(), "questions_direct": set(), "questions_prereq": set()}
+                    global_videos[v_file] = {"concepts": set(), "tasks": set(), "exercises_direct": set(), "questions_direct": set(), "questions_prereq": set()}
                 if ndata.get("type") == "tasks":
                     global_videos[v_file]["tasks"].add(f"[[{filename}]]")
                 else:
@@ -131,9 +139,8 @@ def main():
         lecture_name_clean = clean_filename(ndata.get('lecture_name', 'Unknown_Lecture'))
         content += f"- **🎓 スタディサプリの講義名**: [[{lecture_name_clean}]]\n"
         
-        # 🌟 講義名（lecture_name）のハブにノードを追加
         if lecture_name_clean not in global_lectures:
-            global_lectures[lecture_name_clean] = {"nodes": set(), "questions": set(), "videos": set()}
+            global_lectures[lecture_name_clean] = {"nodes": set(), "exercises": set(), "questions": set(), "videos": set()}
         global_lectures[lecture_name_clean]["nodes"].add(f"[[{filename}]]")
         
         if parent_link_str:
@@ -229,23 +236,32 @@ def main():
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
             f.write(content)
 
-    print("   📝 問題ノードのMarkdownを生成中...")
+    print("   📝 問題・大問ノードのMarkdownを生成中...")
     for qid, qdata in questions.items():
         filename = id_to_filename[qid]
         l_name = clean_filename(qdata.get("lecture_name", "Unknown_Lecture"))
+        q_type = qdata.get("type", "question")
 
         if l_name not in global_lectures:
-            global_lectures[l_name] = {"nodes": set(), "questions": set(), "videos": set()}
-        global_lectures[l_name]["questions"].add(f"[[{filename}]]")
+            global_lectures[l_name] = {"nodes": set(), "exercises": set(), "questions": set(), "videos": set()}
+            
+        # 🌟 大問と確認問題でセットを分割
+        if q_type == 'exercise':
+            global_lectures[l_name]["exercises"].add(f"[[{filename}]]")
+        else:
+            global_lectures[l_name]["questions"].add(f"[[{filename}]]")
 
         for v in qdata.get("aligned_videos", []):
             v_file = v.get("video_file")
             align_type = v.get("alignment_type", "")
             if v_file:
                 if v_file not in global_videos:
-                    global_videos[v_file] = {"concepts": set(), "tasks": set(), "questions_direct": set(), "questions_prereq": set()}
+                    global_videos[v_file] = {"concepts": set(), "tasks": set(), "exercises_direct": set(), "questions_direct": set(), "questions_prereq": set()}
                 if align_type in ["direct_explanation", "task_walkthrough"]:
-                    global_videos[v_file]["questions_direct"].add(f"[[{filename}]]")
+                    if q_type == 'exercise':
+                        global_videos[v_file]["exercises_direct"].add(f"[[{filename}]]")
+                    else:
+                        global_videos[v_file]["questions_direct"].add(f"[[{filename}]]")
                 else:
                     global_videos[v_file]["questions_prereq"].add(f"[[{filename}]]")
 
@@ -253,13 +269,17 @@ def main():
         a_text = qdata.get('answer_text', '').replace('\\n', '\n')
 
         content = f"---\n"
-        content += f"tags:\n  - node/question\n"
+        content += f"tags:\n  - node/{q_type}\n"
         content += f"---\n"
         content += f"# {filename}\n\n"
         
         content += f"**🎓 スタディサプリの講義名**: [[{l_name}]]\n\n"
         
-        content += f"## 📝 問題文\n{q_text}\n\n"
+        if q_type == "exercise":
+            content += f"## 📝 大問（モデリング）\n{q_text}\n\n"
+        else:
+            content += f"## 📝 確認問題（アセスメント）\n{q_text}\n\n"
+            
         content += f"## 💡 解説・解答\n{a_text}\n\n"
         
         if qdata.get("aligned_videos"):
@@ -297,7 +317,7 @@ def main():
             content += f"- [[{l_name_catalog}]]\n\n"
             
             if l_name_catalog not in global_lectures:
-                global_lectures[l_name_catalog] = {"nodes": set(), "questions": set(), "videos": set()}
+                global_lectures[l_name_catalog] = {"nodes": set(), "exercises": set(), "questions": set(), "videos": set()}
             global_lectures[l_name_catalog]["videos"].add(f"[[{filename}]]")
             
         if v_data.get("concepts") or v_data.get("tasks"):
@@ -308,15 +328,21 @@ def main():
                 content += f"- {n}\n"
             content += "\n"
             
-        if v_data.get("questions_direct") or v_data.get("questions_prereq"):
-            content += "## 📝 紐付けられた確認問題\n"
+        # 🌟 大問と確認問題でセクションを分離して出力
+        if v_data.get("exercises_direct") or v_data.get("questions_direct") or v_data.get("questions_prereq"):
+            content += "## 📝 紐付けられた大問・確認問題\n"
+            if v_data.get("exercises_direct"):
+                content += "### 📘 【モデリング】（直接解説している大問・例題）\n"
+                for q in sorted(list(v_data["exercises_direct"])):
+                    content += f"- {q}\n"
+                content += "\n"
             if v_data.get("questions_direct"):
-                content += "### 📗 【例題演習】（直接解説している問題）\n"
+                content += "### 📗 【アセスメント】（直接解説している確認問題）\n"
                 for q in sorted(list(v_data["questions_direct"])):
                     content += f"- {q}\n"
                 content += "\n"
             if v_data.get("questions_prereq"):
-                content += "### 📘 【概念理解】（前提概念として紐づく問題）\n"
+                content += "### ⏪ 【前提・復習】（この動画を前提・復習として利用している問題）\n"
                 for q in sorted(list(v_data["questions_prereq"])):
                     content += f"- {q}\n"
                 content += "\n"
@@ -324,7 +350,6 @@ def main():
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
             f.write(content)
 
-    # 🌟 講義名（lecture_name）のハブノードを生成
     print("   🎓 講義名（lecture_name）のハブノードを生成中...")
     for l_name, l_data in global_lectures.items():
         if l_name == "Unknown_Lecture":
@@ -344,8 +369,14 @@ def main():
                 content += f"- {n}\n"
             content += "\n"
             
+        if l_data["exercises"]:
+            content += "## 📘 大問（モデリング）\n"
+            for q in sorted(list(l_data["exercises"])):
+                content += f"- {q}\n"
+            content += "\n"
+            
         if l_data["questions"]:
-            content += "## 📝 演習問題\n"
+            content += "## 📗 確認問題（アセスメント）\n"
             for q in sorted(list(l_data["questions"])):
                 content += f"- {q}\n"
             content += "\n"
@@ -362,7 +393,7 @@ def main():
                 arcname = os.path.relpath(file_path, PARENT_DIR)
                 zipf.write(file_path, arcname)
 
-    print(f"🎉 🎉 【成功】Obsidian Vault（変数lecture_name統一版）の生成完了！\n💾 保存先: {zip_path}")
+    print(f"🎉 🎉 【成功】Obsidian Vault（大問/確認問題分離版）の生成完了！\n💾 保存先: {zip_path}")
 
 if __name__ == "__main__":
     main()
