@@ -180,6 +180,8 @@ def execute_dynamic_alignment(phase1_data, phase2_data, lecture_name):
     print("🚀 [Phase 3] マルチモーダル暗黙知補完と三位一体アライメントを実行中...")
 
     nodes = phase1_data.get("nodes", {})
+    # 🌟 Ver 14.5: exercisesとquestionsの両方を取得
+    exercises = phase1_data.get("exercises", [])
     questions = phase1_data.get("questions", [])
     video_segments = phase2_data.get("videos", [])
     
@@ -200,26 +202,26 @@ def execute_dynamic_alignment(phase1_data, phase2_data, lecture_name):
 ★【絶対ルール: タスク追加の禁止】動画から新しい `tasks` (技能) を追加することは【絶対に禁止】します。
 
 【ミッション2：三位一体アライメントと粒度の吸収】
-既存のノード、新たに追加した知識ノード、および確認問題に対して、解説している「動画セグメント」を紐づけてください。
+既存のノード、新たに追加した知識ノード、および大問（exercises）・確認問題（questions）に対して、解説している「動画セグメント」を紐づけてください。
 
 【★重要: アライメント・タイプの厳密な分類★】
 `alignment_type` は以下のいずれかを使用してください。
 - `concept_introduction`: その概念を「初めて、またはメインのテーマとして」導入・解説している場合。
 - `prerequisite_review`: 過去に習った概念を、別の問題やタスクを解くための「前提知識」として軽く復習したり、利用しているだけの場合。
 - `task_walkthrough`: タスク（技能）の解法手順を解説している場合。
-- `direct_explanation`: 確認問題の直接解説を行っている場合。
+- `direct_explanation`: 大問または確認問題の直接解説を行っている場合。
 
-★【絶対ルール】: 動画の解説内容がその概念自体の説明に終始していれば `concept_introduction` とし、その概念を使って別のタスク（整式の整理など）を行っている過程での言及であれば、必ず `prerequisite_review` と分類してください。
+★【絶対ルール】: 動画の解説内容がその概念自体の説明に終始していれば `concept_introduction` とし、その概念を使って別のタスクを行っている過程での言及であれば、必ず `prerequisite_review` と分類してください。
 
 ★【最重要: 動画ロールに応じた細かいセグメントの束ね方】
-`exercise_walkthrough` などの動画は、方針、立式、計算ごとにセグメント分割されています。これらをばらばらにして新しいタスクを作るのではなく、「Phase 1の既存のタスク」や「確認問題」の `aligned_videos` の中に、一連のプロセスとして複数個まとめて紐付けて吸収させてください。
+`exercise_walkthrough` などの動画は、方針、立式、計算ごとにセグメント分割されています。これらをばらばらにして新しいタスクを作るのではなく、「Phase 1の既存のタスク」や「問題（exercises / questions）」の `aligned_videos` の中に、一連のプロセスとして複数個まとめて紐付けて吸収させてください。
 
 【★最重要: LaTeXエスケープ★】
 `reasoning`等にLaTeX数式を含める場合は、必ずバックスラッシュを二重にエスケープ（例: \\\\frac）してください。
 
 ---
-■ 【Phase 1】テキスト抽出ベースグラフ:
-{json.dumps({"nodes": nodes, "questions": questions}, ensure_ascii=False)}
+■ 【Phase 1】テキスト抽出ベースグラフ (現在の講義: {lecture_name}):
+{json.dumps({"nodes": nodes, "exercises": exercises, "questions": questions}, ensure_ascii=False)}
 
 ■ 【Phase 2】動画タイムライン・板書データ:
 {json.dumps(video_segments, ensure_ascii=False)}
@@ -255,9 +257,17 @@ def execute_dynamic_alignment(phase1_data, phase2_data, lecture_name):
       ]
     }}
   ],
+  "exercise_video_alignments": [
+    {{
+      "exercise_number": "大問1 (1)",
+      "aligned_videos": [
+        {{ "video_file": "...", "start_time": "MM:SS", "alignment_type": "direct_explanation", "reasoning": "..." }}
+      ]
+    }}
+  ],
   "question_video_alignments": [
     {{
-      "question_number": "1",
+      "question_number": "確認問題 1",
       "aligned_videos": [
         {{ "video_file": "...", "start_time": "MM:SS", "alignment_type": "direct_explanation", "reasoning": "..." }}
       ]
@@ -268,7 +278,7 @@ def execute_dynamic_alignment(phase1_data, phase2_data, lecture_name):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 14.4 変数lecture_name統一版】Phase 3 起動 ===")
+    print("=== 🏁 【Ver 14.5 大問分離版】Phase 3 起動 ===")
     
     phase1_data = load_json(PHASE1_FILE)
     phase2_data = load_json(PHASE2_FILE)
@@ -282,7 +292,7 @@ def main():
     if not phase2_data:
         print("⚠️ Phase 2 の動画データがありません。アライメントをスキップします。")
         final_graph = phase1_data.copy()
-        final_graph["metadata"]["engine_version"] = "14.4_video_skipped"
+        final_graph["metadata"]["engine_version"] = "14.5_video_skipped"
     else:
         result = execute_dynamic_alignment(phase1_data, phase2_data, lecture_name)
         video_segments = phase2_data.get("videos", [])
@@ -290,6 +300,9 @@ def main():
         added_nodes = result.get("added_nodes", {})
         added_edges = result.get("added_edges", [])
         node_alignments = {item["node_id"]: item["aligned_videos"] for item in result.get("node_video_alignments", [])}
+        
+        # 🌟 exercises と questions のアライメント結果を取得
+        exercise_alignments = {str(item["exercise_number"]): item["aligned_videos"] for item in result.get("exercise_video_alignments", [])}
         question_alignments = {str(item["question_number"]): item["aligned_videos"] for item in result.get("question_video_alignments", [])}
 
         id_map = {}
@@ -352,13 +365,20 @@ def main():
                 raw_aligned = node_alignments.get(n_id, [])
                 node["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
 
+        # 🌟 大問（exercises）への動画結合
+        for ex in phase1_data.get("exercises", []):
+            ex_num = str(ex.get("exercise_number", ""))
+            raw_aligned = exercise_alignments.get(ex_num, [])
+            ex["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
+
+        # 🌟 確認問題（questions）への動画結合
         for q in phase1_data.get("questions", []):
             q_num = str(q.get("question_number", ""))
             raw_aligned = question_alignments.get(q_num, [])
             q["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
 
         final_graph = phase1_data
-        final_graph["metadata"]["engine_version"] = "14.4_dynamic_ontology_completed"
+        final_graph["metadata"]["engine_version"] = "14.5_dynamic_ontology_completed"
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(final_graph, f, ensure_ascii=False, indent=2)

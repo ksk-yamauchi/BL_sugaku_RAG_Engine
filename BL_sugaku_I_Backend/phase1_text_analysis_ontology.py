@@ -220,6 +220,20 @@ def execute_step1_extraction(textbook_content, mext_master_dict, lecture_name):
 【エッジの生成ルール】
 - タスク（tasks）の前提知識（`requires_logical` または `prerequisite`）として、直接「視点（perspective_condition）」と「ルールの変化（derived_knowledge）」を繋ぐようにエッジを生成してください。
 
+【★重要：大問（exercises）と確認問題（questions）の役割の違いと抽出ルール★】
+教材テキストに含まれる問題を、その役割に応じて2つの配列に厳格に分離して抽出してください。
+1. `exercises`（大問）:
+   - それまでに学んだ知識・技能の使い方を学ぶことをメインとする問題（先生によるモデリングの場）です。
+   - テキスト上で数字だけの見出し（例: `**1**` や `### 4`）となっているものが該当します。部分的な見落としがないように必ず抽出してください。
+   - 【🌟抽出のガイドライン】: 大問は既習の知識・技能の使い方の確認がメインですが、もし大問の解法を通じて知識の組み合わせ方や新しい視点の使い方が示され、そこから【新たなタスク】や【再構成された知識】が見られた場合は、萎縮せずに `tasks` や `derived_knowledge` ノードとしてポジティブに抽出してください。
+2. `questions`（確認問題）:
+   - 大問で学んだことを生徒が自力で解いて確かめるアセスメントの問題です。
+   - 「確認問題」と明記されているものが該当します。こちらもすべて漏れなく抽出してください。
+
+番号のフォーマットは以下に厳格に統一してください。
+- 大問の場合: `大問X (Y) (Z)` （例: `大問1 (1)`, `大問4 (2) (i)`）
+- 確認問題の場合: `確認問題 X` （例: `確認問題 1`, `確認問題 8`）
+
 【出力JSONフォーマット】:
 {{
   "nodes": {{
@@ -254,21 +268,21 @@ def execute_step1_extraction(textbook_content, mext_master_dict, lecture_name):
       "reasoning": "なぜこの関係があるかの理由"
     }}
   ],
+  "exercises": [
+    {{
+      "exercise_number": "大問番号（例: 大問1 (1)）",
+      "exercise_text": "問題文（LaTeXエスケープ厳守）",
+      "answer_text": "[正解] ... \\n[解説] ..."
+    }}
+  ],
   "questions": [
     {{
-      "question_number": "問題番号（例: 大問1 (1) または 確認問題 1）",
+      "question_number": "確認問題 X",
       "question_text": "問題文（LaTeXエスケープ厳守）",
       "answer_text": "[正解] ... \\n[解説] ..."
     }}
   ]
 }}
-
-【★重要：問題（questions）抽出と番号フォーマットの絶対ルール★】
-教材テキストに含まれる「大問（本文中の見出し）」と「確認問題」を【すべて漏れなく】抽出してください。
-※ テキスト上で `**1**` や `### 4` のように数字だけで見出しになっている部分は「大問」です。部分的な見落としがないように必ず抽出してください。
-`question_number` は以下のフォーマットに厳格に統一してください。
-- 大問の場合: `大問X (Y) (Z)` （例: `大問1 (1)`, `大問4 (2) (i)`）
-- 確認問題の場合: `確認問題 X` （例: `確認問題 1`, `確認問題 8`）
 
 【★最重要: LaTeXエスケープ★】
 数式を含める場合は、必ずバックスラッシュを二重にエスケープ（例: \\\\frac, \\\\subset）してください。
@@ -288,23 +302,33 @@ def execute_step2_alignment(mapped_step1_data):
     
     prompt_data = {
         "nodes": mapped_step1_data["nodes"],
+        "exercises": mapped_step1_data["exercises"],
         "questions": mapped_step1_data["questions"]
     }
 
     prompt = f"""あなたは教育工学のエキスパートです。
-以下の整理済みデータから、確認問題と学習タスク（GNN-KT推論用）のアライメント構造を構築してください。
+以下の整理済みデータから、大問（exercises）および確認問題（questions）と、学習タスク（GNN-KT推論用）のアライメント構造を構築してください。
 
 【整理済みデータ】:
 {json.dumps(prompt_data, ensure_ascii=False, indent=2)}
 
 【ルール】
-各確認問題（question_number）を解くために、どのタスク（tasksノードのID）と、どの知識（foundation_knowledge等のID）が必要になるかを分析し、配列で紐づけてください。
+各「大問（exercise_number）」および「確認問題（question_number）」を解くために、どのタスク（tasksノードのID）と、どの知識（foundation_knowledge等のID）が必要になるかを分析し、配列で紐づけてください。
 
 【出力JSONフォーマット】:
 {{
-  "alignments": [
+  "exercise_alignments": [
     {{
-      "question_number": "問題番号",
+      "exercise_number": "大問番号",
+      "linked_task_ids": ["_T001", "_T002"],
+      "linked_knowledge_ids": ["_K001"],
+      "reasoning": "なぜこれらのタスクや知識が必要かの理由",
+      "formula_used": "使用する公式や解法の要点（LaTeXエスケープ厳守）"
+    }}
+  ],
+  "question_alignments": [
+    {{
+      "question_number": "確認問題番号",
       "linked_task_ids": ["_T001", "_T002"],
       "linked_knowledge_ids": ["_K001"],
       "reasoning": "なぜこれらのタスクや知識が必要かの理由",
@@ -316,7 +340,7 @@ def execute_step2_alignment(mapped_step1_data):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 14.4 変数lecture_name統一版】Phase 1 起動 ===")
+    print("=== 🏁 【Ver 14.5 大問/確認問題 分離抽出 ＆ lecture_name統一版】Phase 1 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
 
     textbook_content, mext_master_dict, lecture_name = load_and_prepare_inputs()
@@ -352,11 +376,13 @@ def main():
     step2_output = execute_step2_alignment(step1_output)
 
     final_knowledge_graph = {
-        "metadata": {"lecture_name": lecture_name, "engine_version": "14.4_gnn_kt_dual_engine", "model_used": MODEL_NAME},
+        "metadata": {"lecture_name": lecture_name, "engine_version": "14.5_exercise_question_separation", "model_used": MODEL_NAME},
         "nodes": step1_output.get("nodes", {}),
         "edges": step1_output.get("edges", []),
+        "exercises": step1_output.get("exercises", []),
         "questions": step1_output.get("questions", []),
-        "alignments": step2_output.get("alignments", []),
+        "exercise_alignments": step2_output.get("exercise_alignments", []),
+        "question_alignments": step2_output.get("question_alignments", []),
     }
     
     output_filepath = os.path.join(OUTPUT_DIR, "final_knowledge_graph.json")
