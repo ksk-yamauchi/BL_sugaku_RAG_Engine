@@ -80,7 +80,7 @@ def get_embedding(text, max_retries=None):
 def main():
     global MODEL_NAME
     
-    print("=== 🏁 【Ver 14.2 所属講義ロジック付与版】グローバルDB構築プロセス起動 ===")
+    print("=== 🏁 【Ver 14.4 変数lecture_name統一版】グローバルDB構築プロセス起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
     try:
         MODEL_NAME = discover_embed_model(API_KEYS[0])
@@ -128,7 +128,7 @@ def main():
         engine_version = data.get("metadata", {}).get("engine_version", "")
         # Ver 14.x 系データを処理対象とする
         if not str(engine_version).startswith("14."): continue
-        bundle_name = data.get("metadata", {}).get("bundle_name", part_name)
+        lecture_name = data.get("metadata", {}).get("lecture_name", part_name)
         
         if os.path.exists(lecture_map_path):
             with open(lecture_map_path, "r", encoding="utf-8") as f:
@@ -138,7 +138,7 @@ def main():
                         v_file = v.get("video_file")
                         if v_file:
                             global_video_catalog[v_file] = {
-                                "bundle_name": bundle_name,
+                                "lecture_name": lecture_name,
                                 "role": v.get("role", "unknown"),
                                 "segments": v.get("segments", [])
                             }
@@ -146,7 +146,7 @@ def main():
         
         part_alignments = data.get("alignments", [])
         for align in part_alignments:
-            align["bundle_name"] = bundle_name
+            align["lecture_name"] = lecture_name
             global_alignments.append(align)
 
         node_categories = {
@@ -173,8 +173,7 @@ def main():
                         "concept_name": node_name,
                         "parent_concept": node.get("parent_concept", ""), "summary": node.get("summary", ""),
                         "mext_code": mext_code, "mext_hierarchy": mext_info.get("hierarchy_text", "不明な階層"), "mext_official_text": mext_info.get("official_text", ""), "mext_explanation": mext_info.get("explanation_summary", "解説なし"),
-                        # 🌟 ロジックベースで bundle_name を付与
-                        "bundle_name": bundle_name,
+                        "lecture_name": lecture_name,
                         "main_videos": [], "review_videos": [], "aligned_questions_text": [], 
                         "incoming_edges": {k: [] for k in empty_edges_template}, "outgoing_edges": {k: [] for k in empty_edges_template},
                         "global_timeline_index": global_timeline_counter
@@ -197,10 +196,10 @@ def main():
 
         for q in data.get("questions", []):
             q_num = str(q.get("question_number", ""))
-            q_id = f"Q_{bundle_name}_{q_num}"
+            q_id = f"Q_{lecture_name}_{q_num}"
             global_questions_map[q_id] = {
                 "global_q_id": q_id, 
-                "id": q_id, "type": "question", "bundle_name": bundle_name, "question_number": q_num, 
+                "id": q_id, "type": "question", "lecture_name": lecture_name, "question_number": q_num, 
                 "local_q_num": q_num, 
                 "question_text": q.get("question_text", ""), "answer_text": q.get("answer_text", ""), "aligned_videos": q.get("aligned_videos", []), 
                 "matched_concept": "",
@@ -243,9 +242,9 @@ def main():
 
     # 3. アライメント情報の紐付け
     for align in global_alignments:
-        b_name = align.get("bundle_name")
+        l_name = align.get("lecture_name")
         q_num = align.get("question_number")
-        q_id = f"Q_{b_name}_{q_num}"
+        q_id = f"Q_{l_name}_{q_num}"
         q_data = global_questions_map.get(q_id)
         if not q_data: continue
         q_text_snippet = f"[問題] {q_data['question_text']}\n[解説] {q_data['answer_text']}"
@@ -282,8 +281,7 @@ def main():
     for n_id, meta in global_nodes_map.items():
         current_count += 1
         print(f"  [{current_count}/{total_items}] Embedding Node: {meta['name']}")
-        # 🌟 ベクトル化テキストにも講義名を含める
-        c_composite = f"【ノード分類】{meta['type_label']}\n【役割】{meta['role_desc']}\n【三つの柱】{meta['pillar']}\n【名称】{meta['name']}\n【講義名】{meta['bundle_name']}\n【上位概念】{meta['parent_concept']}\n【概要】{meta['summary']}\n"
+        c_composite = f"【ノード分類】{meta['type_label']}\n【役割】{meta['role_desc']}\n【三つの柱】{meta['pillar']}\n【名称】{meta['name']}\n【講義名】{meta['lecture_name']}\n【上位概念】{meta['parent_concept']}\n【概要】{meta['summary']}\n"
         if meta.get("mext_code"): c_composite += f"【指導要領階層】{meta['mext_hierarchy']}\n【指導要領解説】{meta['mext_explanation']}\n"
         if meta["incoming_edges"]:
             prereqs = [f"理由: {e['reasoning']}" for e in meta["incoming_edges"].get("prerequisite", []) + meta["incoming_edges"].get("applies_condition", [])]
@@ -305,8 +303,8 @@ def main():
 
     for q_id, meta in global_questions_map.items():
         current_count += 1
-        print(f"  [{current_count}/{total_items}] Embedding Question: {meta['bundle_name']} 問題 {meta['question_number']}")
-        q_composite = f"【講義名】{meta['bundle_name']}\n【問題・演習】\n問題文: {meta['question_text']}\n解説: {meta['answer_text']}\n"
+        print(f"  [{current_count}/{total_items}] Embedding Question: {meta['lecture_name']} 問題 {meta['question_number']}")
+        q_composite = f"【講義名】{meta['lecture_name']}\n【問題・演習】\n問題文: {meta['question_text']}\n解説: {meta['answer_text']}\n"
         for v in meta["aligned_videos"]:
             if v.get("blackboard_ocr"): q_composite += f"【板書OCR】{v['blackboard_ocr']}\n"
         vector = get_embedding(q_composite)
@@ -316,7 +314,7 @@ def main():
 
     db_payload = {
         "embed_model": MODEL_NAME,
-        "metadata": {"engine_version": "14.2_lecture_name_integrated", "embed_model": MODEL_NAME},
+        "metadata": {"engine_version": "14.4_lecture_name_unified", "embed_model": MODEL_NAME},
         "global_concept_nodes": global_nodes_map,
         "global_question_nodes": global_questions_map,
         "global_mext_index": global_mext_index,
@@ -326,7 +324,7 @@ def main():
         json.dump(db_payload, f, ensure_ascii=False, indent=2)
 
     print("\n=========================================================")
-    print(f"🎉 グローバルベクトルDB（所属講義ロジック付与版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
+    print(f"🎉 グローバルベクトルDB（変数lecture_name統一版）構築完了！\n💾 保存先: {OUTPUT_FILE}")
     print("=========================================================")
 
 if __name__ == "__main__":

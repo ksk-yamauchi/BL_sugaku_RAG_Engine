@@ -120,7 +120,7 @@ def time_to_seconds(t_str):
     except:
         return -1
 
-def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, prefix=""):
+def assign_or_get_code(master_path, mext_code, node_name, summary, lecture_name, prefix=""):
     master_data = {}
     if os.path.exists(master_path):
         try:
@@ -149,7 +149,7 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
         "branch_code": new_branch_code,
         "name": node_name,
         "summary_snippet": summary[:100] if summary else "",
-        "first_appeared_in": bundle_name
+        "first_appeared_in": lecture_name
     })
 
     with open(master_path, "w", encoding="utf-8") as f:
@@ -176,7 +176,7 @@ def get_existing_ontology_names():
 # =========================================================
 # 🧠 動的補完 ＆ アライメント実行
 # =========================================================
-def execute_dynamic_alignment(phase1_data, phase2_data, bundle_name):
+def execute_dynamic_alignment(phase1_data, phase2_data, lecture_name):
     print("🚀 [Phase 3] マルチモーダル暗黙知補完と三位一体アライメントを実行中...")
 
     nodes = phase1_data.get("nodes", {})
@@ -268,7 +268,7 @@ def execute_dynamic_alignment(phase1_data, phase2_data, bundle_name):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 14.0 アライメント厳格化版】Phase 3 起動 ===")
+    print("=== 🏁 【Ver 14.4 変数lecture_name統一版】Phase 3 起動 ===")
     
     phase1_data = load_json(PHASE1_FILE)
     phase2_data = load_json(PHASE2_FILE)
@@ -277,14 +277,14 @@ def main():
         print("❌ Phase 1 のデータが見つかりません。")
         return
 
-    bundle_name = phase1_data.get("metadata", {}).get("bundle_name", "Unknown_Bundle")
+    lecture_name = phase1_data.get("metadata", {}).get("lecture_name", "Unknown_Lecture")
 
     if not phase2_data:
         print("⚠️ Phase 2 の動画データがありません。アライメントをスキップします。")
         final_graph = phase1_data.copy()
-        final_graph["metadata"]["engine_version"] = "14.0_video_skipped"
+        final_graph["metadata"]["engine_version"] = "14.4_video_skipped"
     else:
-        result = execute_dynamic_alignment(phase1_data, phase2_data, bundle_name)
+        result = execute_dynamic_alignment(phase1_data, phase2_data, lecture_name)
         video_segments = phase2_data.get("videos", [])
         
         added_nodes = result.get("added_nodes", {})
@@ -303,7 +303,7 @@ def main():
                 name = node.get("name", "")
                 summary = node.get("summary", "")
                 
-                new_id = assign_or_get_code(KNOWLEDGE_MASTER_PATH, m_code, name, summary, bundle_name, prefix="K")
+                new_id = assign_or_get_code(KNOWLEDGE_MASTER_PATH, m_code, name, summary, lecture_name, prefix="K")
                 id_map[temp_id] = new_id
                 node["node_id"] = new_id
                 phase1_data["nodes"].setdefault(k_type, []).append(node)
@@ -358,7 +358,7 @@ def main():
             q["aligned_videos"] = enrich_videos(raw_aligned, video_segments)
 
         final_graph = phase1_data
-        final_graph["metadata"]["engine_version"] = "14.0_dynamic_ontology_completed"
+        final_graph["metadata"]["engine_version"] = "14.4_dynamic_ontology_completed"
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(final_graph, f, ensure_ascii=False, indent=2)

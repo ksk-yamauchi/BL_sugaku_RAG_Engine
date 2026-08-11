@@ -38,7 +38,7 @@ TYPE_PREFIX = {
 }
 
 def main():
-    print("🚀 [Ver 14.3 講義名ハブノード・topic_nameタグ追加版] Obsidian Vault パッケージ化を開始します...")
+    print("🚀 [Ver 14.4 変数lecture_name統一版] Obsidian Vault パッケージ化を開始します...")
 
     if not os.path.exists(DB_PATH):
         raise FileNotFoundError(f"❌ {DB_PATH} が見つかりません。先に build_vector_db.py を実行してください。")
@@ -59,8 +59,8 @@ def main():
     name_to_id = {}
     used_names = set()
     
-    # 🌟 講義名（bundle_name）ごとに中身を集計する辞書を新設
-    global_bundles = {}
+    # 🌟 講義名（lecture_name）ごとに中身を集計する辞書
+    global_lectures = {}
 
     for nid, ndata in nodes.items():
         prefix = TYPE_PREFIX.get(ndata["type"], "概念")
@@ -72,9 +72,9 @@ def main():
         name_to_id[ndata['name']] = nid
 
     for qid, qdata in questions.items():
-        b_name = clean_filename(qdata.get('bundle_name', 'Unknown'))
+        l_name = clean_filename(qdata.get('lecture_name', 'Unknown_Lecture'))
         q_num = qdata.get('question_number', 'X')
-        base_name = f"[問題] {b_name}_{q_num}"
+        base_name = f"[問題] {l_name}_{q_num}"
         id_to_filename[qid] = base_name
 
     global_parent_concepts = {}
@@ -128,13 +128,13 @@ def main():
         content += f"- **役割定義**: {ndata.get('role_desc', '')}\n"
         content += f"- **三つの柱**: {ndata.get('pillar', '')}\n"
         
-        bundle_name_clean = clean_filename(ndata.get('bundle_name', 'Unknown_Bundle'))
-        content += f"- **🎓 スタディサプリの講義名**: [[{bundle_name_clean}]]\n"
+        lecture_name_clean = clean_filename(ndata.get('lecture_name', 'Unknown_Lecture'))
+        content += f"- **🎓 スタディサプリの講義名**: [[{lecture_name_clean}]]\n"
         
-        # 🌟 講義名（bundle_name）のハブにノードを追加
-        if bundle_name_clean not in global_bundles:
-            global_bundles[bundle_name_clean] = {"nodes": set(), "questions": set(), "videos": set()}
-        global_bundles[bundle_name_clean]["nodes"].add(f"[[{filename}]]")
+        # 🌟 講義名（lecture_name）のハブにノードを追加
+        if lecture_name_clean not in global_lectures:
+            global_lectures[lecture_name_clean] = {"nodes": set(), "questions": set(), "videos": set()}
+        global_lectures[lecture_name_clean]["nodes"].add(f"[[{filename}]]")
         
         if parent_link_str:
             content += f"- **上位概念**: {parent_link_str}\n"
@@ -232,12 +232,11 @@ def main():
     print("   📝 問題ノードのMarkdownを生成中...")
     for qid, qdata in questions.items():
         filename = id_to_filename[qid]
-        b_name = clean_filename(qdata.get("bundle_name", "Unknown_Bundle"))
+        l_name = clean_filename(qdata.get("lecture_name", "Unknown_Lecture"))
 
-        # 🌟 講義名（bundle_name）のハブに問題を追加
-        if b_name not in global_bundles:
-            global_bundles[b_name] = {"nodes": set(), "questions": set(), "videos": set()}
-        global_bundles[b_name]["questions"].add(f"[[{filename}]]")
+        if l_name not in global_lectures:
+            global_lectures[l_name] = {"nodes": set(), "questions": set(), "videos": set()}
+        global_lectures[l_name]["questions"].add(f"[[{filename}]]")
 
         for v in qdata.get("aligned_videos", []):
             v_file = v.get("video_file")
@@ -258,7 +257,7 @@ def main():
         content += f"---\n"
         content += f"# {filename}\n\n"
         
-        content += f"**🎓 スタディサプリの講義名**: [[{b_name}]]\n\n"
+        content += f"**🎓 スタディサプリの講義名**: [[{l_name}]]\n\n"
         
         content += f"## 📝 問題文\n{q_text}\n\n"
         content += f"## 💡 解説・解答\n{a_text}\n\n"
@@ -291,16 +290,15 @@ def main():
         content = f"---\ntags:\n  - node/video\n---\n# {filename}\n\n"
         
         catalog_info = video_catalog.get(v_file, {})
-        b_name_catalog = clean_filename(catalog_info.get("bundle_name", "Unknown_Bundle"))
+        l_name_catalog = clean_filename(catalog_info.get("lecture_name", "Unknown_Lecture"))
         
-        if b_name_catalog:
+        if l_name_catalog:
             content += "## 🎓 スタディサプリの講義名\n"
-            content += f"- [[{b_name_catalog}]]\n\n"
+            content += f"- [[{l_name_catalog}]]\n\n"
             
-            # 🌟 講義名（bundle_name）のハブに動画を追加
-            if b_name_catalog not in global_bundles:
-                global_bundles[b_name_catalog] = {"nodes": set(), "questions": set(), "videos": set()}
-            global_bundles[b_name_catalog]["videos"].add(f"[[{filename}]]")
+            if l_name_catalog not in global_lectures:
+                global_lectures[l_name_catalog] = {"nodes": set(), "questions": set(), "videos": set()}
+            global_lectures[l_name_catalog]["videos"].add(f"[[{filename}]]")
             
         if v_data.get("concepts") or v_data.get("tasks"):
             content += "## 🧠 📘 関連する知識・タスク（インプット講義）\n"
@@ -326,33 +324,33 @@ def main():
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
             f.write(content)
 
-    # 🌟 講義名（所属単元）のハブノードを生成
-    print("   🎓 講義名（所属単元）のハブノードを生成中...")
-    for b_name, b_data in global_bundles.items():
-        if b_name == "Unknown_Bundle":
+    # 🌟 講義名（lecture_name）のハブノードを生成
+    print("   🎓 講義名（lecture_name）のハブノードを生成中...")
+    for l_name, l_data in global_lectures.items():
+        if l_name == "Unknown_Lecture":
             continue
             
-        content = f"---\ntags:\n  - node/topic_name\n---\n# {b_name}\n\n"
+        content = f"---\ntags:\n  - node/lecture_name\n---\n# {l_name}\n\n"
         
-        if b_data["videos"]:
+        if l_data["videos"]:
             content += "## 🎬 講義動画\n"
-            for v in sorted(list(b_data["videos"])):
+            for v in sorted(list(l_data["videos"])):
                 content += f"- {v}\n"
             content += "\n"
             
-        if b_data["nodes"]:
+        if l_data["nodes"]:
             content += "## 🧠 抽出された知識・タスク\n"
-            for n in sorted(list(b_data["nodes"])):
+            for n in sorted(list(l_data["nodes"])):
                 content += f"- {n}\n"
             content += "\n"
             
-        if b_data["questions"]:
+        if l_data["questions"]:
             content += "## 📝 演習問題\n"
-            for q in sorted(list(b_data["questions"])):
+            for q in sorted(list(l_data["questions"])):
                 content += f"- {q}\n"
             content += "\n"
             
-        with open(os.path.join(VAULT_PATH, f"{b_name}.md"), "w", encoding="utf-8") as f:
+        with open(os.path.join(VAULT_PATH, f"{l_name}.md"), "w", encoding="utf-8") as f:
             f.write(content)
 
     print("   📦 ZIPパッケージに圧縮中...")
@@ -364,7 +362,7 @@ def main():
                 arcname = os.path.relpath(file_path, PARENT_DIR)
                 zipf.write(file_path, arcname)
 
-    print(f"🎉 🎉 【成功】Obsidian Vault（スタディサプリ講義名ハブ表示版）の生成完了！\n💾 保存先: {zip_path}")
+    print(f"🎉 🎉 【成功】Obsidian Vault（変数lecture_name統一版）の生成完了！\n💾 保存先: {zip_path}")
 
 if __name__ == "__main__":
     main()

@@ -11,7 +11,7 @@ PARENT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_JSON_PATH = os.path.join(PARENT_DIR, "lecture_index_master.json")
 
 def main():
-    print("=== 📚 目次マスターJSON生成スクリプト ===")
+    print("=== 📚 目次マスターJSON生成スクリプト (Ver 14.4) ===")
     
     # 🌟 動的にインデックスMDファイルを検索（ファイル名やフォルダ名が変わってもOK！）
     search_pattern = os.path.join(PARENT_DIR, "*index*_clean.md")
@@ -58,15 +58,15 @@ def main():
             # キーの生成 (例: "01-1", "03-2", "15-4")
             key = f"{int(current_lecture_num):02d}-{part_num}"
             
-            # 正確な単元名（Bundle Name）を組み上げ
-            bundle_name = f"第{current_lecture_num}講 {current_lecture_title} PART{part_num} {part_title}"
+            # 正確な講義名（Lecture Name）を組み上げ
+            lecture_name = f"第{current_lecture_num}講 {current_lecture_title} PART{part_num} {part_title}"
             
             index_data[key] = {
                 "lecture_num": current_lecture_num,
                 "lecture_title": current_lecture_title,
                 "part_num": part_num,
                 "part_title": part_title,
-                "bundle_name": bundle_name
+                "lecture_name": lecture_name  # 🌟 bundle_name から変更
             }
 
     # JSONファイルとして保存

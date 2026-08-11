@@ -113,22 +113,22 @@ TASK_MASTER_PATH = os.path.join(PARENT_DIR, "task_master.json")
 OUTPUT_DIR = os.path.join(CURRENT_DIR, "output_result")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-def get_bundle_name_from_master(folder_name):
-    if not os.path.exists(INDEX_MASTER_PATH): return "Unknown_Bundle"
+def get_lecture_name_from_master(folder_name):
+    if not os.path.exists(INDEX_MASTER_PATH): return "Unknown_Lecture"
     with open(INDEX_MASTER_PATH, "r", encoding="utf-8") as f: index_master = json.load(f)
     match = re.search(r"(\d{2}-\d+)", folder_name)
-    if not match: return "Unknown_Bundle"
+    if not match: return "Unknown_Lecture"
     key = match.group(1)
-    return index_master.get(key, {}).get("bundle_name", "Unknown_Bundle")
+    return index_master.get(key, {}).get("lecture_name", "Unknown_Lecture")
 
 def load_and_prepare_inputs():
     with open(TEXTBOOK_MD_PATH, "r", encoding="utf-8") as f: textbook_content = f.read()
     folder_name = os.path.basename(CURRENT_DIR)
-    bundle_name = get_bundle_name_from_master(folder_name)
+    lecture_name = get_lecture_name_from_master(folder_name)
     with open(MEXT_DICT_PATH, "r", encoding="utf-8") as f: mext_master_dict = f.read()
-    return textbook_content, mext_master_dict, bundle_name
+    return textbook_content, mext_master_dict, lecture_name
 
-def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, prefix=""):
+def assign_or_get_code(master_path, mext_code, node_name, summary, lecture_name, prefix=""):
     master_data = {}
     if os.path.exists(master_path):
         try:
@@ -157,7 +157,7 @@ def assign_or_get_code(master_path, mext_code, node_name, summary, bundle_name, 
         "branch_code": new_branch_code,
         "name": node_name,
         "summary_snippet": summary[:100] if summary else "",
-        "first_appeared_in": bundle_name
+        "first_appeared_in": lecture_name
     })
 
     with open(master_path, "w", encoding="utf-8") as f:
@@ -185,15 +185,15 @@ def get_existing_ontology_names():
 # =========================================================
 # 🧠 Phase 1 / Step 1: オントロジー抽出
 # =========================================================
-def execute_step1_extraction(textbook_content, mext_master_dict, bundle_name):
-    print(f"\n🚀 [Phase 1 / Step 1] 概念・タスク抽出を実行中（対象: {bundle_name}）...")
+def execute_step1_extraction(textbook_content, mext_master_dict, lecture_name):
+    print(f"\n🚀 [Phase 1 / Step 1] 概念・タスク抽出を実行中（対象: {lecture_name}）...")
 
     existing_names = get_existing_ontology_names()
 
     prompt = f"""あなたは高等学校数学科の教材分析・学習オントロジー構築のエキスパートです。
 以下の「教材データ」と「指導要領マスター辞書」を解析し、GNN-KT（学習状態推論）およびGraph RAGに最適化されたナレッジグラフ（ノードとエッジ）を構築してください。
 
-【対象単元】: {bundle_name}
+【対象単元】: {lecture_name}
 
 【★最重要：用語の統合と分離のルール★】
 過去の単元解析で、以下の概念が既にシステムに登録されています。
@@ -316,13 +316,13 @@ def execute_step2_alignment(mapped_step1_data):
     return generate_content_and_parse_json(prompt)
 
 def main():
-    print("=== 🏁 【Ver 14.0 数学的厳格性＆汎化防止版】Phase 1 起動 ===")
+    print("=== 🏁 【Ver 14.4 変数lecture_name統一版】Phase 1 起動 ===")
     print(f"   🔑 読み込み済み有効APIキー数: {len(API_KEYS)} 個")
 
-    textbook_content, mext_master_dict, bundle_name = load_and_prepare_inputs()
+    textbook_content, mext_master_dict, lecture_name = load_and_prepare_inputs()
     
     # [Step 1] 抽出
-    step1_output = execute_step1_extraction(textbook_content, mext_master_dict, bundle_name)
+    step1_output = execute_step1_extraction(textbook_content, mext_master_dict, lecture_name)
     
     print("   🌐 マスター辞書との照合・正式ID (_Kxxx, _Txxx) への変換処理中...")
     id_map = {}
@@ -332,14 +332,14 @@ def main():
     for k_type in knowledge_lists:
         for node in step1_output.get("nodes", {}).get(k_type, []):
             old_id = node.get("node_id")
-            new_id = assign_or_get_code(KNOWLEDGE_MASTER_PATH, node.get("mext_code"), node.get("name"), node.get("summary"), bundle_name, "K")
+            new_id = assign_or_get_code(KNOWLEDGE_MASTER_PATH, node.get("mext_code"), node.get("name"), node.get("summary"), lecture_name, "K")
             id_map[old_id] = new_id
             node["node_id"] = new_id
             
     # タスクノードの採番とID置換
     for node in step1_output.get("nodes", {}).get("tasks", []):
         old_id = node.get("node_id")
-        new_id = assign_or_get_code(TASK_MASTER_PATH, node.get("mext_code"), node.get("name"), node.get("summary"), bundle_name, "T")
+        new_id = assign_or_get_code(TASK_MASTER_PATH, node.get("mext_code"), node.get("name"), node.get("summary"), lecture_name, "T")
         id_map[old_id] = new_id
         node["node_id"] = new_id
 
@@ -352,7 +352,7 @@ def main():
     step2_output = execute_step2_alignment(step1_output)
 
     final_knowledge_graph = {
-        "metadata": {"bundle_name": bundle_name, "engine_version": "14.0_gnn_kt_dual_engine", "model_used": MODEL_NAME},
+        "metadata": {"lecture_name": lecture_name, "engine_version": "14.4_gnn_kt_dual_engine", "model_used": MODEL_NAME},
         "nodes": step1_output.get("nodes", {}),
         "edges": step1_output.get("edges", []),
         "questions": step1_output.get("questions", []),
