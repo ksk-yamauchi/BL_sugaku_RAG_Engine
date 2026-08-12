@@ -198,7 +198,7 @@ def main():
                         if not any(v.get("video_file") == v_file for v in global_nodes_map[n_id]["review_videos"]):
                             global_nodes_map[n_id]["review_videos"].append(new_v)
 
-        # 🌟 Ver 14.5: exercises のマップ統合
+        # 🌟 Ver 14.5: exercises のマップ統合 (配列保持対応)
         for ex in data.get("exercises", []):
             ex_num = str(ex.get("exercise_number", ""))
             q_id = f"EX_{lecture_name}_{ex_num}"
@@ -208,11 +208,13 @@ def main():
                 "local_q_num": ex_num, 
                 "question_text": ex.get("exercise_text", ""), "answer_text": ex.get("answer_text", ""), "aligned_videos": ex.get("aligned_videos", []), 
                 "matched_concept": "",
+                "linked_task_ids": [], "linked_task_names": [],
+                "linked_knowledge_ids": [], "linked_knowledge_names": [],
                 "global_timeline_index": global_timeline_counter
             }
             global_timeline_counter += 1
 
-        # 🌟 Ver 14.5: questions のマップ統合
+        # 🌟 Ver 14.5: questions のマップ統合 (配列保持対応)
         for q in data.get("questions", []):
             q_num = str(q.get("question_number", ""))
             q_id = f"Q_{lecture_name}_{q_num}"
@@ -222,6 +224,8 @@ def main():
                 "local_q_num": q_num, 
                 "question_text": q.get("question_text", ""), "answer_text": q.get("answer_text", ""), "aligned_videos": q.get("aligned_videos", []), 
                 "matched_concept": "",
+                "linked_task_ids": [], "linked_task_names": [],
+                "linked_knowledge_ids": [], "linked_knowledge_names": [],
                 "global_timeline_index": global_timeline_counter
             }
             global_timeline_counter += 1
@@ -259,7 +263,7 @@ def main():
                 part_of_edges.append({"target_id": p_id, "reasoning": "システム自動結合 (親概念)"})
             global_nodes_map[p_id]["incoming_edges"].setdefault("part_of", []).append({"source_id": n_id, "reasoning": "システム自動結合 (親概念)"})
 
-    # 3. アライメント情報の紐付け
+    # 3. アライメント情報の紐付け (配列での保持へ変更)
     for align in global_alignments:
         l_name = align.get("lecture_name")
         target_num = align.get("target_number")
@@ -272,16 +276,28 @@ def main():
         prefix_text = "[例題/大問]" if target_type == "exercise" else "[確認問題]"
         q_text_snippet = f"{prefix_text} {q_data['question_text']}\n[解説] {q_data['answer_text']}"
         
-        for t_id in align.get("linked_task_ids", []):
+        t_ids = align.get("linked_task_ids", [])
+        k_ids = align.get("linked_knowledge_ids", [])
+        
+        q_data["linked_task_ids"] = t_ids
+        q_data["linked_knowledge_ids"] = k_ids
+        
+        for t_id in t_ids:
             if t_id in global_nodes_map and global_nodes_map[t_id]["type"] == "tasks":
                 global_nodes_map[t_id]["aligned_questions_text"].append(q_text_snippet)
-                
-        k_ids = align.get("linked_knowledge_ids", [])
-        if k_ids and not q_data["matched_concept"]:
-            for k_id in k_ids:
-                if k_id in global_nodes_map:
-                    q_data["matched_concept"] = global_nodes_map[k_id]["name"]
-                    break
+                if global_nodes_map[t_id]["name"] not in q_data["linked_task_names"]:
+                    q_data["linked_task_names"].append(global_nodes_map[t_id]["name"])
+                    
+        for k_id in k_ids:
+            if k_id in global_nodes_map:
+                if global_nodes_map[k_id]["name"] not in q_data["linked_knowledge_names"]:
+                    q_data["linked_knowledge_names"].append(global_nodes_map[k_id]["name"])
+                    
+        # 後方互換性のため matched_concept にも代表名を一つ格納 (知識優先)
+        if q_data["linked_knowledge_names"]:
+            q_data["matched_concept"] = q_data["linked_knowledge_names"][0]
+        elif q_data["linked_task_names"]:
+            q_data["matched_concept"] = q_data["linked_task_names"][0]
 
     # prerequisite_concepts (フロント仕様) の作成
     for n_id, meta in global_nodes_map.items():

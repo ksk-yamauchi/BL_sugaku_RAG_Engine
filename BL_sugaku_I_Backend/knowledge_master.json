@@ -3,19 +3,19 @@
     {
       "branch_code": "_K001",
       "name": "単項式",
-      "summary_snippet": "数や文字、およびそれらを掛け合わせてできる式。",
+      "summary_snippet": "数，文字，および数や文字を掛け合わせて作られる式。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
     },
     {
       "branch_code": "_K002",
       "name": "係数",
-      "summary_snippet": "単項式における数の部分。",
+      "summary_snippet": "単項式の数の部分。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
     },
     {
       "branch_code": "_K003",
-      "name": "次数",
-      "summary_snippet": "単項式で掛け合わされている文字の個数。多項式では最も次数が高い項の次数。",
+      "name": "次数（単項式）",
+      "summary_snippet": "単項式の中で，掛け合わせた文字の個数。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
     },
     {
@@ -27,58 +27,150 @@
     {
       "branch_code": "_K005",
       "name": "項",
-      "summary_snippet": "多項式を構成する各単項式。",
+      "summary_snippet": "多項式を構成する1つ1つの単項式。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
     },
     {
       "branch_code": "_K006",
       "name": "定数項",
-      "summary_snippet": "多項式のうち、数字だけの項（着目した文字を含まない項）。",
+      "summary_snippet": "多項式における数字だけの項。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
     },
     {
       "branch_code": "_K007",
-      "name": "整式",
-      "summary_snippet": "単項式と多項式を合わせた総称。",
+      "name": "次数（多項式）",
+      "summary_snippet": "多項式の各項の中で，次数が最も高い項の次数。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
     },
     {
       "branch_code": "_K008",
-      "name": "数だけの単項式の次数",
-      "summary_snippet": "文字を含まない数だけの単項式の次数は0とし、ただし数0の次数は考えない（定義しない）とする原則ルール。",
+      "name": "整式",
+      "summary_snippet": "単項式と多項式を合わせた呼び方。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
     },
     {
       "branch_code": "_K009",
-      "name": "同類項",
-      "summary_snippet": "文字の部分が同じ項のこと。",
-      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+      "name": "数だけの単項式の次数と0の扱い",
+      "summary_snippet": "文字を含まない数だけの単項式の次数は0とし、数0の次数は多項式において考えないこと。",
+      "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
     },
     {
       "branch_code": "_K010",
-      "name": "降べきの順",
-      "summary_snippet": "整式を整理するときに、次数の高い項から順に並べること。",
+      "name": "同類項",
+      "summary_snippet": "文字の部分がまったく同じである項のこと。同類項は係数の和を計算して1つにまとめることができる。",
       "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
     },
     {
       "branch_code": "_K011",
-      "name": "昇べきの順",
-      "summary_snippet": "整式を整理するときに、次数の低い項から順に並べること。",
+      "name": "降べきの順",
+      "summary_snippet": "整式を整理する際、ある文字の次数の高い項から順に低い項へ並べること。",
       "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "昇べきの順",
+      "summary_snippet": "整式を整理する際、ある文字の次数の低い項から順に高い項へ並べること。",
+      "first_appeared_in": "第1講 式の計算と展開 PART2 整式の整理"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "累乗",
+      "summary_snippet": "同じ数や文字をいくつか掛け合わせたもの。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "指数",
+      "summary_snippet": "累乗において、その数や文字がいくつ掛け合わされているかを示す右上につける数（$a^n$ の $n$）。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "単項式の乗法における係数と文字の分離処理",
+      "summary_snippet": "単項式どうしの掛け算において、①係数どうしの積、②文字どうしの積（指数法則の適用）という手順に分けて計算を行う思考の視点。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
     }
   ],
   "8451503122000000": [
     {
       "branch_code": "_K001",
       "name": "特定の文字に着目する",
-      "summary_snippet": "2種類以上の文字を含む式において、特定の文字に着目して思考を進める条件・視点。",
+      "summary_snippet": "式に含まれる複数の文字のうち、指定された特定の文字のみを変数として扱い、思考や計算を行う視点・枠組み。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
     },
     {
       "branch_code": "_K002",
-      "name": "着目外の文字の定数扱い",
-      "summary_snippet": "特定の文字に着目した際、着目していない他の文字を変数ではなく数（定数）とみなす概念的ルールの変化。",
+      "name": "着目外の文字の定数視",
+      "summary_snippet": "特定の文字に着目した際、それ以外の文字を数（定数）と同等とみなす概念的ルールの変化。",
       "first_appeared_in": "第1講 式の計算と展開 PART1 単項式と多項式"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "同類項への着目",
+      "summary_snippet": "整式の加減計算において、文字とその次数が共通する項を識別し、1つの項にまとめるための視点。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "指数法則の適用判断",
+      "summary_snippet": "単項式の掛け算や累乗の計算において、積の累乗や指数の和・積への変換法則を適切に選択・適用する思考の枠組み。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "整式の減法における各項の符号反転",
+      "summary_snippet": "整式の引き算 $A-B$ を行う際、引き算を直ちに実行するのではなく、$B$ のすべての項の符号を反転させて加法に変換するという概念的理解。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "積の累乗における指数分配規則",
+      "summary_snippet": "複数の因子からなる単項式の累乗 $(ab)^n$ を計算する際、指数 $n$ をそれぞれの因子に個別に分配して $a^n b^n$ とみなすルールの理解。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "式の一部をひとつの文字や「かたまり」とみる視点",
+      "summary_snippet": "複雑な多項式の中に共通する式や括弧でくくれる部分を見いだし、それを単一の文字や「ひとつのかたまり」として捉える思考の枠組み。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "共通部分の置き換えによる基本展開公式への構造帰着",
+      "summary_snippet": "3項以上の多項式の積や累乗であっても、共通の式の一部を別の文字でおき換えるか「かたまり」とみなすことで、2項式の乗法公式（基本展開公式）が適用できる構造へと変換できるという理解。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "輪環の順による多項式の整理",
+      "summary_snippet": "3つの文字を含む多項式の展開において、$a \\to b \\to c \\to a$ のようにアルファベットを巡回させる順序（輪環の順）で整理することで、式の対称性を保ち、見通しよく記述する技法。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    }
+  ],
+  "8451503113000000": [
+    {
+      "branch_code": "_K001",
+      "name": "分配法則",
+      "summary_snippet": "カッコの前後の積を各項に分散して掛ける規則（$A(B+C) = AB + AC$, $(A+B)C = AC + BC$）。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "中黒記号による積の表現",
+      "summary_snippet": "乗法記号 $\\times$ の代わりに中黒 $\\cdot$ を使用して、数や整式の積を簡略に表す記法。",
+      "first_appeared_in": "第1講 式の計算と展開 PART3 整式の加法と減法，乗法"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "展開",
+      "summary_snippet": "整式の積を、単項式の和の形に表すこと。",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "展開の公式",
+      "summary_snippet": "展開する式が特別な形をしているとき、途中計算を省略して効率よく展開するための公式群。$(a+b)^2 = a^2 + 2ab + b^2$, $(a-b)^2 = a^2 - 2ab + b^2$, ",
+      "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
     }
   ]
 }

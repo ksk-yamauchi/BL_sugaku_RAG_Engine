@@ -62,6 +62,9 @@ def generate_content_and_parse_json(prompt, max_retries=None):
             text = re.sub(r'^```json\s*', '', text.strip(), flags=re.IGNORECASE)
             text = re.sub(r'\s*```$', '', text)
             
+            # 🌟 【追加】LLM特有の簡体字ハルシネーション（文字化け）を強制クレンジング
+            text = text.replace("大问", "大問")
+            
             try:
                 return json.loads(text)
             except json.JSONDecodeError:

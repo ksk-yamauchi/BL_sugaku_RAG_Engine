@@ -275,6 +275,35 @@ def main():
         
         content += f"**🎓 スタディサプリの講義名**: [[{l_name}]]\n\n"
         
+        # 🌟 Ver 14.5: リッチ・リレーション（紐づくタスクと知識）の双方向リンク化
+        t_names = qdata.get("linked_task_names", [])
+        k_names = qdata.get("linked_knowledge_names", [])
+        
+        if t_names or k_names:
+            content += f"## 🧠 紐づくオントロジー (GNN-KT推論ベース)\n"
+            if t_names:
+                content += f"### ⬛ 測られるタスク (技能)\n"
+                for tn in t_names:
+                    # リンク先のファイル名を復元して双方向リンクにする
+                    if tn in name_to_id:
+                        t_nid = name_to_id[tn]
+                        t_filename = id_to_filename[t_nid]
+                        content += f"- [[{t_filename}]]\n"
+                    else:
+                        content += f"- {tn}\n"
+                content += "\n"
+                
+            if k_names:
+                content += f"### 🟦 必要な知識・視点 (前提条件)\n"
+                for kn in k_names:
+                    if kn in name_to_id:
+                        k_nid = name_to_id[kn]
+                        k_filename = id_to_filename[k_nid]
+                        content += f"- [[{k_filename}]]\n"
+                    else:
+                        content += f"- {kn}\n"
+                content += "\n"
+        
         if q_type == "exercise":
             content += f"## 📝 大問（モデリング）\n{q_text}\n\n"
         else:
