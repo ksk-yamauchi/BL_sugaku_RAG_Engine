@@ -240,6 +240,7 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
     result_data = {
         "intent": "concept" if is_concept_intent else "question",
         "top_match": None,
+        "top_matches": [],  # 🌟 1%以内の僅差スコアの複数候補
         "runner_ups": [],
         "linked_questions": [],
         "connected_questions": [],
@@ -292,12 +293,21 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
         )
 
     processed_results.sort(key=lambda x: x["final_score"], reverse=True)
-    result_data["top_match"] = processed_results[0]
-    result_data["runner_ups"] = [
-        r
-        for r in processed_results[1:]
-        if (processed_results[0]["final_score"] - r["final_score"]) <= TOLERANCE
-    ]
+    
+    # 🌟 僅差スコア（1%以内）の複数取得ロジック
+    top_score = processed_results[0]["final_score"]
+    top_matches = []
+    runner_ups = []
+    for r in processed_results:
+        diff = top_score - r["final_score"]
+        if diff <= 0.01:
+            top_matches.append(r)
+        elif diff <= TOLERANCE:
+            runner_ups.append(r)
+            
+    result_data["top_match"] = top_matches[0]
+    result_data["top_matches"] = top_matches
+    result_data["runner_ups"] = runner_ups
 
     top_node = processed_results[0]["node"]
     
@@ -379,11 +389,18 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
 
     # 🌟 相談1＆2: 配列構造に対応した問題・横展開の引き当てロジック
     if is_concept_intent:
-        # 概念ルート: ヒットした概念・タスク名が、問題の linked_task_names または linked_knowledge_names のいずれかに含まれれば引き当て
-        c_name = top_node["concept_name"]
+        # タブ対応のため、top_matches の各要素に対して個別にリンクを取得
+        for tm in top_matches:
+            c_name = tm["node"].get("concept_name")
+            tm["linked_questions"] = [
+                q for q in question_nodes.values() 
+                if c_name in q.get("linked_task_names", []) or c_name in q.get("linked_knowledge_names", [])
+            ]
+        # (後方互換用)
+        c_name_legacy = top_node["concept_name"]
         result_data["linked_questions"] = [
             q for q in question_nodes.values() 
-            if c_name in q.get("linked_task_names", []) or c_name in q.get("linked_knowledge_names", [])
+            if c_name_legacy in q.get("linked_task_names", []) or c_name_legacy in q.get("linked_knowledge_names", [])
         ]
     else:
         # 問題ルート:
@@ -407,7 +424,7 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
                 
         result_data["connected_questions"] = connected_questions
 
-        # 🌟 相談3: 問題ルートの Graph RAG 表示用ノードの取得
+        # 問題ルートの Graph RAG 表示用ノードの取得
         for cid, cnode in concept_nodes.items():
             c_name_val = cnode.get("concept_name")
             if c_name_val in t_names:
@@ -429,25 +446,27 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
 
 
 # 🌟 【UI共通化】動画アイテム（主従対応版）を描画するヘルパー関数
-def render_video_item(v, unique_key):
+def render_video_item(v, unique_key, is_modeling=False):
     with st.container(border=True):
         col_info, col_btn = st.columns([4, 1])
         with col_info:
             a_type = v.get("alignment_type", "")
             
-            # 主従関係に応じたバッジの出し分け
+            # 🌟 バッジの出し分け（モデリング時はシンプルに【解説】）
             if a_type in ["concept_introduction", "task_walkthrough", "direct_explanation"]:
-                badge = "💡 【メイン解説】"
+                badge = "💡 【解説】" if is_modeling else "💡 【メイン解説】"
             elif a_type == "prerequisite_review":
                 badge = "⏪ 【前提・復習】"
             else:
                 badge = "🎬 【解説動画】"
 
             st.markdown(f"{badge} **{v.get('video_file')}** (`{v.get('start_time')}`〜)")
-            if v.get('reasoning'):
+            
+            # 🌟 第二アクション（大問解説）では「なぜこの動画？」の理由表記をカット
+            if not is_modeling and v.get('reasoning'):
                 st.markdown(f"**🤔 なぜこの動画？:** `{v.get('reasoning')}`")
             if v.get('explanation_summary'):
-                st.markdown(f"**💬 先生の解説の狙い:** {v.get('explanation_summary')}")
+                st.markdown(f"**💬 講師の解説（概要）:** {v.get('explanation_summary')}")
                 
         with col_btn:
             if st.button("📑 チャプター", key=f"cat_btn_{unique_key}", use_container_width=True):
@@ -475,7 +494,7 @@ def main():
     # 🌟 サイドバーにバージョン情報を表示
     engine_ver = db.get("metadata", {}).get("engine_version", "バージョン情報なし")
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{engine_ver}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6 (Array Ready)`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6.1`")
 
     # 🌟 State初期化
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
@@ -502,7 +521,7 @@ def main():
             st.video("[https://www.w3schools.com/html/mov_bbb.mp4](https://www.w3schools.com/html/mov_bbb.mp4)") 
             
             st.markdown("### 📑 タイムライン・チャプター (解説要約つき)")
-            st.info("💡 先生の解説の狙い（要約）を事前に確認して、見たいチャプターから再生できます。")
+            st.info("💡 講師の解説（概要）を事前に確認して、見たいチャプターから再生できます。")
             
             for idx, seg in enumerate(v_data.get("segments", [])):
                 start = seg.get('start_time', '00:00')
@@ -512,7 +531,7 @@ def main():
                 with st.expander(f"⏱️ {start} 〜 {end} | 📌 {topic}", expanded=(idx==0)):
                     col1, col2 = st.columns([3, 1])
                     with col1:
-                        st.markdown(f"**💬 先生の解説の狙い:**\n> {seg.get('explanation_summary', 'データなし')}")
+                        st.markdown(f"**💬 講師の解説（概要）:**\n> {seg.get('explanation_summary', 'データなし')}")
                     with col2:
                         if st.button("▶️ ここから再生", key=f"play_{v_file}_{idx}", use_container_width=True):
                             st.toast(f"{start} から再生を開始しました！（モック機能）")
@@ -605,9 +624,7 @@ def main():
 
         st.divider()
 
-        if res and res.get("top_match"):
-            top = res["top_match"]
-            node = top["node"]
+        if res and res.get("top_matches"):
             intent_label = (
                 "📘 概念インプット優先ルート"
                 if res["intent"] == "concept"
@@ -617,156 +634,173 @@ def main():
             st.subheader(f"🎯 第一候補: {intent_label}")
 
             with st.container(border=True):
-                title = (
-                    node.get("concept_name")
-                    if res["intent"] == "concept"
-                    else f"{node.get('lecture_name', '')} {node.get('local_q_num', '')}"
-                )
-                
-                if res.get("is_drilldown"):
-                    st.markdown(f"### {title}")
-                else:
-                    display_score = min(top['final_score'], 1.0)
-                    base = top['base_score']
-                    boost = top['boost_amount']
-                    pen_str = f" | {top['penalty_reason']}" if top['penalty_reason'] != "なし (既習・復習範囲)" else ""
-                    
-                    st.markdown(f"### {title} (総合適合度: {display_score*100:.1f}%)")
-                    st.caption(
-                        f"📊 **【スコア内訳】** ベース類似度: {base*100:.1f}% "
-                        f"| 加点ブースト: +{boost*100:.1f}%{pen_str}"
-                    )
-                    
-                st.caption(f"🎓 講義名: {node.get('lecture_name', '未設定')}")
-
                 # ===============================================
-                # 📘 概念インプット優先ルートの描画
+                # 📘 概念インプット優先ルートの描画 (タブ化対応)
                 # ===============================================
                 if res["intent"] == "concept":
-                    st.info(f"**💡 概念要約:** {node.get('summary', '要約なし')}")
-                    p_concept = node.get("parent_concept", "未分類")
-                    
-                    comp_str = node.get("pillar", "未設定")
-                    
-                    st.markdown(f"**🔼 親概念 (Level 3):** `{p_concept}` | **🏷️ 観点:** `{comp_str}`")
-                    
-                    with st.expander(
-                        f"🏛️ 指導要領: {node.get('mext_hierarchy', '未割り当て')} "
-                        f"(コード: {node.get('mext_code', 'N/A')})"
-                    ):
-                        st.markdown(f"**【公式テキスト】** {node.get('mext_official_text', '情報なし')}")
-                        st.markdown(f"**【解説要約】** {node.get('mext_explanation', '情報なし')}")
-
-                    st.divider()
-
-                    st.markdown("#### 🎬 第一アクション (概念インプット講義)")
-                    catalog = db.get("global_video_catalog", {})
-                    input_videos = []
-                    
-                    c_videos = node.get("main_videos", []) + node.get("review_videos", [])
-                    
-                    for v in c_videos:
-                        v_file = v.get("video_file")
-                        v_role = catalog.get(v_file, {}).get("role", "")
-                        # role が exercise_walkthrough （大問・例題解説）でない場合のみ、純粋な概念講義として表示
-                        if v_role != "exercise_walkthrough":
-                            input_videos.append(v)
-
-                    for idx, v in enumerate(input_videos):
-                        render_video_item(v, f"action1_{node.get('global_c_id')}_{idx}")
-                    if not input_videos:
-                        st.write("該当なし")
-
-                    st.markdown("#### 📘 第二アクション (モデリング: 大問・例題解説)")
-                    exercises = [q for q in res.get("linked_questions", []) if q.get("type") == "exercise"]
-                    if exercises:
-                        for i, ex in enumerate(exercises):
-                            with st.container(border=True):
-                                st.caption(f"🎓 講義名: {ex.get('lecture_name', '未設定')}")
-                                st.markdown(f"**📌 📘 大問 {clean_q_label(ex.get('local_q_num', ''))}**")
-                                st.markdown(ex.get("question_text", ""))
-                                
-                                ex_videos = ex.get("aligned_videos", [])
-                                for idx, v in enumerate(ex_videos):
-                                    render_video_item(v, f"action2_ex_{ex.get('global_q_id')}_{idx}")
-                                
-                                if st.button("🔍 詳しく見る", key=f"action2_btn_{ex.get('global_q_id', i)}", use_container_width=True):
-                                    st.session_state.history.append({
-                                        "result": st.session_state.current_result,
-                                        "query": st.session_state.display_query,
-                                        "image_choices": st.session_state.pending_image_choices,
-                                    })
-                                    new_query = f"{ex.get('question_text', '')} の解き方"
-                                    st.session_state.display_query = new_query
-                                    st.session_state.last_clicked_node = None
-                                    with st.spinner("問題ルートへ切り替え中..."):
-                                        res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
-                                        if res_next:
-                                            st.session_state.current_result = res_next
-                                    st.rerun()
+                    top_matches = res.get("top_matches", [res["top_match"]])
+                    if len(top_matches) > 1:
+                        tabs = st.tabs([m["node"].get("concept_name", "概念") for m in top_matches])
                     else:
-                        st.write("該当なし")
+                        tabs = [st.container()]
+                        
+                    for tab_idx, (tm, tab) in enumerate(zip(top_matches, tabs)):
+                        with tab:
+                            node = tm["node"]
+                            title = node.get("concept_name")
+                            
+                            if res.get("is_drilldown"):
+                                st.markdown(f"### {title}")
+                            else:
+                                display_score = min(tm['final_score'], 1.0)
+                                base = tm['base_score']
+                                boost = tm['boost_amount']
+                                pen_str = f" | {tm['penalty_reason']}" if tm['penalty_reason'] != "なし (既習・復習範囲)" else ""
+                                
+                                st.markdown(f"### {title} (総合適合度: {display_score*100:.1f}%)")
+                                st.caption(
+                                    f"📊 **【スコア内訳】** ベース類似度: {base*100:.1f}% "
+                                    f"| 加点ブースト: +{boost*100:.1f}%{pen_str}"
+                                )
+                                
+                            st.caption(f"🎓 講義名: {node.get('lecture_name', '未設定')}")
 
-                    st.markdown("#### 📗 第三アクション (アセスメント: 確認問題演習)")
-                    questions = [q for q in res.get("linked_questions", []) if q.get("type") == "question"]
-                    if questions:
-                        cols = st.columns(3)
-                        for i, q in enumerate(questions):
-                            with cols[i % 3]:
-                                with st.container(border=True):
-                                    st.caption(f"🎓 講義名: {q.get('lecture_name', '未設定')}")
-                                    st.markdown(f"**📌 📗 確認問題 {clean_q_label(q.get('local_q_num', ''))}**")
-                                    st.markdown(q.get("question_text", ""))
+                            st.info(f"**💡 概念要約:** {node.get('summary', '要約なし')}")
+                            p_concept = node.get("parent_concept", "未分類")
+                            
+                            comp_str = node.get("pillar", "未設定")
+                            
+                            st.markdown(f"**🔼 親概念 (Level 3):** `{p_concept}` | **🏷️ 観点:** `{comp_str}`")
+                            
+                            with st.expander(
+                                f"🏛️ 指導要領: {node.get('mext_hierarchy', '未割り当て')} "
+                                f"(コード: {node.get('mext_code', 'N/A')})"
+                            ):
+                                st.markdown(f"**【公式テキスト】** {node.get('mext_official_text', '情報なし')}")
+                                st.markdown(f"**【解説要約】** {node.get('mext_explanation', '情報なし')}")
 
-                                    if st.button(
-                                        "🔍 解き方を見る",
-                                        key=f"action3_{q.get('global_q_id', i)}",
-                                        use_container_width=True,
-                                    ):
-                                        st.session_state.history.append({
-                                            "result": st.session_state.current_result,
-                                            "query": st.session_state.display_query,
-                                            "image_choices": st.session_state.pending_image_choices,
-                                        })
-                                        new_query = f"{q.get('question_text', '')} の解き方"
-                                        st.session_state.display_query = new_query
-                                        st.session_state.last_clicked_node = None
-                                        with st.spinner("問題ルートへ切り替え中..."):
-                                            res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
-                                            if res_next:
-                                                st.session_state.current_result = res_next
-                                        st.rerun()
-                    else:
-                        st.write("該当なし")
+                            st.divider()
+
+                            st.markdown("#### 🎬 第一アクション (概念インプット講義)")
+                            catalog = db.get("global_video_catalog", {})
+                            input_videos = []
+                            
+                            c_videos = node.get("main_videos", []) + node.get("review_videos", [])
+                            
+                            for v in c_videos:
+                                v_file = v.get("video_file")
+                                v_role = catalog.get(v_file, {}).get("role", "")
+                                # role が exercise_walkthrough （大問・例題解説）でない場合のみ表示
+                                if v_role != "exercise_walkthrough":
+                                    input_videos.append(v)
+
+                            for idx, v in enumerate(input_videos):
+                                render_video_item(v, f"action1_{node.get('global_c_id')}_{tab_idx}_{idx}", is_modeling=False)
+                            if not input_videos:
+                                st.write("該当なし")
+
+                            st.markdown("#### 📘 第二アクション (モデリング: 大問・例題解説)")
+                            exercises = [q for q in tm.get("linked_questions", []) if q.get("type") == "exercise"]
+                            if exercises:
+                                for i, ex in enumerate(exercises):
+                                    with st.container(border=True):
+                                        st.caption(f"🎓 講義名: {ex.get('lecture_name', '未設定')}")
+                                        st.markdown(f"**📌 📘 大問 {clean_q_label(ex.get('local_q_num', ''))}**")
+                                        st.markdown(ex.get("question_text", ""))
+                                        
+                                        ex_videos = ex.get("aligned_videos", [])
+                                        for idx, v in enumerate(ex_videos):
+                                            render_video_item(v, f"action2_ex_{ex.get('global_q_id')}_{tab_idx}_{idx}", is_modeling=True)
+                                        
+                                        if st.button("🔍 詳しく見る", key=f"action2_btn_{ex.get('global_q_id')}_{tab_idx}_{i}", use_container_width=True):
+                                            st.session_state.history.append({
+                                                "result": st.session_state.current_result,
+                                                "query": st.session_state.display_query,
+                                                "image_choices": st.session_state.pending_image_choices,
+                                            })
+                                            new_query = f"{ex.get('question_text', '')} の解き方"
+                                            st.session_state.display_query = new_query
+                                            st.session_state.last_clicked_node = None
+                                            with st.spinner("問題ルートへ切り替え中..."):
+                                                res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
+                                                if res_next:
+                                                    st.session_state.current_result = res_next
+                                            st.rerun()
+                            else:
+                                st.write("該当なし")
+
+                            st.markdown("#### 📗 第三アクション (アセスメント: 確認問題演習)")
+                            questions = [q for q in tm.get("linked_questions", []) if q.get("type") == "question"]
+                            if questions:
+                                cols = st.columns(3)
+                                for i, q in enumerate(questions):
+                                    with cols[i % 3]:
+                                        with st.container(border=True):
+                                            st.caption(f"🎓 講義名: {q.get('lecture_name', '未設定')}")
+                                            st.markdown(f"**📌 📗 確認問題 {clean_q_label(q.get('local_q_num', ''))}**")
+                                            st.markdown(q.get("question_text", ""))
+
+                                            if st.button(
+                                                "🔍 解き方を見る",
+                                                key=f"action3_{q.get('global_q_id')}_{tab_idx}_{i}",
+                                                use_container_width=True,
+                                            ):
+                                                st.session_state.history.append({
+                                                    "result": st.session_state.current_result,
+                                                    "query": st.session_state.display_query,
+                                                    "image_choices": st.session_state.pending_image_choices,
+                                                })
+                                                new_query = f"{q.get('question_text', '')} の解き方"
+                                                st.session_state.display_query = new_query
+                                                st.session_state.last_clicked_node = None
+                                                with st.spinner("問題ルートへ切り替え中..."):
+                                                    res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
+                                                    if res_next:
+                                                        st.session_state.current_result = res_next
+                                                st.rerun()
+                            else:
+                                st.write("該当なし")
 
                 # ===============================================
-                # 📗 問題・解法ステップ優先ルートの描画
+                # 📗 問題・解法ステップ優先ルートの描画 (本バージョンでは既存通り)
                 # ===============================================
                 else:
+                    top = res["top_match"]
+                    node = top["node"]
+                    title = f"{node.get('lecture_name', '')} {clean_q_label(node.get('local_q_num', ''))}"
+                    
+                    if res.get("is_drilldown"):
+                        st.markdown(f"### {title}")
+                    else:
+                        display_score = min(top['final_score'], 1.0)
+                        base = top['base_score']
+                        boost = top['boost_amount']
+                        pen_str = f" | {top['penalty_reason']}" if top['penalty_reason'] != "なし (既習・復習範囲)" else ""
+                        
+                        st.markdown(f"### {title} (総合適合度: {display_score*100:.1f}%)")
+                        st.caption(
+                            f"📊 **【スコア内訳】** ベース類似度: {base*100:.1f}% "
+                            f"| 加点ブースト: +{boost*100:.1f}%{pen_str}"
+                        )
+                        
+                    st.caption(f"🎓 講義名: {node.get('lecture_name', '未設定')}")
+
                     st.markdown("#### 🧠 ゼロアクション (前提知識の確認)")
                     if res.get("required_concepts_text"):
                         st.info(res["required_concepts_text"])
                     else:
                         st.write("下部のGraph RAGから前提知識を確認してください。")
 
-                    st.markdown(f"#### 📝 本命の問題 ({node.get('lecture_name', '')})")
-                    with st.container(border=True):
-                        q_label = "📘 大問" if node.get("type") == "exercise" else "📗 確認問題"
-                        st.markdown(f"**📌 {q_label} {clean_q_label(node.get('local_q_num', ''))}**")
-                        st.info(node.get("question_text", ""))
-                        
-                        # 新構造: 複数の知識とタスクを表示
-                        if node.get("linked_task_names"):
-                            st.markdown(f"**⬛ 測られるタスク:** {', '.join(node['linked_task_names'])}")
-                        if node.get("linked_knowledge_names"):
-                            st.markdown(f"**🟦 必要な知識:** {', '.join(node['linked_knowledge_names'])}")
+                    st.markdown(f"#### 📝 本命の問題 ({node.get('lecture_name', '')} {node.get('local_q_num', '')})")
+                    st.info(node.get("question_text", ""))
+                    st.markdown(f"**🧠 関連概念:** {node.get('matched_concept', '')}")
 
                     st.divider()
 
                     st.markdown("#### 🎬 第一アクション (問題の直接解説・モデリング)")
                     edges = node.get("aligned_videos", [])
                     for idx, e in enumerate(edges):
-                        render_video_item(e, f"action1_q_{node.get('global_q_id')}_{idx}")
+                        render_video_item(e, f"action1_q_{node.get('global_q_id')}_{idx}", is_modeling=True)
                     if not edges:
                         st.write("該当なし")
 
@@ -802,7 +836,7 @@ def main():
                     else:
                         st.write("該当なし")
 
-            # 次点の表示
+            # 🌟 次点の表示
             if res.get("runner_ups"):
                 st.subheader("🥈 次点 (関連概念・類題)")
                 cols = st.columns(3)
@@ -855,50 +889,49 @@ def main():
 
             st.divider()
 
-             # 🌟 相談3: Graph RAG の抜本的再構築 (ルート別にグラフ構造を切り替え)
+            # 🌟 Graph RAG ネットワーク (知識群の視覚的表現)
             if res.get("graph_prerequisites") or res.get("graph_siblings") or res.get("graph_next_steps") or res.get("graph_linked_tasks") or res.get("graph_linked_knowledges"):
                 st.subheader("🧭 Graph RAG: オントロジー探索 (学習の繋がり)")
                 
-                graph_nodes = []
-                graph_edges = []
-                node_ids = set()
+                # 概念ルートの場合はトップマッチの1位をGraphの中心として描画
+                top_node_ref = res["top_match"]["node"]
+                c_name_target = top_node_ref.get("concept_name") if res["intent"] == "concept" else top_node_ref.get("matched_concept", "")
+                p_name_target = top_node_ref.get("parent_concept", "未分類")
+                
+                if c_name_target:
+                    graph_nodes = []
+                    graph_edges = []
+                    node_ids = set()
 
-                def add_graph_node(nid, label, node_type, tooltip=None, is_current=False):
-                    if nid not in node_ids and nid:
-                        display_tooltip = tooltip if tooltip else f"👆 クリックして「{label}」を検索"
-                        clean_label = clean_math_for_label(label)
-                        max_len = 15
-                        if clean_label.startswith("親: "):
-                            raw_name = clean_label.replace("親: ", "")
-                            display_label = "親: " + (raw_name[:12] + "..." if len(raw_name) > 12 else raw_name)
-                        else:
-                            display_label = clean_label[:max_len] + "..." if len(clean_label) > max_len else clean_label
+                    def add_graph_node(nid, label, node_type, tooltip=None, is_current=False):
+                        if nid not in node_ids and nid:
+                            display_tooltip = tooltip if tooltip else f"👆 クリックして「{label}」を検索"
+                            
+                            clean_label = clean_math_for_label(label)
+                            max_len = 15
+                            if clean_label.startswith("親: "):
+                                raw_name = clean_label.replace("親: ", "")
+                                display_label = "親: " + (raw_name[:12] + "..." if len(raw_name) > 12 else raw_name)
+                            else:
+                                display_label = clean_label[:max_len] + "..." if len(clean_label) > max_len else clean_label
 
-                        # 🌟 GNN-KT仕様: 問題ノードなら色を変える
-                        if is_current and node_type == "problem":
-                            color, shape = "#FFD54F", "star" # 問題の現在地: 星(オレンジ)
-                        elif is_current:
-                            color, shape = "#FFECB3", "star" # 概念の現在地: 星(明るい黄色)
-                        elif node_type == "foundation_knowledge":
-                            color, shape = "#BBDEFB", "box" # 基礎知識: 四角(薄い青)
-                        elif node_type == "perspective_condition":
-                            color, shape = "#E1BEE7", "hexagon" # 視点: 六角形(薄い紫)
-                        elif node_type == "derived_knowledge":
-                            color, shape = "#C8E6C9", "box" # 再構成知識: 四角(薄い緑)
-                        elif node_type == "tasks":
-                            color, shape = "#B0BEC5", "box" # タスク: 四角(グレー/紺系)
-                        else:
-                            color, shape = "#E0E0E0", "ellipse" # その他: 楕円(灰)
+                            # 🌟 知識群（グループ）を「形」と「色」で表現
+                            if is_current:
+                                color, shape = "#FFECB3", "star" # 現在地: 星(明るい黄色)
+                            elif node_type == "foundation_knowledge":
+                                color, shape = "#BBDEFB", "box" # 基礎知識: 四角(薄い青)
+                            elif node_type == "perspective_condition":
+                                color, shape = "#E1BEE7", "hexagon" # 視点: 六角形(薄い紫)
+                            elif node_type == "derived_knowledge":
+                                color, shape = "#C8E6C9", "box" # 再構成知識: 四角(薄い緑)
+                            elif node_type == "tasks":
+                                color, shape = "#B0BEC5", "box" # タスク: 四角(グレー/紺系)
+                            else:
+                                color, shape = "#E0E0E0", "ellipse" # その他: 楕円(灰)
 
-                        graph_nodes.append(Node(id=nid, label=display_label, size=30, color=color, shape=shape, title=display_tooltip))
-                        node_ids.add(nid)
+                            graph_nodes.append(Node(id=nid, label=display_label, size=30, color=color, shape=shape, title=display_tooltip))
+                            node_ids.add(nid)
 
-                # ==================================
-                # 📘 概念ルートのグラフ描画
-                # ==================================
-                c_name_target = node.get("concept_name") if res["intent"] == "concept" else None
-                if res["intent"] == "concept" and c_name_target:
-                    p_name_target = node.get("parent_concept", "未分類")
                     target_node_obj = next((c for c in db.get("global_concept_nodes", {}).values() if c.get("concept_name") == c_name_target), {})
                     add_graph_node(c_name_target, c_name_target, target_node_obj.get("type", "unknown"), tooltip="📍 現在地", is_current=True) 
                     
@@ -916,6 +949,7 @@ def main():
                             is_mandatory = (dep_type == "mandatory")
                             badge_str = "🔵 [必須前提]" if is_mandatory else "🟡 [補足前提]"
                             tt_text = f"{badge_str} {pre_name}\n💡 理由: {reasoning}" if reasoning else f"{badge_str} {pre_name}"
+                            
                             add_graph_node(pre_name, pre_name, pre_node.get("type", "unknown"), tooltip=tt_text)
                             graph_edges.append(Edge(source=pre_name, target=c_name_target, label=dep_type, dashes=not is_mandatory))
 
@@ -932,124 +966,100 @@ def main():
                             add_graph_node(nxt_name, nxt_name, nxt.get("type", "unknown")) 
                             graph_edges.append(Edge(source=c_name_target, target=nxt_name, label="requires", dashes=True))
 
-                # ==================================
-                # 📗 問題ルートのグラフ描画 (新設計)
-                # ==================================
-                elif res["intent"] == "question":
-                    q_id = node.get("global_q_id")
-                    q_label = f"問題: {clean_q_label(node.get('local_q_num', ''))}"
-                    add_graph_node(q_id, q_label, "problem", tooltip="📍 現在地 (この問題)", is_current=True)
-                    
-                    # 問題 ➔ 測られるタスク (技能)
-                    for t_node in res.get("graph_linked_tasks", []):
-                        tn_id = t_node.get("global_c_id")
-                        tn_name = t_node.get("concept_name")
-                        add_graph_node(tn_id, tn_name, t_node.get("type", "tasks"), tooltip=f"⬛ [測られるタスク]\n{tn_name}")
-                        graph_edges.append(Edge(source=q_id, target=tn_id, label="測られる技能", dashes=False))
+                    config = Config(
+                        width="100%",
+                        height=400,
+                        directed=True,
+                        physics=False,
+                        hierarchical={"enabled": True, "direction": "UD", "sortMethod": "directed"},
+                    )
+
+                    with st.expander("🗺️ 学習スキルツリーを開く (クリックで探索可能)", expanded=True):
+                        st.info("💡 **ヒント**: 気になるノードにカーソルを合わせるか、クリックするとその概念の世界へワープして探索を続けられます！")
+                        st.caption("🟦 基礎知識 | 🟪 視点・条件(六角形) | 🟩 再構成知識 | ⬛ タスク(技能) | ⭐️ 現在地")
+                        clicked_node_id = agraph(nodes=graph_nodes, edges=graph_edges, config=config)
                         
-                    # 問題 ➔ 必要な知識 (前提)
-                    for k_node in res.get("graph_linked_knowledges", []):
-                        kn_id = k_node.get("global_c_id")
-                        kn_name = k_node.get("concept_name")
-                        add_graph_node(kn_id, kn_name, k_node.get("type", "foundation_knowledge"), tooltip=f"🟦 [必要な知識]\n{kn_name}")
-                        graph_edges.append(Edge(source=q_id, target=kn_id, label="必要な知識", dashes=False))
+                        target_to_check = c_name_target if res["intent"] == "concept" else top_node_ref.get("global_q_id")
+                        if clicked_node_id and clicked_node_id != target_to_check:
+                            if clicked_node_id != st.session_state.last_clicked_node:
+                                st.session_state.last_clicked_node = clicked_node_id
+                                st.session_state.history.append({
+                                    "result": st.session_state.current_result,
+                                    "query": st.session_state.display_query,
+                                    "image_choices": st.session_state.pending_image_choices,
+                                })
+                                clean_query_name = clicked_node_id.replace("親: ", "")
+                                new_query = f"{clean_query_name} について詳しく知りたい"
+                                st.session_state.display_query = new_query
+                                with st.spinner(f"「{clean_query_name}」へワープ中..."):
+                                    res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
+                                    if res_next:
+                                        st.session_state.current_result = res_next
+                                st.rerun()
 
-                # ==================================
-                # Graph RAG レンダリング
-                # ==================================
-                config = Config(
-                    width="100%", height=400, directed=True, physics=False,
-                    hierarchical={"enabled": True, "direction": "UD", "sortMethod": "directed"},
-                )
-
-                with st.expander("🗺️ 学習スキルツリーを開く (クリックで探索可能)", expanded=True):
-                    st.info("💡 **ヒント**: 気になるノードにカーソルを合わせるか、クリックするとその概念の世界へワープして探索を続けられます！")
-                    st.caption("🟦 基礎知識 | 🟪 視点・条件(六角形) | 🟩 再構成知識 | ⬛ タスク(技能) | ⭐️ 現在地")
-                    clicked_node_id = agraph(nodes=graph_nodes, edges=graph_edges, config=config)
-                    
-                    target_to_check = c_name_target if res["intent"] == "concept" else node.get("global_q_id")
-                    if clicked_node_id and clicked_node_id != target_to_check:
-                        if clicked_node_id != st.session_state.last_clicked_node:
-                            st.session_state.last_clicked_node = clicked_node_id
-                            st.session_state.history.append({
-                                "result": st.session_state.current_result,
-                                "query": st.session_state.display_query,
-                                "image_choices": st.session_state.pending_image_choices,
-                            })
-                            clean_query_name = clicked_node_id.replace("親: ", "")
-                            new_query = f"{clean_query_name} について詳しく知りたい"
-                            st.session_state.display_query = new_query
-                            with st.spinner(f"「{clean_query_name}」へワープ中..."):
-                                res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
-                                if res_next:
-                                    st.session_state.current_result = res_next
-                            st.rerun()
-
-                # カラム表示 (概念ルートのみ表示)
-                if res["intent"] == "concept":
-                    col_p, col_s, col_n = st.columns(3)
-                    with col_p:
-                        st.markdown("#### ⏪ 遡り学習 (前提)")
-                        if res.get("graph_prerequisites"):
-                            for pre_info in res["graph_prerequisites"]:
-                                p_node = pre_info["node"]
-                                dep_type = pre_info.get("dependency_type", "mandatory")
-                                reasoning = pre_info.get("reasoning", "")
-                                badge_str = "🔵 [必須]" if dep_type == "mandatory" else "🟡 [補足]"
-                                
-                                with st.expander(f"{badge_str} {p_node.get('concept_name', '')}"):
-                                    st.caption(f"🔼 親ハブ: {p_node.get('parent_concept', '')}")
-                                    if reasoning:
-                                        st.info(f"💡 **前提となる理由:** {reasoning}")
-                                    st.write(p_node.get("summary", ""))
-                                    for idx, v in enumerate(p_node.get("main_videos", []) + p_node.get("review_videos", [])):
-                                        render_video_item(v, f"pre_{p_node.get('global_c_id')}_{idx}")
-                                    if st.button("🔍 学ぶ", key=f"g_pre_{p_node.get('global_c_id')}", use_container_width=True):
-                                        st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
-                                        st.session_state.display_query = f"{p_node.get('concept_name', '')} について詳しく知りたい"
-                                        st.session_state.last_clicked_node = None
-                                        st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
-                                        st.rerun()
-                        else:
-                            st.write("該当なし")
-
-                    with col_s:
-                        st.markdown("#### ⏩ 横展開 (兄弟)")
-                        if res.get("graph_siblings"):
-                            for s_node in res["graph_siblings"]:
-                                with st.expander(f"🧠 {s_node.get('concept_name', '')}"):
-                                    st.caption(f"🔼 親ハブ: {s_node.get('parent_concept', '')}")
-                                    st.write(s_node.get("summary", ""))
-                                    for idx, v in enumerate(s_node.get("main_videos", []) + s_node.get("review_videos", [])):
-                                        render_video_item(v, f"sib_{s_node.get('global_c_id')}_{idx}")
-                                    
-                                    if st.button("🔍 学ぶ", key=f"g_sib_{s_node.get('global_c_id')}", use_container_width=True):
-                                        st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
-                                        st.session_state.display_query = f"{s_node.get('concept_name', '')} について詳しく知りたい"
-                                        st.session_state.last_clicked_node = None
-                                        st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
-                                        st.rerun()
-                        else:
-                            st.write("該当なし")
+                col_p, col_s, col_n = st.columns(3)
+                with col_p:
+                    st.markdown("#### ⏪ 遡り学習 (前提)")
+                    if res.get("graph_prerequisites"):
+                        for pre_info in res["graph_prerequisites"]:
+                            p_node = pre_info["node"]
+                            dep_type = pre_info.get("dependency_type", "mandatory")
+                            reasoning = pre_info.get("reasoning", "")
+                            badge_str = "🔵 [必須]" if dep_type == "mandatory" else "🟡 [補足]"
                             
-                    with col_n:
-                        st.markdown("#### ⏭️ 応用先 (Next)")
-                        if res.get("graph_next_steps"):
-                            for n_node in res["graph_next_steps"]:
-                                with st.expander(f"🧠 {n_node.get('concept_name', '')}"):
-                                    st.caption(f"🔼 親ハブ: {n_node.get('parent_concept', '')}")
-                                    st.write(n_node.get("summary", ""))
-                                    for idx, v in enumerate(n_node.get("main_videos", []) + n_node.get("review_videos", [])):
-                                        render_video_item(v, f"nxt_{n_node.get('global_c_id')}_{idx}")
-                                    
-                                    if st.button("🔍 学ぶ", key=f"g_nxt_{n_node.get('global_c_id')}", use_container_width=True):
-                                        st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
-                                        st.session_state.display_query = f"{n_node.get('concept_name', '')} について詳しく知りたい"
-                                        st.session_state.last_clicked_node = None
-                                        st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
-                                        st.rerun()
-                        else:
-                            st.write("該当なし")
+                            with st.expander(f"{badge_str} {p_node.get('concept_name', '')}"):
+                                st.caption(f"🔼 親ハブ: {p_node.get('parent_concept', '')}")
+                                if reasoning:
+                                    st.info(f"💡 **前提となる理由:** {reasoning}")
+                                st.write(p_node.get("summary", ""))
+                                for idx, v in enumerate(p_node.get("main_videos", []) + p_node.get("review_videos", [])):
+                                    render_video_item(v, f"pre_{p_node.get('global_c_id')}_{idx}")
+                                if st.button("🔍 学ぶ", key=f"g_pre_{p_node.get('global_c_id')}", use_container_width=True):
+                                    st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
+                                    st.session_state.display_query = f"{p_node.get('concept_name', '')} について詳しく知りたい"
+                                    st.session_state.last_clicked_node = None
+                                    st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
+                                    st.rerun()
+                    else:
+                        st.write("該当なし")
+
+                with col_s:
+                    st.markdown("#### ⏩ 横展開 (兄弟)")
+                    if res.get("graph_siblings"):
+                        for s_node in res["graph_siblings"]:
+                            with st.expander(f"🧠 {s_node.get('concept_name', '')}"):
+                                st.caption(f"🔼 親ハブ: {s_node.get('parent_concept', '')}")
+                                st.write(s_node.get("summary", ""))
+                                for idx, v in enumerate(s_node.get("main_videos", []) + s_node.get("review_videos", [])):
+                                    render_video_item(v, f"sib_{s_node.get('global_c_id')}_{idx}")
+                                
+                                if st.button("🔍 学ぶ", key=f"g_sib_{s_node.get('global_c_id')}", use_container_width=True):
+                                    st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
+                                    st.session_state.display_query = f"{s_node.get('concept_name', '')} について詳しく知りたい"
+                                    st.session_state.last_clicked_node = None
+                                    st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
+                                    st.rerun()
+                    else:
+                        st.write("該当なし")
+                        
+                with col_n:
+                    st.markdown("#### ⏭️ 応用先 (Next)")
+                    if res.get("graph_next_steps"):
+                        for n_node in res["graph_next_steps"]:
+                            with st.expander(f"🧠 {n_node.get('concept_name', '')}"):
+                                st.caption(f"🔼 親ハブ: {n_node.get('parent_concept', '')}")
+                                st.write(n_node.get("summary", ""))
+                                for idx, v in enumerate(n_node.get("main_videos", []) + n_node.get("review_videos", [])):
+                                    render_video_item(v, f"nxt_{n_node.get('global_c_id')}_{idx}")
+                                
+                                if st.button("🔍 学ぶ", key=f"g_nxt_{n_node.get('global_c_id')}", use_container_width=True):
+                                    st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
+                                    st.session_state.display_query = f"{n_node.get('concept_name', '')} について詳しく知りたい"
+                                    st.session_state.last_clicked_node = None
+                                    st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
+                                    st.rerun()
+                    else:
+                        st.write("該当なし")
 
     # ==========================================
     # トップ検索画面
