@@ -222,7 +222,14 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
     top_concept_score = raw_concept_results[0]["score"] if raw_concept_results else 0.0
     top_question_score = question_results[0]["score"] if question_results else 0.0
 
+    # 🌟 ルート判定のハイブリッド化（キーワード明示時はスコアを上書きして優先）
     is_concept_intent = top_concept_score >= top_question_score
+    
+    explicit_problem_kws = ["問題", "演習", "ドリル", "テスト", "解き方", "解法"]
+    if any(kw in search_query for kw in explicit_problem_kws):
+        is_concept_intent = False
+    elif any(kw in search_query for kw in ["とは", "意味", "教えて", "概念", "仕組み"]):
+        is_concept_intent = True
 
     result_data = {
         "intent": "concept" if is_concept_intent else "question",
@@ -259,8 +266,8 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
             and this_time_idx is not None
             and this_time_idx > top_time_idx
         ):
-            if node.get("bundle_name") == top_raw["node"].get("bundle_name"):
-                penalty_reason = "同じPART内の先のステップ"
+            if node.get("lecture_name") == top_raw["node"].get("lecture_name"):
+                penalty_reason = "同じ講義内の先のステップ"
             else:
                 penalty = (this_time_idx - top_time_idx) * PENALTY_WEIGHT
                 final_score -= penalty
@@ -361,6 +368,7 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
             
     result_data["runner_ups"] = filtered_runner_ups
 
+    # 🌟 Ver 14.5: 問題（大問/確認問題）のリンク取得
     if is_concept_intent:
         c_name = top_node["concept_name"]
         result_data["linked_questions"] = [
@@ -386,16 +394,27 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
     return result_data
 
 
-# 🌟 【UI共通化】動画アイテム（XAI対応）を描画するヘルパー関数
+# 🌟 【UI共通化】動画アイテム（主従対応版）を描画するヘルパー関数
 def render_video_item(v, unique_key):
     with st.container(border=True):
         col_info, col_btn = st.columns([4, 1])
         with col_info:
-            st.markdown(f"📺 **{v.get('video_file')}** (`{v.get('start_time')}`〜)")
+            a_type = v.get("alignment_type", "")
+            
+            # 主従関係に応じたバッジの出し分け
+            if a_type in ["concept_introduction", "task_walkthrough", "direct_explanation"]:
+                badge = "💡 【メイン解説】"
+            elif a_type == "prerequisite_review":
+                badge = "⏪ 【前提・復習】"
+            else:
+                badge = "🎬 【解説動画】"
+
+            st.markdown(f"{badge} **{v.get('video_file')}** (`{v.get('start_time')}`〜)")
             if v.get('reasoning'):
                 st.markdown(f"**🤔 なぜこの動画？:** `{v.get('reasoning')}`")
             if v.get('explanation_summary'):
                 st.markdown(f"**💬 先生の解説の狙い:** {v.get('explanation_summary')}")
+                
         with col_btn:
             if st.button("📑 チャプター", key=f"cat_btn_{unique_key}", use_container_width=True):
                 st.session_state.history.append({
@@ -422,6 +441,7 @@ def main():
     # 🌟 サイドバーにバージョン情報を表示
     engine_ver = db.get("metadata", {}).get("engine_version", "バージョン情報なし")
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{engine_ver}`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.5`")
 
     # 🌟 State初期化
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
@@ -442,10 +462,10 @@ def main():
             
         st.markdown(f"## 📺 動画プレイヤー: `{v_file}`")
         if v_data:
-            st.caption(f"📚 所属単元: {v_data.get('bundle_name', '')} | 🏷️ 授業タイプ: {v_data.get('role', '')}")
+            st.caption(f"📚 所属単元: {v_data.get('lecture_name', '')} | 🏷️ 授業タイプ: {v_data.get('role', '')}")
             
             # ダミーの動画プレイヤー枠 (純粋なURL文字列で指定)
-            st.video("https://www.w3schools.com/html/mov_bbb.mp4") 
+            st.video("[https://www.w3schools.com/html/mov_bbb.mp4](https://www.w3schools.com/html/mov_bbb.mp4)") 
             
             st.markdown("### 📑 タイムライン・チャプター (解説要約つき)")
             st.info("💡 先生の解説の狙い（要約）を事前に確認して、見たいチャプターから再生できます。")
@@ -458,7 +478,6 @@ def main():
                 with st.expander(f"⏱️ {start} 〜 {end} | 📌 {topic}", expanded=(idx==0)):
                     col1, col2 = st.columns([3, 1])
                     with col1:
-                        # 🌟 板書OCRは削除し、解説の狙いのみをスッキリと表示
                         st.markdown(f"**💬 先生の解説の狙い:**\n> {seg.get('explanation_summary', 'データなし')}")
                     with col2:
                         if st.button("▶️ ここから再生", key=f"play_{v_file}_{idx}", use_container_width=True):
@@ -564,11 +583,10 @@ def main():
             st.subheader(f"🎯 第一候補: {intent_label}")
 
             with st.container(border=True):
-                # 🌟 問題の文言（確認問題など）の重複を解消
                 title = (
                     node.get("concept_name")
                     if res["intent"] == "concept"
-                    else f"{node.get('bundle_name', '')} {node.get('local_q_num', '')}"
+                    else f"{node.get('lecture_name', '')} {node.get('local_q_num', '')}"
                 )
                 
                 if res.get("is_drilldown"):
@@ -585,8 +603,11 @@ def main():
                         f"| 加点ブースト: +{boost*100:.1f}%{pen_str}"
                     )
                     
-                st.caption(f"📚 所属単元: {node.get('bundle_name', '未設定')}")
+                st.caption(f"📚 所属単元: {node.get('lecture_name', '未設定')}")
 
+                # ===============================================
+                # 📘 概念インプット優先ルートの描画
+                # ===============================================
                 if res["intent"] == "concept":
                     st.info(f"**💡 概念要約:** {node.get('summary', '要約なし')}")
                     p_concept = node.get("parent_concept", "未分類")
@@ -595,51 +616,60 @@ def main():
                     comp_str = "知識・技能" if comp_code == "knowledge_skill" else ("思考力・判断力等" if comp_code == "thinking_judgment" else "未設定")
                     
                     st.markdown(f"**🔼 親概念 (Level 3):** `{p_concept}` | **🏷️ 観点:** `{comp_str}`")
-                else:
-                    if res.get("required_concepts_text"):
-                        st.markdown("#### 🧠 解くために必要な高校数学の概念")
-                        st.info(res["required_concepts_text"])
+                    
+                    with st.expander(
+                        f"🏛️ 指導要領: {node.get('mext_hierarchy', '未割り当て')} "
+                        f"(コード: {node.get('mext_code', 'N/A')})"
+                    ):
+                        st.markdown(f"**【公式テキスト】** {node.get('mext_official_text', '情報なし')}")
+                        st.markdown(f"**【解説要約】** {node.get('mext_explanation', '情報なし')}")
 
-                    # 🌟 問題の文言の重複を解消
-                    st.markdown(f"#### 📝 本命の問題 ({node.get('bundle_name', '')} {node.get('local_q_num', '')})")
-                    st.info(node.get("question_text", ""))
-                    st.markdown(f"**🧠 関連概念:** {node.get('matched_concept', '')}")
+                    st.divider()
 
-                with st.expander(
-                    f"🏛️ 指導要領: {node.get('mext_hierarchy', '未割り当て')} "
-                    f"(コード: {node.get('mext_code', 'N/A')})"
-                ):
-                    st.markdown(f"**【公式テキスト】** {node.get('mext_official_text', '情報なし')}")
-                    st.markdown(f"**【解説要約】** {node.get('mext_explanation', '情報なし')}")
-
-                st.divider()
-
-                if res["intent"] == "concept":
                     st.markdown("#### 🎬 第一アクション (概念インプット講義)")
-                    c_videos = node.get("aligned_videos", [])
+                    c_videos = node.get("main_videos", []) + node.get("review_videos", [])
                     for idx, v in enumerate(c_videos):
                         render_video_item(v, f"action1_{node.get('global_c_id')}_{idx}")
                     if not c_videos:
                         st.write("該当なし")
 
-                    st.markdown("#### 📗 第二アクション (この概念の例題解説動画)")
-                    e_videos_found = False
-                    for q in res.get("linked_questions", []):
-                        for idx, edge in enumerate(q.get("aligned_videos", [])):
-                            if edge.get("alignment_type") == "direct_explanation":
-                                render_video_item(edge, f"action2_{q.get('global_q_id')}_{idx}")
-                                e_videos_found = True
-                    if not e_videos_found:
+                    st.markdown("#### 📘 第二アクション (モデリング: 大問・例題解説)")
+                    exercises = [q for q in res.get("linked_questions", []) if q.get("type") == "exercise"]
+                    if exercises:
+                        for i, ex in enumerate(exercises):
+                            with st.container(border=True):
+                                st.markdown(f"**📌 {ex.get('lecture_name', '')} {ex.get('local_q_num', '')}**")
+                                st.markdown(ex.get("question_text", ""))
+                                
+                                ex_videos = ex.get("aligned_videos", [])
+                                for idx, v in enumerate(ex_videos):
+                                    render_video_item(v, f"action2_ex_{ex.get('global_q_id')}_{idx}")
+                                
+                                if st.button("🔍 詳しく見る", key=f"action2_btn_{ex.get('global_q_id', i)}", use_container_width=True):
+                                    st.session_state.history.append({
+                                        "result": st.session_state.current_result,
+                                        "query": st.session_state.display_query,
+                                        "image_choices": st.session_state.pending_image_choices,
+                                    })
+                                    new_query = f"{ex.get('question_text', '')} の解き方"
+                                    st.session_state.display_query = new_query
+                                    st.session_state.last_clicked_node = None
+                                    with st.spinner("問題ルートへ切り替え中..."):
+                                        res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
+                                        if res_next:
+                                            st.session_state.current_result = res_next
+                                    st.rerun()
+                    else:
                         st.write("該当なし")
 
-                    st.markdown("#### 📝 第三アクション (演習のための問題)")
-                    if res.get("linked_questions"):
+                    st.markdown("#### 📗 第三アクション (アセスメント: 確認問題演習)")
+                    questions = [q for q in res.get("linked_questions", []) if q.get("type") == "question"]
+                    if questions:
                         cols = st.columns(3)
-                        for i, q in enumerate(res["linked_questions"]):
+                        for i, q in enumerate(questions):
                             with cols[i % 3]:
                                 with st.container(border=True):
-                                    # 🌟 問題の文言の重複を解消
-                                    st.markdown(f"**📌 {q.get('bundle_name', '')} {q.get('local_q_num', '')}**")
+                                    st.markdown(f"**📌 {q.get('lecture_name', '')} {q.get('local_q_num', '')}**")
                                     st.markdown(q.get("question_text", ""))
 
                                     if st.button(
@@ -663,23 +693,37 @@ def main():
                     else:
                         st.write("該当なし")
 
+                # ===============================================
+                # 📗 問題・解法ステップ優先ルートの描画
+                # ===============================================
                 else:
-                    st.markdown("#### 🎬 第一アクション (例題直接解説動画)")
+                    st.markdown("#### 🧠 ゼロアクション (前提知識の確認)")
+                    if res.get("required_concepts_text"):
+                        st.info(res["required_concepts_text"])
+                    else:
+                        st.write("下部のGraph RAGから前提知識を確認してください。")
+
+                    st.markdown(f"#### 📝 本命の問題 ({node.get('lecture_name', '')} {node.get('local_q_num', '')})")
+                    st.info(node.get("question_text", ""))
+                    st.markdown(f"**🧠 関連概念:** {node.get('matched_concept', '')}")
+
+                    st.divider()
+
+                    st.markdown("#### 🎬 第一アクション (問題の直接解説・モデリング)")
                     edges = node.get("aligned_videos", [])
-                    direct_edges = [e for e in edges if e.get("alignment_type") == "direct_explanation"]
-                    for idx, e in enumerate(direct_edges):
+                    for idx, e in enumerate(edges):
                         render_video_item(e, f"action1_q_{node.get('global_q_id')}_{idx}")
-                    if not direct_edges:
+                    if not edges:
                         st.write("該当なし")
 
-                    st.markdown("#### 🧬 第二アクション (同概念の他問題で演習)")
+                    st.markdown("#### 🧬 第二アクション (同概念の横展開演習)")
                     if res.get("connected_questions"):
                         cols = st.columns(3)
                         for i, q in enumerate(res["connected_questions"]):
                             with cols[i % 3]:
                                 with st.container(border=True):
-                                    # 🌟 問題の文言の重複を解消
-                                    st.markdown(f"**📌 {q.get('bundle_name', '')} {q.get('local_q_num', '')}**")
+                                    q_label = "📘 大問" if q.get("type") == "exercise" else "📗 確認問題"
+                                    st.markdown(f"**📌 {q_label} {q.get('local_q_num', '')}**")
                                     st.markdown(q.get("question_text", ""))
 
                                     if st.button(
@@ -703,6 +747,7 @@ def main():
                     else:
                         st.write("該当なし")
 
+            # 次点の表示
             if res.get("runner_ups"):
                 st.subheader("🥈 次点 (関連概念・類題)")
                 cols = st.columns(3)
@@ -712,15 +757,15 @@ def main():
                         with st.container(border=True):
                             if res["intent"] == "concept":
                                 st.markdown(f"**🧠 {r_node.get('concept_name', '')}**")
-                                st.caption(f"📚 {r_node.get('bundle_name', '')}")
+                                st.caption(f"📚 {r_node.get('lecture_name', '')}")
                                 p_c = r_node.get("parent_concept", "")
                                 if p_c:
                                     st.caption(f"🔼 親概念: {p_c}")
                                 st.markdown(r_node.get("summary", ""))
                             else:
-                                # 🌟 問題の文言の重複を解消
-                                st.markdown(f"**📌 {r_node.get('local_q_num', '')}**")
-                                st.caption(f"📚 {r_node.get('bundle_name', '')}")
+                                q_label = "📘 大問" if r_node.get("type") == "exercise" else "📗 確認問題"
+                                st.markdown(f"**📌 {q_label} {r_node.get('local_q_num', '')}**")
+                                st.caption(f"📚 {r_node.get('lecture_name', '')}")
                                 st.markdown(f"**🧠 概念:** {r_node.get('matched_concept', '')}")
                                 st.markdown(r_node.get("question_text", ""))
 
@@ -779,7 +824,7 @@ def main():
                             else:
                                 display_label = clean_label[:max_len] + "..." if len(clean_label) > max_len else clean_label
 
-                            # 🌟 知識群（グループ）を「形」と「色」で表現 (黒文字が読みやすいパステル調に変更)
+                            # 🌟 知識群（グループ）を「形」と「色」で表現
                             if is_current:
                                 color, shape = "#FFECB3", "star" # 現在地: 星(明るい黄色)
                             elif node_type == "foundation_knowledge":
@@ -875,7 +920,7 @@ def main():
                                 if reasoning:
                                     st.info(f"💡 **前提となる理由:** {reasoning}")
                                 st.write(p_node.get("summary", ""))
-                                for idx, v in enumerate(p_node.get("aligned_videos", [])):
+                                for idx, v in enumerate(p_node.get("main_videos", []) + p_node.get("review_videos", [])):
                                     render_video_item(v, f"pre_{p_node.get('global_c_id')}_{idx}")
                                 if st.button("🔍 学ぶ", key=f"g_pre_{p_node.get('global_c_id')}", use_container_width=True):
                                     st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
@@ -893,7 +938,7 @@ def main():
                             with st.expander(f"🧠 {s_node.get('concept_name', '')}"):
                                 st.caption(f"🔼 親ハブ: {s_node.get('parent_concept', '')}")
                                 st.write(s_node.get("summary", ""))
-                                for idx, v in enumerate(s_node.get("aligned_videos", [])):
+                                for idx, v in enumerate(s_node.get("main_videos", []) + s_node.get("review_videos", [])):
                                     render_video_item(v, f"sib_{s_node.get('global_c_id')}_{idx}")
                                 
                                 if st.button("🔍 学ぶ", key=f"g_sib_{s_node.get('global_c_id')}", use_container_width=True):
@@ -912,7 +957,7 @@ def main():
                             with st.expander(f"🧠 {n_node.get('concept_name', '')}"):
                                 st.caption(f"🔼 親ハブ: {n_node.get('parent_concept', '')}")
                                 st.write(n_node.get("summary", ""))
-                                for idx, v in enumerate(n_node.get("aligned_videos", [])):
+                                for idx, v in enumerate(n_node.get("main_videos", []) + n_node.get("review_videos", [])):
                                     render_video_item(v, f"nxt_{n_node.get('global_c_id')}_{idx}")
                                 
                                 if st.button("🔍 学ぶ", key=f"g_nxt_{n_node.get('global_c_id')}", use_container_width=True):
