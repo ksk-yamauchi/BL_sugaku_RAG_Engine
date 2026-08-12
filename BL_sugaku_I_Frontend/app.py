@@ -496,7 +496,7 @@ def main():
             
         st.markdown(f"## 📺 動画プレイヤー: `{v_file}`")
         if v_data:
-            st.caption(f"📚 所属単元: {v_data.get('lecture_name', '')} | 🏷️ 授業タイプ: {v_data.get('role', '')}")
+            st.caption(f"🎓 講義名: {v_data.get('lecture_name', '')} | 🏷️ 授業タイプ: {v_data.get('role', '')}")
             
             # ダミーの動画プレイヤー枠 (純粋なURL文字列で指定)
             st.video("[https://www.w3schools.com/html/mov_bbb.mp4](https://www.w3schools.com/html/mov_bbb.mp4)") 
@@ -620,7 +620,7 @@ def main():
                 title = (
                     node.get("concept_name")
                     if res["intent"] == "concept"
-                    else f"{node.get('lecture_name', '')} {clean_q_label(node.get('local_q_num', ''))}"
+                    else f"{node.get('lecture_name', '')} {node.get('local_q_num', '')}"
                 )
                 
                 if res.get("is_drilldown"):
@@ -637,7 +637,7 @@ def main():
                         f"| 加点ブースト: +{boost*100:.1f}%{pen_str}"
                     )
                     
-                st.caption(f"📚 所属単元: {node.get('lecture_name', '未設定')}")
+                st.caption(f"🎓 講義名: {node.get('lecture_name', '未設定')}")
 
                 # ===============================================
                 # 📘 概念インプット優先ルートの描画
@@ -646,8 +646,7 @@ def main():
                     st.info(f"**💡 概念要約:** {node.get('summary', '要約なし')}")
                     p_concept = node.get("parent_concept", "未分類")
                     
-                    comp_code = node.get("competency", "")
-                    comp_str = "知識・技能" if comp_code == "knowledge_skill" else ("思考力・判断力等" if comp_code == "thinking_judgment" else "未設定")
+                    comp_str = node.get("pillar", "未設定")
                     
                     st.markdown(f"**🔼 親概念 (Level 3):** `{p_concept}` | **🏷️ 観点:** `{comp_str}`")
                     
@@ -663,12 +662,13 @@ def main():
                     st.markdown("#### 🎬 第一アクション (概念インプット講義)")
                     catalog = db.get("global_video_catalog", {})
                     input_videos = []
+                    
                     c_videos = node.get("main_videos", []) + node.get("review_videos", [])
                     
                     for v in c_videos:
                         v_file = v.get("video_file")
                         v_role = catalog.get(v_file, {}).get("role", "")
-                        # role が exercise_walkthrough （大問・例題解説）でない場合のみ表示
+                        # role が exercise_walkthrough （大問・例題解説）でない場合のみ、純粋な概念講義として表示
                         if v_role != "exercise_walkthrough":
                             input_videos.append(v)
 
@@ -677,12 +677,12 @@ def main():
                     if not input_videos:
                         st.write("該当なし")
 
-                    # 🌟 相談1: linked_questions (包含チェック済) のうち type="exercise" は第二アクションへ
                     st.markdown("#### 📘 第二アクション (モデリング: 大問・例題解説)")
                     exercises = [q for q in res.get("linked_questions", []) if q.get("type") == "exercise"]
                     if exercises:
                         for i, ex in enumerate(exercises):
                             with st.container(border=True):
+                                st.caption(f"🎓 講義名: {ex.get('lecture_name', '未設定')}")
                                 st.markdown(f"**📌 📘 大問 {clean_q_label(ex.get('local_q_num', ''))}**")
                                 st.markdown(ex.get("question_text", ""))
                                 
@@ -707,7 +707,6 @@ def main():
                     else:
                         st.write("該当なし")
 
-                    # 🌟 相談1: linked_questions (包含チェック済) のうち type="question" は第三アクションへ
                     st.markdown("#### 📗 第三アクション (アセスメント: 確認問題演習)")
                     questions = [q for q in res.get("linked_questions", []) if q.get("type") == "question"]
                     if questions:
@@ -715,6 +714,7 @@ def main():
                         for i, q in enumerate(questions):
                             with cols[i % 3]:
                                 with st.container(border=True):
+                                    st.caption(f"🎓 講義名: {q.get('lecture_name', '未設定')}")
                                     st.markdown(f"**📌 📗 確認問題 {clean_q_label(q.get('local_q_num', ''))}**")
                                     st.markdown(q.get("question_text", ""))
 
@@ -770,14 +770,14 @@ def main():
                     if not edges:
                         st.write("該当なし")
 
-                    # 🌟 相談2: 案Aに基づく同じタスク（技能）を測る問題の横展開
-                    st.markdown("#### 🧬 第二アクション (同タスク・同概念の横展開演習)")
+                    st.markdown("#### 🧬 第二アクション (同概念の横展開演習)")
                     if res.get("connected_questions"):
                         cols = st.columns(3)
                         for i, q in enumerate(res["connected_questions"]):
                             with cols[i % 3]:
                                 with st.container(border=True):
                                     q_label = "📘 大問" if q.get("type") == "exercise" else "📗 確認問題"
+                                    st.caption(f"🎓 講義名: {q.get('lecture_name', '未設定')}")
                                     st.markdown(f"**📌 {q_label} {clean_q_label(q.get('local_q_num', ''))}**")
                                     st.markdown(q.get("question_text", ""))
 
@@ -812,15 +812,16 @@ def main():
                         with st.container(border=True):
                             if res["intent"] == "concept":
                                 st.markdown(f"**🧠 {r_node.get('concept_name', '')}**")
-                                st.caption(f"📚 {r_node.get('lecture_name', '')}")
+                                st.caption(f"🎓 講義名: {r_node.get('lecture_name', '')}")
                                 p_c = r_node.get("parent_concept", "")
                                 if p_c:
                                     st.caption(f"🔼 親概念: {p_c}")
                                 st.markdown(r_node.get("summary", ""))
                             else:
                                 q_label = "📘 大問" if r_node.get("type") == "exercise" else "📗 確認問題"
+                                st.caption(f"🎓 講義名: {r_node.get('lecture_name', '未設定')}")
                                 st.markdown(f"**📌 {q_label} {clean_q_label(r_node.get('local_q_num', ''))}**")
-                                st.caption(f"📚 {r_node.get('lecture_name', '')}")
+                                st.markdown(f"**🧠 概念:** {r_node.get('matched_concept', '')}")
                                 st.markdown(r_node.get("question_text", ""))
 
                             st.markdown("<hr style='margin: 0.5em 0;'>", unsafe_allow_html=True)
@@ -854,7 +855,7 @@ def main():
 
             st.divider()
 
-            # 🌟 相談3: Graph RAG の抜本的再構築 (ルート別にグラフ構造を切り替え)
+             # 🌟 相談3: Graph RAG の抜本的再構築 (ルート別にグラフ構造を切り替え)
             if res.get("graph_prerequisites") or res.get("graph_siblings") or res.get("graph_next_steps") or res.get("graph_linked_tasks") or res.get("graph_linked_knowledges"):
                 st.subheader("🧭 Graph RAG: オントロジー探索 (学習の繋がり)")
                 
