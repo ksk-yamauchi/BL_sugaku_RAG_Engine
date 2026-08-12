@@ -80,7 +80,11 @@ AIがノードの意味を正しく空間配置できるよう、合成テキス
 *   **タスクノード (`_T` 系) と 問題ノード (`_EX`, `_Q` 系)**:
     「技能」としての役割を明記し、アライメント情報から**「実際に紐づいている具体的な大問・確認問題のテキストと解説」および「動画の板書OCR（数式）」を裏側で結合**してベクトル化します。これにより、生徒が具体的な数式（例：「$2x^2+3x+1$」）で画像検索した際、抽象的な概念ではなく「このタスクだ」「この大問だ」とダイレクトにヒットするようになります。
 
-### ② エンティティ統合とオートワイヤリング（自動エッジ結線）
+### ② 問題データのリッチ・リレーション配列化 (Array Ready)
+以前のシステムでは、UIの都合で問題の代表概念を1つだけ選び `matched_concept` に上書きするという不可逆圧縮を行っていました。
+現在のVer 14.6アーキテクチャでは、**「紐づくタスクの配列（`linked_task_names`）」と「紐づく知識の配列（`linked_knowledge_names`）」を独立した配列データのままベクトルDBに格納**します。これにより、「タスクヒット時の問題の空振り」を防ぐ多段引き当てや、Graph RAGにおける高精細なGNN-KTの可視化を実現しています。
+
+### ③ エンティティ統合とオートワイヤリング（自動エッジ結線）
 AIの抽出揺らぎによる「階層の逆転」や「孤立ノード」を防ぐため、DB構築時に**オートワイヤリング機能**が働きます。子ノードの `parent_concept` が既存ノードと一致した場合、システムが自動的に `subsumes`（親➔子）および `part_of`（子➔親）のエッジを強制的に結線し、強固なGraph RAGネットワークを自動生成します。
 
 ---
@@ -143,8 +147,8 @@ AIの抽出揺らぎによる「階層の逆転」や「孤立ノード」を防
 │   ├── 📜 build_mext_master_dict.py        # 指導要領辞書生成
 │   ├── 📜 build_index_master.py            # 目次マスター生成 (lecture_name対応版)
 │   ├── 📜 run_single_part_batch.py         # 全PART一括解析バッチ
-│   ├── 📜 build_vector_db.py               # グローバルベクトルDB構築 (Ver 14.x 対応)
-│   ├── 📜 export_global_obsidian_vault_mext.py # Obsidian用ZIP出力 (Ver 14.x 対応)
+│   ├── 📜 build_vector_db.py               # グローバルベクトルDB構築 (Array Ready 対応)
+│   ├── 📜 export_global_obsidian_vault_mext.py # Obsidian用ZIP出力 (双方向リンク対応)
 │   ├── 📜 generate_mock_logs.py            # GNN-KT検証用 ダミー学習ログ生成
 │   ├── 📄 global_vector_db_cache.json      # 【成果物】全PART統合ベクトルキャッシュDB
 │   ├── 📄 mock_student_logs.json           # 【成果物】生成されたダミー学習ログ
@@ -155,14 +159,14 @@ AIの抽出揺らぎによる「階層の逆転」や「孤立ノード」を防
 │       ├── 📄 BL_sugaku_I_XX-Y_clean.md   # 【生成】クリーンテキスト
 │       ├── 📄 *.mp4 / *.vtt               # 講義動画および字幕ファイル
 │       ├── 📜 phase0_pdf_to_md.py         # Phase 0: PDF ➔ Markdown変換
-│       ├── 📜 phase1_text_analysis_ontology.py # Phase 1: デュアルエンジン・オントロジー解析 (Ver 14.x)
+│       ├── 📜 phase1_text_analysis_ontology.py # Phase 1: デュアルエンジン・オントロジー解析
 │       ├── 📜 phase2_video_analysis.py    # Phase 2: 動画マルチモーダル解析
-│       ├── 📜 phase3_alignment_graph.py   # Phase 3: 動的補完 & 粒度吸収・主従分離アライメント (Ver 14.x)
+│       ├── 📜 phase3_alignment_graph.py   # Phase 3: 動的補完 & 粒度吸収・主従分離アライメント
 │       └── 📁 output_result/              # 中間出力結果格納フォルダー
 │
 └── 📱 BL_sugaku_I_Frontend/                 # フロントエンド専用ディレクトリ
     ├── 📄 .env                             # APIキー設定ファイル
-    ├── 📜 app.py                           # AIチューター UI アプリ
+    ├── 📜 app.py                           # AIチューター UI アプリ (Ver 4.6)
     ├── 📜 app_ft.py                        # 教員向け Semantic Zoom ダッシュボード
     └── 📄 requirements.txt                 # 依存パッケージ定義
 ```
