@@ -331,7 +331,7 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
                 if not p_name: continue
 
                 for cid, c_node in concept_nodes.items():
-                    if c_node["concept_name"] == p_name or c_node.get("parent_concept") == p_name:
+                    if c_node["concept_name"] == p_name:
                         already_added = any(x["node"]["global_c_id"] == c_node["global_c_id"] for x in prereqs)
                         if not already_added:
                             prereqs.append({
@@ -405,7 +405,7 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
                         m_exs = [m_exs[0]]
                 tm["modeling_exercises"] = m_exs
                 
-            # 2. 第二アクション用（横展開演習）の取得：同じタスクおよび視点（知識）を完全に有する確認問題 ＆ スコア順
+            # 2. 第二アクション用（横展開演習）の取得
             connected_questions = []
             tm_t_set = set(t_names)
             tm_k_set = set(k_names)
@@ -508,7 +508,7 @@ def main():
     # 🌟 サイドバーにバージョン情報を表示
     engine_ver = db.get("metadata", {}).get("engine_version", "バージョン情報なし")
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{engine_ver}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6.17`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6.20`")
 
     # 🌟 State初期化
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
@@ -801,10 +801,10 @@ def main():
                                 if p_c:
                                     st.caption(f"🔼 親概念: {p_c}")
                                 
+                                st.write(p_node.get("summary", ""))
+                                
                                 if reasoning:
                                     st.info(f"💡 **前提となる理由:** {reasoning}")
-                                    
-                                st.write(p_node.get("summary", ""))
 
                                 st.markdown("<hr style='margin: 0.5em 0;'>", unsafe_allow_html=True)
                                 
@@ -878,7 +878,8 @@ def main():
                     
                     if p_name_target and p_name_target != "未分類":
                         add_graph_node(p_name_target, f"親: {p_name_target}", "unknown")
-                        graph_edges.append(Edge(source=p_name_target, target=c_name_target, dashes=True, arrows=""))
+                        # 🌟 太線に変更し、ラベルや矢印を削除
+                        graph_edges.append(Edge(source=p_name_target, target=c_name_target, dashes=True, arrows="", width=3))
 
                     for pre_info in tm.get("graph_prerequisites", []):
                         pre_node = pre_info["node"]
@@ -892,7 +893,6 @@ def main():
                             tt_text = f"{badge_str} {pre_name}\n💡 理由: {reasoning}" if reasoning else f"{badge_str} {pre_name}"
                             add_graph_node(pre_name, pre_name, pre_node.get("type", "unknown"), tooltip=tt_text)
                             
-                            # 🌟 ラベルをリネーム
                             edge_label = "必須" if is_mandatory else "補足"
                             graph_edges.append(Edge(source=pre_name, target=c_name_target, label=edge_label, dashes=not is_mandatory))
 
@@ -901,13 +901,15 @@ def main():
                         if sib_name:
                             add_graph_node(sib_name, sib_name, sib.get("type", "unknown"))
                             if p_name_target and p_name_target != "未分類":
-                                graph_edges.append(Edge(source=p_name_target, target=sib_name, dashes=True, arrows=""))
+                                # 🌟 色を極めて薄いブルーに変更
+                                graph_edges.append(Edge(source=p_name_target, target=sib_name, dashes=True, arrows="", color="#BBDEFB", length=200))
                                 
                     for nxt in tm.get("graph_next_steps", []):
                         nxt_name = nxt.get("concept_name")
                         if nxt_name:
                             add_graph_node(nxt_name, nxt_name, nxt.get("type", "unknown")) 
-                            graph_edges.append(Edge(source=c_name_target, target=nxt_name, label="requires", dashes=True))
+                            # 🌟 requires を 必要 に変更
+                            graph_edges.append(Edge(source=c_name_target, target=nxt_name, label="必要", dashes=True))
 
                 config = Config(
                     width="100%", height=400, directed=True, physics=False,
@@ -950,9 +952,11 @@ def main():
                             
                             with st.expander(f"{prefix}{p_node.get('concept_name', '')}"):
                                 st.caption(f"🔼 親ハブ: {p_node.get('parent_concept', '')}")
+                                st.write(p_node.get("summary", ""))
+                                
                                 if reasoning:
                                     st.info(f"💡 **前提となる理由:** {reasoning}")
-                                st.write(p_node.get("summary", ""))
+                                    
                                 for idx, v in enumerate(p_node.get("main_videos", []) + p_node.get("review_videos", [])):
                                     render_video_item(v, f"pre_{p_node.get('global_c_id')}_{tab_idx}_{idx}")
                                 if st.button("🔍 学ぶ", key=f"g_pre_{p_node.get('global_c_id')}_{tab_idx}", use_container_width=True):
@@ -1008,7 +1012,6 @@ def main():
             else:
                 top_matches = res.get("top_matches", [res["top_match"]])
                 
-                # 🌟 タブを廃止し、ラジオボタンで選択させる
                 if len(top_matches) > 1:
                     tab_titles = []
                     for m in top_matches:
@@ -1064,7 +1067,6 @@ def main():
                 st.markdown("#### 🎬 第一アクション (問題の直接解説・モデリング)")
                 m_exs = tm.get("modeling_exercises", [])
                 if m_exs:
-                    # 🌟 トップヒットの1件のみを表示
                     ex = m_exs[0]
                     with st.container(border=True):
                         ex_q_id = ex.get("global_q_id")
@@ -1123,7 +1125,6 @@ def main():
                 else:
                     st.write("該当なし")
 
-                # 🌟 新設計：問題ルート専用の次点（前提確認）と類題
                 st.divider()
                 
                 st.subheader("🥈 次点 (前提となる概念を確認する問題)")
@@ -1135,13 +1136,11 @@ def main():
                     r_node = r["node"]
                     r_q_id = r_node.get("global_q_id")
                     
-                    # 第一アクション、第二アクションで既出の問題は完全にスキップ（重複排除）
                     if r_q_id and (r_q_id in displayed_q_ids):
                         continue
                         
                     with cols[drawn_pre % 3]:
                         with st.container(border=True):
-                            # ここで表示処理に入るため、次点としても既出登録
                             displayed_q_ids.add(r_q_id)
                             
                             q_num_str = r_node.get('local_q_num', '')
@@ -1150,7 +1149,6 @@ def main():
                             st.caption(f"🎓 講義名: {r_node.get('lecture_name', '未設定')}")
                             st.markdown(f"**📌 📗 確認問題 {cleaned_num}**")
                             
-                            # 一致したタスク名のバッジを表示
                             matched_tasks = r.get("matched_task_names", [])
                             if matched_tasks:
                                 t_str = "、".join(matched_tasks[:2])
@@ -1232,28 +1230,24 @@ def main():
                         graph_nodes.append(Node(id=nid, label=display_label, size=30, color=color, shape=shape, title=display_tooltip))
                         node_ids.add(nid)
 
-                # 問題ノードの追加
                 q_id = tm["node"].get("global_q_id")
                 q_num_str = tm['node'].get('local_q_num', '')
                 cleaned_num = clean_q_label(q_num_str)
                 q_label = f"問題: {cleaned_num}"
                 add_graph_node(q_id, q_label, "problem", tooltip="📍 現在地 (この問題)", is_current=True)
                 
-                # 測られるタスクの追加
                 for t_node in tm.get("graph_linked_tasks", []):
                     tn_id = t_node.get("global_c_id")
                     tn_name = t_node.get("concept_name")
                     add_graph_node(tn_id, tn_name, t_node.get("type", "tasks"), tooltip=f"⬛ [測られるタスク]\n{tn_name}")
                     graph_edges.append(Edge(source=q_id, target=tn_id, label="測られる技能", dashes=False))
                     
-                # 必要な知識の追加
                 for k_node in tm.get("graph_linked_knowledges", []):
                     kn_id = k_node.get("global_c_id")
                     kn_name = k_node.get("concept_name")
                     add_graph_node(kn_id, kn_name, k_node.get("type", "foundation_knowledge"), tooltip=f"🟦 [必要な知識]\n{kn_name}")
                     graph_edges.append(Edge(source=q_id, target=kn_id, label="必要な知識", dashes=False))
 
-                # 看板概念（ツリーの起点）の追加と接続
                 kanban_name = tm.get("kanban_concept_name")
                 if kanban_name:
                     kanban_node_obj = tm.get("kanban_concept_node")
@@ -1261,12 +1255,12 @@ def main():
                         kn_id = kanban_node_obj.get("global_c_id")
                         p_name_target = kanban_node_obj.get("parent_concept", "未分類")
                         
-                        # 看板概念がまだ描画されていなければ追加（通常はタスクか知識なので上記で追加済み）
                         add_graph_node(kn_id, kanban_name, kanban_node_obj.get("type", "unknown"), tooltip="📍 看板概念")
                         
                         if p_name_target and p_name_target != "未分類":
                             add_graph_node(p_name_target, f"親: {p_name_target}", "unknown")
-                            graph_edges.append(Edge(source=p_name_target, target=kn_id, dashes=True, arrows=""))
+                            # 🌟 太線に変更し、ラベルや矢印を削除
+                            graph_edges.append(Edge(source=p_name_target, target=kn_id, dashes=True, arrows="", width=3))
 
                         for pre_info in tm.get("graph_prerequisites", []):
                             pre_node = pre_info["node"]
@@ -1279,7 +1273,6 @@ def main():
                                 tt_text = f"{badge_str} {pre_name}\n💡 理由: {reasoning}" if reasoning else f"{badge_str} {pre_name}"
                                 add_graph_node(pre_node.get("global_c_id"), pre_name, pre_node.get("type", "unknown"), tooltip=tt_text)
                                 
-                                # 🌟 ラベルをリネーム
                                 edge_label = "必須" if is_mandatory else "補足"
                                 graph_edges.append(Edge(source=pre_node.get("global_c_id"), target=kn_id, label=edge_label, dashes=not is_mandatory))
 
@@ -1288,13 +1281,15 @@ def main():
                             if sib_name:
                                 add_graph_node(sib.get("global_c_id"), sib_name, sib.get("type", "unknown"))
                                 if p_name_target and p_name_target != "未分類":
-                                    graph_edges.append(Edge(source=p_name_target, target=sib.get("global_c_id"), dashes=True, arrows=""))
+                                    # 🌟 色を極めて薄いブルーに変更
+                                    graph_edges.append(Edge(source=p_name_target, target=sib.get("global_c_id"), dashes=True, arrows="", color="#BBDEFB", length=200))
                                     
                         for nxt in tm.get("graph_next_steps", []):
                             nxt_name = nxt.get("concept_name")
                             if nxt_name:
                                 add_graph_node(nxt.get("global_c_id"), nxt_name, nxt.get("type", "unknown")) 
-                                graph_edges.append(Edge(source=kn_id, target=nxt.get("global_c_id"), label="requires", dashes=True))
+                                # 🌟 requires を 必要 に変更
+                                graph_edges.append(Edge(source=kn_id, target=nxt.get("global_c_id"), label="必要", dashes=True))
 
                 config = Config(
                     width="100%", height=400, directed=True, physics=False,
@@ -1324,7 +1319,6 @@ def main():
                                     st.session_state.current_result = res_next
                             st.rerun()
 
-                # 🌟 カラム表示 (問題解法ルートでも表示を解放)
                 col_p, col_s, col_n = st.columns(3)
                 with col_p:
                     st.markdown("#### ⏪ 遡り学習 (前提)")
@@ -1338,9 +1332,12 @@ def main():
                             
                             with st.expander(f"{prefix}{p_node.get('concept_name', '')}"):
                                 st.caption(f"🔼 親ハブ: {p_node.get('parent_concept', '')}")
+                                st.write(p_node.get("summary", ""))
+                                
+                                # 🌟 理由をサマリーの下へ移動
                                 if reasoning:
                                     st.info(f"💡 **前提となる理由:** {reasoning}")
-                                st.write(p_node.get("summary", ""))
+                                    
                                 for idx, v in enumerate(p_node.get("main_videos", []) + p_node.get("review_videos", [])):
                                     render_video_item(v, f"pre_{p_node.get('global_c_id')}_{tab_idx}_{idx}")
                                 if st.button("🔍 学ぶ", key=f"g_pre_{p_node.get('global_c_id')}_{tab_idx}", use_container_width=True):
