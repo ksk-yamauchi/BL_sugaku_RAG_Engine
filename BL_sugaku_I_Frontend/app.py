@@ -251,11 +251,6 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
         "connected_questions": [],
         "required_concepts_text": "",
         "is_drilldown": is_drilldown,
-        "graph_prerequisites": [], 
-        "graph_siblings": [],      
-        "graph_next_steps": [],
-        "graph_linked_tasks": [],       
-        "graph_linked_knowledges": [],  
         "sanitized_query": sanitized_query if sanitized_query != search_query else None
     }
 
@@ -513,7 +508,7 @@ def main():
     # 🌟 サイドバーにバージョン情報を表示
     engine_ver = db.get("metadata", {}).get("engine_version", "バージョン情報なし")
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{engine_ver}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6.15`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6.17`")
 
     # 🌟 State初期化
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
@@ -784,61 +779,47 @@ def main():
                     else:
                         st.write("該当なし")
 
-                # 🌟 概念ルート用 次点表示
-                if res.get("runner_ups"):
-                    st.subheader("🥈 次点 (関連概念・類題)")
+                # 🌟 概念ルート用 次点表示 (前提となる概念)
+                st.subheader("🥈 次点 (前提となる概念)")
+                prereq_concepts = tm.get("graph_prerequisites", [])
+                
+                if prereq_concepts:
                     cols = st.columns(3)
                     drawn_count = 0
-                    for r in res["runner_ups"]:
-                        r_node = r["node"]
-                        r_q_id = r_node.get("global_q_id")
+                    for pre_info in prereq_concepts:
+                        p_node = pre_info["node"]
+                        p_q_id = p_node.get("global_c_id")
+                        dep_type = pre_info.get("dependency_type", "mandatory")
+                        reasoning = pre_info.get("reasoning", "")
                         
-                        if r_q_id and (r_q_id in displayed_q_ids):
-                            continue
-                            
+                        prefix = "必須： " if dep_type == "mandatory" else "補足： "
+                        
                         with cols[drawn_count % 3]:
-                            with st.container(border=True):
-                                if res["intent"] == "concept":
-                                    st.markdown(f"**🧠 {r_node.get('concept_name', '')}**")
-                                    st.caption(f"🎓 講義名: {r_node.get('lecture_name', '')}")
-                                    p_c = r_node.get("parent_concept", "")
-                                    if p_c:
-                                        st.caption(f"🔼 親概念: {p_c}")
-                                    st.markdown(r_node.get("summary", ""))
-                                else:
-                                    q_type = r_node.get("type")
-                                    q_label = "📘 大問" if q_type == "exercise" else "📗 確認問題"
-                                    q_num_str = r_node.get('local_q_num', '')
-                                    cleaned_num = clean_q_label(q_num_str)
+                            with st.expander(f"{prefix}{p_node.get('concept_name', '')}"):
+                                st.caption(f"🎓 講義名: {p_node.get('lecture_name', '未設定')}")
+                                p_c = p_node.get("parent_concept", "")
+                                if p_c:
+                                    st.caption(f"🔼 親概念: {p_c}")
+                                
+                                if reasoning:
+                                    st.info(f"💡 **前提となる理由:** {reasoning}")
                                     
-                                    st.caption(f"🎓 講義名: {r_node.get('lecture_name', '未設定')}")
-                                    st.markdown(f"**📌 {q_label} {cleaned_num}**")
-                                    st.markdown(r_node.get("question_text", ""))
+                                st.write(p_node.get("summary", ""))
 
                                 st.markdown("<hr style='margin: 0.5em 0;'>", unsafe_allow_html=True)
                                 
-                                display_r_score = min(r['final_score'], 1.0)
-                                r_base = r['base_score']
-                                r_boost = r['boost_amount']
-                                r_pen_str = f" | {r['penalty_reason']}" if r['penalty_reason'] != "なし (既習・復習範囲)" else ""
-                                
-                                st.caption(f"📊 総合: {display_r_score*100:.1f}%")
-                                st.caption(f"(ベース {r_base*100:.1f}% + ブースト {r_boost*100:.1f}%{r_pen_str})")
+                                for idx, v in enumerate(p_node.get("main_videos", []) + p_node.get("review_videos", [])):
+                                    render_video_item(v, f"pre_runner_{p_q_id}_{tab_idx}_{idx}")
 
-                                c_id_val = r_node.get('global_c_id')
-                                btn_id = c_id_val if c_id_val else r_q_id
-                                btn_key = f"btn_runner_c_{btn_id}_{tab_idx}_{drawn_count}"
+                                btn_key = f"btn_runner_c_{p_q_id}_{tab_idx}_{drawn_count}"
                                 
-                                if st.button("🔍 詳しく見る", key=btn_key, use_container_width=True):
+                                if st.button("🔍 学ぶ", key=btn_key, use_container_width=True):
                                     st.session_state.history.append({
                                         "result": st.session_state.current_result,
                                         "query": st.session_state.display_query,
                                         "image_choices": st.session_state.pending_image_choices,
                                     })
-                                    if res["intent"] == "concept":
-                                        new_query = f"{r_node.get('concept_name', '')} について詳しく知りたい"
-                                    else:
-                                        new_query = f"{r_node.get('question_text', '')} の解き方"
+                                    new_query = f"{p_node.get('concept_name', '')} について詳しく知りたい"
                                     st.session_state.display_query = new_query
                                     st.session_state.last_clicked_node = None
                                     with st.spinner("切り替え中..."):
@@ -847,6 +828,9 @@ def main():
                                             st.session_state.current_result = res_next
                                     st.rerun()
                         drawn_count += 1
+                else:
+                    with st.container(border=True):
+                        st.write("該当なし")
 
                 st.divider()
 
@@ -907,7 +891,10 @@ def main():
                             badge_str = "🔵 [必須前提]" if is_mandatory else "🟡 [補足前提]"
                             tt_text = f"{badge_str} {pre_name}\n💡 理由: {reasoning}" if reasoning else f"{badge_str} {pre_name}"
                             add_graph_node(pre_name, pre_name, pre_node.get("type", "unknown"), tooltip=tt_text)
-                            graph_edges.append(Edge(source=pre_name, target=c_name_target, label=dep_type, dashes=not is_mandatory))
+                            
+                            # 🌟 ラベルをリネーム
+                            edge_label = "必須" if is_mandatory else "補足"
+                            graph_edges.append(Edge(source=pre_name, target=c_name_target, label=edge_label, dashes=not is_mandatory))
 
                     for sib in tm.get("graph_siblings", []):
                         sib_name = sib.get("concept_name")
@@ -958,9 +945,10 @@ def main():
                             p_node = pre_info["node"]
                             dep_type = pre_info.get("dependency_type", "mandatory")
                             reasoning = pre_info.get("reasoning", "")
-                            badge_str = "🔵 [必須]" if dep_type == "mandatory" else "🟡 [補足]"
                             
-                            with st.expander(f"{badge_str} {p_node.get('concept_name', '')}"):
+                            prefix = "必須： " if dep_type == "mandatory" else "補足： "
+                            
+                            with st.expander(f"{prefix}{p_node.get('concept_name', '')}"):
                                 st.caption(f"🔼 親ハブ: {p_node.get('parent_concept', '')}")
                                 if reasoning:
                                     st.info(f"💡 **前提となる理由:** {reasoning}")
@@ -1290,7 +1278,10 @@ def main():
                                 badge_str = "🔵 [必須前提]" if is_mandatory else "🟡 [補足前提]"
                                 tt_text = f"{badge_str} {pre_name}\n💡 理由: {reasoning}" if reasoning else f"{badge_str} {pre_name}"
                                 add_graph_node(pre_node.get("global_c_id"), pre_name, pre_node.get("type", "unknown"), tooltip=tt_text)
-                                graph_edges.append(Edge(source=pre_node.get("global_c_id"), target=kn_id, label=dep_type, dashes=not is_mandatory))
+                                
+                                # 🌟 ラベルをリネーム
+                                edge_label = "必須" if is_mandatory else "補足"
+                                graph_edges.append(Edge(source=pre_node.get("global_c_id"), target=kn_id, label=edge_label, dashes=not is_mandatory))
 
                         for sib in tm.get("graph_siblings", []):
                             sib_name = sib.get("concept_name")
@@ -1342,9 +1333,10 @@ def main():
                             p_node = pre_info["node"]
                             dep_type = pre_info.get("dependency_type", "mandatory")
                             reasoning = pre_info.get("reasoning", "")
-                            badge_str = "🔵 [必須]" if dep_type == "mandatory" else "🟡 [補足]"
                             
-                            with st.expander(f"{badge_str} {p_node.get('concept_name', '')}"):
+                            prefix = "必須： " if dep_type == "mandatory" else "補足： "
+                            
+                            with st.expander(f"{prefix}{p_node.get('concept_name', '')}"):
                                 st.caption(f"🔼 親ハブ: {p_node.get('parent_concept', '')}")
                                 if reasoning:
                                     st.info(f"💡 **前提となる理由:** {reasoning}")
