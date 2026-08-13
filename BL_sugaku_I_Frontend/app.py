@@ -407,7 +407,11 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
     else:
         # 🌟 問題ルートの抜本的改修 (複数タブ・相互排他対応)
         # トップ候補に選ばれた全問題のIDをセットにしておく（相互排他のため）
-        top_q_ids = {tm["node"].get("global_q_id") for tm in top_matches}
+        top_q_ids = set()
+        for tm in top_matches:
+            q_id = tm["node"].get("global_q_id")
+            if q_id:
+                top_q_ids.add(q_id)
         
         for tm in top_matches:
             tm_node = tm["node"]
@@ -415,7 +419,14 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
             k_names = tm_node.get("linked_knowledge_names", [])
             
             # 1. 看板概念の取得 (タスク優先、無ければ知識)
-            kanban_c_name = t_names[0] if t_names else (k_names[0] if k_names else tm_node.get("matched_concept", ""))
+            kanban_c_name = ""
+            if t_names:
+                kanban_c_name = t_names[0]
+            elif k_names:
+                kanban_c_name = k_names[0]
+            else:
+                kanban_c_name = tm_node.get("matched_concept", "")
+                
             tm["kanban_concept_name"] = kanban_c_name
             
             kanban_node = {}
@@ -425,31 +436,40 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
                     break
             tm["kanban_concept_node"] = kanban_node
 
-            # 2. 第一アクション用（大問）の取得：代表概念の一致 ＆ スコア順
+            # 2. 第一アクション用（大問）の取得：代表概念(matched_concept)の一致 ＋ 本命の確認問題とのベクトル間距離
             if tm_node.get("type") == "exercise":
                 tm["modeling_exercises"] = [tm_node]
             else:
                 m_exs = []
                 tm_concept = tm_node.get("matched_concept")
+                tm_vector = tm_node.get("question_vector", [])
                 if tm_concept:
-                    # processed_resultsを回すことで類似度スコアの高い順に大問を引き当てる
-                    for pr in processed_results:
-                        q = pr["node"]
-                        qid = q.get("global_q_id")
+                    for qid, q in question_nodes.items():
+                        # 自分が属するトップ候補以外のトップ候補問題は第一アクションから除外
                         if qid in top_q_ids and qid != tm_node.get("global_q_id"):
                             continue
+                            
                         if q.get("type") == "exercise" and q.get("matched_concept") == tm_concept:
                             m_exs.append(q)
+                    
+                    # 複数ある場合は、本命問題(tm_node)のベクトルと大問のベクトルの類似度（距離）で降順ソート
+                    if len(m_exs) > 1 and tm_vector:
+                        m_exs.sort(key=lambda ex: cosine_similarity(tm_vector, ex.get("question_vector", [])), reverse=True)
+                        m_exs = [m_exs[0]]  # トップヒットの1つのみ抽出
+                    elif len(m_exs) > 0:
+                        m_exs = [m_exs[0]]
+                        
                 tm["modeling_exercises"] = m_exs
                 
             # 3. 第二アクション用（横展開演習）の取得：同じタスクおよび視点（知識）を有する確認問題 ＆ スコア順
             connected_questions = []
             tm_t_set = set(t_names)
             tm_k_set = set(k_names)
+            # processed_resultsを回すことで類似度(クエリとの)スコアの高い順に横展開を取得
             for pr in processed_results:
                 q = pr["node"]
                 qid = q.get("global_q_id")
-                # 🌟 【重要】トップ候補に選ばれている問題は、いかなるタブの第二アクションにも出さない（相互排他）
+                # トップ候補に選ばれている問題は除外（相互排他）
                 if qid in top_q_ids:
                     continue
                 
@@ -458,7 +478,7 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
                     q_t_set = set(q.get("linked_task_names", []))
                     q_k_set = set(q.get("linked_knowledge_names", []))
                     
-                    # 同じタスクおよび視点（知識）を有する
+                    # 同じタスクおよび視点（知識）を完全に有する
                     if tm_t_set == q_t_set and tm_k_set == q_k_set:
                         connected_questions.append(q)
                         
@@ -535,7 +555,7 @@ def main():
     # 🌟 サイドバーにバージョン情報を表示
     engine_ver = db.get("metadata", {}).get("engine_version", "バージョン情報なし")
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{engine_ver}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6.4`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6.7`")
 
     # 🌟 State初期化
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
@@ -867,37 +887,26 @@ def main():
                         st.markdown("#### 🎬 第一アクション (問題の直接解説・モデリング)")
                         m_exs = tm.get("modeling_exercises", [])
                         if m_exs:
-                            if len(m_exs) > 1:
-                                m_tab_names = []
-                                for ex in m_exs:
-                                    q_num_str = ex.get('local_q_num', '')
-                                    cleaned_num = clean_q_label(q_num_str)
-                                    m_tab_name = f"大問 {cleaned_num}".strip()
-                                    m_tab_names.append(m_tab_name)
-                                m_tabs = st.tabs(m_tab_names)
-                            else:
-                                m_tabs = [st.container()]
+                            # 🌟 トップヒットの1件のみを表示し、タブUIを廃止
+                            ex = m_exs[0]
+                            with st.container(border=True):
+                                ex_q_id = ex.get("global_q_id")
+                                if ex_q_id:
+                                    displayed_q_ids.add(ex_q_id) 
+                                    
+                                q_num_str = ex.get('local_q_num', '')
+                                cleaned_num = clean_q_label(q_num_str)
                                 
-                            for idx_ex, (ex, m_tab) in enumerate(zip(m_exs, m_tabs)):
-                                with m_tab:
-                                    with st.container(border=True):
-                                        ex_q_id = ex.get("global_q_id")
-                                        if ex_q_id:
-                                            displayed_q_ids.add(ex_q_id) 
-                                            
-                                        q_num_str = ex.get('local_q_num', '')
-                                        cleaned_num = clean_q_label(q_num_str)
-                                        
-                                        st.caption(f"🎓 講義名: {ex.get('lecture_name', '未設定')}")
-                                        st.markdown(f"**📌 📘 大問 {cleaned_num}**")
-                                        st.markdown(ex.get("question_text", ""))
-                                        
-                                        edges = ex.get("aligned_videos", [])
-                                        if edges:
-                                            for idx, e in enumerate(edges):
-                                                render_video_item(e, f"action1_q_{ex_q_id}_{tab_idx}_{idx_ex}_{idx}", is_modeling=True)
-                                        else:
-                                            st.write("該当する解説動画はありません。")
+                                st.caption(f"🎓 講義名: {ex.get('lecture_name', '未設定')}")
+                                st.markdown(f"**📌 📘 大問 {cleaned_num}**")
+                                st.markdown(ex.get("question_text", ""))
+                                
+                                edges = ex.get("aligned_videos", [])
+                                if edges:
+                                    for idx, e in enumerate(edges):
+                                        render_video_item(e, f"action1_q_{ex_q_id}_{tab_idx}_0_{idx}", is_modeling=True)
+                                else:
+                                    st.write("該当する解説動画はありません。")
                         else:
                             st.write("該当なし")
 
