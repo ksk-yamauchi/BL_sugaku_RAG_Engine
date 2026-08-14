@@ -531,6 +531,25 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
     return result_data
 
 
+# 🌟 解答・解説の分割表示ヘルパー関数
+def render_answer_explanation(answer_text):
+    if not answer_text:
+        return
+        
+    # [解説] または 【解説】 という文字で分割する
+    parts = re.split(r'\[解説\]|【解説】', answer_text)
+    
+    ans_part = parts[0].replace('[正解]', '').replace('【正解】', '').strip()
+    exp_part = parts[1].strip() if len(parts) > 1 else ""
+    
+    if ans_part or exp_part:
+        with st.expander("💡 解答・解説を見る"):
+            if ans_part:
+                st.markdown(f"**【解答】**\n{ans_part.replace('\n', '  \n')}")
+            if exp_part:
+                st.markdown(f"**【解説】**\n{exp_part.replace('\n', '  \n')}")
+
+
 # 🌟 【UI共通化】動画アイテム（主従対応版）を描画するヘルパー関数
 def render_video_item(v, unique_key, is_modeling=False):
     with st.container(border=True):
@@ -575,7 +594,7 @@ def main():
         return
 
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{db.get('metadata', {}).get('engine_version', 'バージョン情報なし')}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.17.0`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.17.1`")
 
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
         if key not in st.session_state:
@@ -652,7 +671,6 @@ def main():
             st.markdown("#### 📑 動画内タイムスタンプ (DB抽出)")
             st.info("※DBから該当動画のセグメント情報を抽出し、再生箇所をピンポイントで指定できる想定のUIです。")
             if v_data:
-                # 🌟 指定された start_time と一致するセグメントのインデックスを特定
                 target_idx = 0
                 for i, seg in enumerate(v_data.get("segments", [])):
                     if seg.get('start_time') == v_start:
@@ -663,7 +681,6 @@ def main():
                     s_time = seg.get('start_time', '00:00')
                     topic = seg.get('topic', '無題')
                     
-                    # 🌟 特定したインデックスのみ expanded を True にする
                     with st.expander(f"⏱️ {s_time} 〜 | 📌 {topic}", expanded=(idx == target_idx)):
                         col_ts1, col_ts2 = st.columns([4, 1])
                         with col_ts1:
@@ -873,7 +890,11 @@ def main():
                                 
                                 st.caption(f"🎓 講義名: {ex.get('lecture_name', '未設定')}")
                                 st.markdown(f"**📌 📘 大問 {cleaned_num}**")
-                                st.markdown(ex.get("question_text", ""))
+                                
+                                q_text = ex.get("question_text", "").replace("\n", "  \n")
+                                st.markdown(q_text)
+                                
+                                render_answer_explanation(ex.get("answer_text", ""))
                                 
                                 ex_videos = ex.get("aligned_videos", [])
                                 for idx, v in enumerate(ex_videos):
@@ -896,7 +917,11 @@ def main():
                                     
                                     st.caption(f"🎓 講義名: {q.get('lecture_name', '未設定')}")
                                     st.markdown(f"**📌 📗 確認問題 {cleaned_num}**")
-                                    st.markdown(q.get("question_text", ""))
+                                    
+                                    q_text = q.get("question_text", "").replace("\n", "  \n")
+                                    st.markdown(q_text)
+                                    
+                                    render_answer_explanation(q.get("answer_text", ""))
 
                                     if st.button("🔍 解き方を見る", key=f"action3_{q_id_val}_{tab_idx}_{i}", use_container_width=True):
                                         st.session_state.history.append({
@@ -1218,7 +1243,12 @@ def main():
                         q_num_str = node.get('local_q_num', '')
                         cleaned_num = clean_q_label(q_num_str)
                         st.markdown(f"**📌 📗 {lecture_n} 確認問題 {cleaned_num}**")
-                        st.info(node.get("question_text", ""))
+                        
+                        q_text = node.get("question_text", "").replace("\n", "  \n")
+                        st.info(q_text)
+                        
+                        # 🌟 解答・解説の分割表示処理を呼び出し
+                        render_answer_explanation(node.get("answer_text", ""))
                     else:
                         st.write("該当なし")
 
@@ -1238,7 +1268,12 @@ def main():
                         
                         st.caption(f"🎓 講義名: {ex.get('lecture_name', '未設定')}")
                         st.markdown(f"**📌 📘 大問 {cleaned_num}**")
-                        st.markdown(ex.get("question_text", ""))
+                        
+                        q_text = ex.get("question_text", "").replace("\n", "  \n")
+                        st.markdown(q_text)
+                        
+                        # 🌟 解答・解説の分割表示処理を呼び出し
+                        render_answer_explanation(ex.get("answer_text", ""))
                         
                         edges = ex.get("aligned_videos", [])
                         if edges:
@@ -1266,7 +1301,9 @@ def main():
                                 
                                 st.caption(f"🎓 講義名: {q.get('lecture_name', '未設定')}")
                                 st.markdown(f"**📌 {q_label} {cleaned_num}**")
-                                st.markdown(q.get("question_text", ""))
+                                
+                                q_text = q.get("question_text", "").replace("\n", "  \n")
+                                st.markdown(q_text)
 
                                 if st.button("🔍 これも解く", key=f"hub_{q_id_val}_{tab_idx}_{i}", use_container_width=True):
                                     st.session_state.history.append({
@@ -1314,7 +1351,8 @@ def main():
                                 t_str = "、".join(matched_tasks[:2])
                                 st.info(f"💡 タスク「{t_str}」の確認")
 
-                            st.markdown(r_node.get("question_text", ""))
+                            q_text = r_node.get("question_text", "").replace("\n", "  \n")
+                            st.markdown(q_text)
 
                             st.markdown("<hr style='margin: 0.5em 0;'>", unsafe_allow_html=True)
                             
