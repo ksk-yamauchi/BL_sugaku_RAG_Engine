@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 import numpy as np
 from dotenv import load_dotenv
 from google import genai
@@ -33,7 +34,7 @@ PENALTY_WEIGHT = 0.015
 
 
 # =========================================================
-# 🧠 ベクトル化・類似度計算 ＆ 画像解析 (JSON出力対応版)
+# 🧠 ベクトル化・類似度計算 ＆ 画像解析
 # =========================================================
 @st.cache_resource
 def load_db():
@@ -78,7 +79,7 @@ def clean_math_for_label(text):
     t = t.replace(r"\sqrt", "√")
     return t
 
-# 🌟 ラベルの二重表示を防ぐヘルパー関数
+
 def clean_q_label(q_num_str):
     if not q_num_str:
         return ""
@@ -129,7 +130,8 @@ def analyze_image_with_gemini_json(image_bytes):
         return {"image_type": "PROBLEM", "extracted_items": []}
 
 
-def generate_required_concepts(problem_text):
+# 🌟 レートリミット対策（リトライ機能）を追加
+def generate_required_concepts(problem_text, retries=1):
     prompt = f"""
     あなたは優秀な高校数学教師です。以下の生徒が直面している問題（または質問）を解くために必要な「高校数学の概念や公式」を箇条書きで簡潔に提示・解説してください。
     数式はLaTeX形式とし、必ず $ または $$ 記号で囲んで生徒が理解しやすいように要点をまとめてください。
@@ -137,22 +139,25 @@ def generate_required_concepts(problem_text):
     【問題・質問】
     {problem_text}
     """
-    try:
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=[prompt],
-            config=types.GenerateContentConfig(temperature=0.2),
-        )
-        return response.text
-    except Exception:
-        return "⚠️ 概念情報の取得に失敗しました。"
+    for attempt in range(retries + 1):
+        try:
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=[prompt],
+                config=types.GenerateContentConfig(temperature=0.2),
+            )
+            return response.text
+        except Exception as e:
+            if attempt < retries:
+                time.sleep(2) # 🌟 連続APIエラーを防ぐため2秒待機してリトライ
+            else:
+                print(f"Concept Generation Error: {e}")
+                return "⚠️ 概念情報の取得に失敗しました。"
 
 
+# 🌟 乱暴な正規表現を廃止し、純粋に$記号のみを取り除くよう最適化
 def sanitize_query_for_search(raw_query):
-    text = raw_query
-    text = re.sub(r'\$.*?\$', ' ', text)
-    text = re.sub(r'[\(（][a-zA-Z0-9あ-んア-ン]{1,2}[\)）]', ' ', text)
-    text = re.sub(r'[\[［【][a-zA-Z0-9あ-んア-ン]{1,2}[\]］】]', ' ', text)
+    text = raw_query.replace("$", "")
     text = re.sub(r'\s+', ' ', text).strip()
     return text if text else raw_query
 
@@ -160,14 +165,48 @@ def sanitize_query_for_search(raw_query):
 # =========================================================
 # 🔍 検索ロジック ＆ GraphRAG ネットワーク探索
 # =========================================================
-def execute_search_for_ui(search_query, db, is_drilldown=False):
+def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=False):
     embed_model = db.get("embed_model", "models/text-embedding-004")
     concept_nodes = db.get("global_concept_nodes", {})
     question_nodes = db.get("global_question_nodes", {})
 
+    target_id = None
+    is_id_query = False
+    id_match = re.search(r"\(ID:\s*(.+?)\)$", search_query)
+    
+    if id_match:
+        target_id = id_match.group(1).strip()
+        is_id_query = True
+        
+    target_node = None
+    if is_id_query:
+        target_node = concept_nodes.get(target_id) or question_nodes.get(target_id)
+        if not target_node:
+            is_id_query = False 
+
+    ai_explanation = ""
+    text_to_embed = ""
     sanitized_query = sanitize_query_for_search(search_query)
 
-    query_vector = get_embedding(sanitized_query, embed_model)
+    has_math = bool(re.search(r"[\$\^\=]", search_query))
+    needs_hyde = (not is_id_query) and (has_math or is_image_query)
+
+    if is_id_query:
+        query_vector = target_node.get("concept_vector") or target_node.get("question_vector")
+        sanitized_query = target_node.get("concept_name") or target_node.get("question_text", "")
+    else:
+        if needs_hyde:
+            ai_explanation = generate_required_concepts(search_query)
+            # 🌟 ベクトル汚染の防止：エラー（⚠️）の時は合体させない
+            if ai_explanation and not ai_explanation.startswith("⚠️"):
+                text_to_embed = f"{sanitized_query}\n{ai_explanation}"
+            else:
+                text_to_embed = sanitized_query
+        else:
+            text_to_embed = sanitized_query
+            
+        query_vector = get_embedding(text_to_embed, embed_model)
+
     if not query_vector:
         return None
 
@@ -244,22 +283,23 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
     if not keywords:
         keywords = [sanitized_query.strip()]
     
-    for item in raw_concept_results:
-        node = item["node"]
-        target_text = f"{node.get('concept_name', '')} {node.get('parent_concept', '')} {node.get('summary', '')}"
-        
-        if "promoted_from_node" in node:
-            p_node = node["promoted_from_node"]
-            target_text += f" {p_node.get('concept_name', '')} {p_node.get('parent_concept', '')} {p_node.get('summary', '')}"
+    if not is_id_query:
+        for item in raw_concept_results:
+            node = item["node"]
+            target_text = f"{node.get('concept_name', '')} {node.get('parent_concept', '')} {node.get('summary', '')}"
             
-        if any(len(kw) >= 2 and kw in target_text for kw in keywords):
-            item["score"] += 0.30
+            if "promoted_from_node" in node:
+                p_node = node["promoted_from_node"]
+                target_text += f" {p_node.get('concept_name', '')} {p_node.get('parent_concept', '')} {p_node.get('summary', '')}"
+                
+            if any(len(kw) >= 2 and kw in target_text for kw in keywords):
+                item["score"] += 0.30
 
-    for item in question_results:
-        node = item["node"]
-        target_text = f"{node.get('question_text', '')} {node.get('matched_concept', '')}"
-        if any(len(kw) >= 2 and kw in target_text for kw in keywords):
-            item["score"] += 0.30
+        for item in question_results:
+            node = item["node"]
+            target_text = f"{node.get('question_text', '')} {node.get('matched_concept', '')}"
+            if any(len(kw) >= 2 and kw in target_text for kw in keywords):
+                item["score"] += 0.30
 
     raw_concept_results.sort(key=lambda x: x["score"], reverse=True)
     question_results.sort(key=lambda x: x["score"], reverse=True)
@@ -267,13 +307,15 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
     top_concept_score = raw_concept_results[0]["score"] if raw_concept_results else 0.0
     top_question_score = question_results[0]["score"] if question_results else 0.0
 
-    is_concept_intent = top_concept_score >= top_question_score
-    
-    explicit_problem_kws = ["問題", "演習", "ドリル", "テスト", "解き方", "解法"]
-    if any(kw in search_query for kw in explicit_problem_kws):
-        is_concept_intent = False
-    elif any(kw in search_query for kw in ["とは", "意味", "教えて", "概念", "仕組み"]):
-        is_concept_intent = True
+    if is_id_query:
+        is_concept_intent = (target_id in concept_nodes)
+    else:
+        is_concept_intent = top_concept_score >= top_question_score
+        explicit_problem_kws = ["問題", "演習", "ドリル", "テスト", "解き方", "解法"]
+        if any(kw in search_query for kw in explicit_problem_kws):
+            is_concept_intent = False
+        elif any(kw in search_query for kw in ["とは", "意味", "教えて", "概念", "仕組み"]):
+            is_concept_intent = True
 
     result_data = {
         "intent": "concept" if is_concept_intent else "question",
@@ -282,9 +324,9 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
         "runner_ups": [],
         "linked_questions": [],
         "connected_questions": [],
-        "required_concepts_text": "",
+        "required_concepts_text": ai_explanation,
         "is_drilldown": is_drilldown,
-        "sanitized_query": sanitized_query if sanitized_query != search_query else None
+        "sanitized_query": None if is_id_query else (sanitized_query if sanitized_query != search_query else None)
     }
 
     target_list = raw_concept_results if is_concept_intent else question_results
@@ -327,16 +369,28 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
 
     processed_results.sort(key=lambda x: x["final_score"], reverse=True)
     
-    top_score = processed_results[0]["final_score"]
-    top_matches = []
-    runner_ups = []
-    for r in processed_results:
-        diff = top_score - r["final_score"]
-        if diff <= 0.01:
-            top_matches.append(r)
-        elif diff <= TOLERANCE:
-            runner_ups.append(r)
-            
+    if is_id_query:
+        top_matches = []
+        for r in processed_results:
+            nid = r["node"].get("global_c_id") or r["node"].get("global_q_id")
+            promoted_from = r["node"].get("promoted_from_node", {}).get("global_c_id")
+            if nid == target_id or promoted_from == target_id:
+                top_matches.append(r)
+                break
+        if not top_matches:
+            top_matches = [processed_results[0]]
+        runner_ups = []
+    else:
+        top_score = processed_results[0]["final_score"]
+        top_matches = []
+        runner_ups = []
+        for r in processed_results:
+            diff = top_score - r["final_score"]
+            if diff <= 0.01:
+                top_matches.append(r)
+            elif diff <= TOLERANCE:
+                runner_ups.append(r)
+                
     result_data["top_match"] = top_matches[0]
     result_data["top_matches"] = top_matches
     result_data["runner_ups"] = runner_ups
@@ -444,16 +498,20 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
                 if q.get("type") == "question":
                     q_t_set = set(q.get("linked_task_names", []))
                     q_k_set = set(q.get("linked_knowledge_names", []))
-                    if tm_t_set == q_t_set and tm_k_set == q_k_set:
+                    
+                    if bool(tm_t_set.intersection(q_t_set)) and tm_k_set == q_k_set:
                         connected_questions.append(q)
             tm["connected_questions"] = connected_questions
 
+            connected_q_ids = {cq.get("global_q_id") for cq in connected_questions}
+            
             tm_task_names = set(tm_node.get("linked_task_names", []))
             prereq_qs = []
             for pr in processed_results:
                 q = pr["node"]
                 qid = q.get("global_q_id")
-                if qid in top_q_ids:
+                
+                if qid in top_q_ids or qid in connected_q_ids:
                     continue
                 
                 if q.get("type") == "question":
@@ -472,16 +530,6 @@ def execute_search_for_ui(search_query, db, is_drilldown=False):
             tm["graph_prerequisites"] = prereqs
             tm["graph_siblings"] = sibs
             tm["graph_next_steps"] = nxts
-
-        needs_concept = not is_drilldown
-        if needs_concept:
-            content_search_kws = ["の問題", "例題", "類題", "ありますか", "探して", "ドリル", "テスト"]
-            solve_kws = ["解き方", "解法", "教えて", "解説", "わからない"]
-            if any(kw in search_query for kw in content_search_kws) and not any(kw in search_query for kw in solve_kws):
-                needs_concept = False
-
-        if needs_concept:
-            result_data["required_concepts_text"] = generate_required_concepts(search_query)
 
     return result_data
 
@@ -503,7 +551,7 @@ def render_video_item(v, unique_key, is_modeling=False):
             st.markdown(f"{badge} **{v.get('video_file')}** (`{v.get('start_time')}`〜)")
             
             if not is_modeling and v.get('reasoning'):
-                st.markdown(f"**🤔 なぜこの動画？:** `{v.get('reasoning')}`")
+                st.markdown(f"**🤔 なぜこの動画？:** {v.get('reasoning')}")
             if v.get('explanation_summary'):
                 st.markdown(f"**💬 講師の解説（概要）:** {v.get('explanation_summary')}")
                 
@@ -528,12 +576,9 @@ def main():
         st.error("❌ データベースが見つかりません。先にバックエンドでDBを構築してください。")
         return
 
-    # 🌟 サイドバーにバージョン情報を表示
-    engine_ver = db.get("metadata", {}).get("engine_version", "バージョン情報なし")
-    st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{engine_ver}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6.26`")
+    st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{db.get('metadata', {}).get('engine_version', 'バージョン情報なし')}`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6.31`")
 
-    # 🌟 State初期化
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
         if key not in st.session_state:
             st.session_state[key] = [] if key == "history" else None
@@ -546,31 +591,38 @@ def main():
         catalog = db.get("global_video_catalog", {})
         v_data = catalog.get(v_file)
         
-        if st.button("🔙 検索結果に戻る", use_container_width=True):
-            st.session_state.selected_video = None
-            st.rerun()
+        st.markdown(f"## 📺 動画講義: `{v_file}`")
+        
+        col_btn, _ = st.columns([1, 4])
+        with col_btn:
+            if st.button("🔙 検索結果に戻る", use_container_width=True):
+                st.session_state.selected_video = None
+                st.rerun()
             
-        st.markdown(f"## 📺 動画プレイヤー: `{v_file}`")
+        st.divider()
+        
         if v_data:
             st.caption(f"🎓 講義名: {v_data.get('lecture_name', '')} | 🏷️ 授業タイプ: {v_data.get('role', '')}")
             
-            st.video("[https://www.w3schools.com/html/mov_bbb.mp4](https://www.w3schools.com/html/mov_bbb.mp4)") 
+            # 🌟 完全にクリーンなモック動画プレイヤーの実装
+            col_vid, col_chap = st.columns([3, 2])
             
-            st.markdown("### 📑 タイムライン・チャプター (解説要約つき)")
-            st.info("💡 講師の解説（概要）を事前に確認して、見たいチャプターから再生できます。")
-            
-            for idx, seg in enumerate(v_data.get("segments", [])):
-                start = seg.get('start_time', '00:00')
-                end = seg.get('end_time', '00:00')
-                topic = seg.get('topic', '無題')
+            with col_vid:
+                st.video("[https://www.w3schools.com/html/mov_bbb.mp4](https://www.w3schools.com/html/mov_bbb.mp4)") 
+                st.info("💡 講師の解説（概要）を事前に確認して、見たいチャプターからダイレクトに再生できます。")
                 
-                with st.expander(f"⏱️ {start} 〜 {end} | 📌 {topic}", expanded=(idx==0)):
-                    col1, col2 = st.columns([3, 1])
-                    with col1:
-                        st.markdown(f"**💬 講師の解説（概要）:**\n> {seg.get('explanation_summary', 'データなし')}")
-                    with col2:
+            with col_chap:
+                st.markdown("### 📑 タイムライン・チャプター")
+                
+                for idx, seg in enumerate(v_data.get("segments", [])):
+                    start = seg.get('start_time', '00:00')
+                    end = seg.get('end_time', '00:00')
+                    topic = seg.get('topic', '無題')
+                    
+                    with st.expander(f"⏱️ {start} 〜 {end} | 📌 {topic}", expanded=(idx==0)):
+                        st.markdown(f"**💬 概要:**\n{seg.get('explanation_summary', 'データなし')}")
                         if st.button("▶️ ここから再生", key=f"play_{v_file}_{idx}", use_container_width=True):
-                            st.toast(f"{start} から再生を開始しました！（モック機能）")
+                            st.toast(f"{start} から再生を開始しました！")
         else:
             st.warning("⚠️ この動画の詳細なチャプターカタログデータがデータベースに見つかりません。")
             
@@ -602,7 +654,7 @@ def main():
                         new_query = f"{item}{boost}"
                         st.session_state.display_query = new_query
                         with st.spinner("検索中..."):
-                            res = execute_search_for_ui(new_query, db, is_drilldown=False)
+                            res = execute_search_for_ui(new_query, db, is_drilldown=False, is_image_query=True)
                             if res:
                                 st.session_state.current_result = res
                             st.session_state.pending_image_choices = None
@@ -624,9 +676,10 @@ def main():
         res = st.session_state.current_result
         displayed_q_ids = set()
         
-        st.info(f"🔍 現在の学習テーマ: **{st.session_state.display_query}**")
+        display_text_clean = re.sub(r"\s*\(ID:.+?\)$", "", st.session_state.display_query) if st.session_state.display_query else ""
+        st.info(f"🔍 現在の学習テーマ: **{display_text_clean}**")
         
-        if res.get("sanitized_query"):
+        if res.get("sanitized_query") and res.get("sanitized_query") != display_text_clean:
             st.caption(f"✨ **自動ノイズ除去フィルター適用:** `{res['sanitized_query']}`")
             
         col_back, col_home = st.columns(2)
@@ -661,6 +714,12 @@ def main():
                 if res["intent"] == "concept"
                 else "📗 問題・解法ステップ優先ルート"
             )
+            
+            if res.get("required_concepts_text"):
+                with st.chat_message("assistant"):
+                    st.markdown("**💡 AIチューターからのアプローチ解説**")
+                    st.markdown(res["required_concepts_text"])
+            
             st.subheader(f"🎯 第一候補: {intent_label}")
             
             top_matches = res["top_matches"]
@@ -771,21 +830,6 @@ def main():
                                 ex_videos = ex.get("aligned_videos", [])
                                 for idx, v in enumerate(ex_videos):
                                     render_video_item(v, f"action2_ex_{ex_q_id}_{tab_idx}_{idx}", is_modeling=True)
-                                
-                                if st.button("🔍 詳しく見る", key=f"action2_btn_{ex_q_id}_{tab_idx}_{i}", use_container_width=True):
-                                    st.session_state.history.append({
-                                        "result": st.session_state.current_result,
-                                        "query": st.session_state.display_query,
-                                        "image_choices": st.session_state.pending_image_choices,
-                                    })
-                                    new_query = f"{ex.get('question_text', '')} の解き方"
-                                    st.session_state.display_query = new_query
-                                    st.session_state.last_clicked_node = None
-                                    with st.spinner("問題ルートへ切り替え中..."):
-                                        res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
-                                        if res_next:
-                                            st.session_state.current_result = res_next
-                                    st.rerun()
                     else:
                         st.write("該当なし")
 
@@ -812,7 +856,7 @@ def main():
                                             "query": st.session_state.display_query,
                                             "image_choices": st.session_state.pending_image_choices,
                                         })
-                                        new_query = f"{q.get('question_text', '')} の解き方"
+                                        new_query = f"確認問題 {cleaned_num} の解き方 (ID:{q_id_val})"
                                         st.session_state.display_query = new_query
                                         st.session_state.last_clicked_node = None
                                         with st.spinner("問題ルートへ切り替え中..."):
@@ -862,7 +906,7 @@ def main():
                                         "query": st.session_state.display_query,
                                         "image_choices": st.session_state.pending_image_choices,
                                     })
-                                    new_query = f"{p_node.get('concept_name', '')} について詳しく知りたい"
+                                    new_query = f"{p_node.get('concept_name', '')} について詳しく知りたい (ID:{p_q_id})"
                                     st.session_state.display_query = new_query
                                     st.session_state.last_clicked_node = None
                                     with st.spinner("切り替え中..."):
@@ -995,10 +1039,11 @@ def main():
                                 "query": st.session_state.display_query,
                                 "image_choices": st.session_state.pending_image_choices,
                             })
-                            clean_query_name = clicked_node_id.replace("親: ", "")
-                            new_query = f"{clean_query_name} について詳しく知りたい"
+                            tgt_n = concept_nodes.get(clicked_node_id) or question_nodes.get(clicked_node_id)
+                            c_n_name = tgt_n.get("concept_name", "") if tgt_n else clicked_node_id.replace("親: ", "")
+                            new_query = f"{c_n_name} について詳しく知りたい (ID:{clicked_node_id})"
                             st.session_state.display_query = new_query
-                            with st.spinner(f"「{clean_query_name}」へワープ中..."):
+                            with st.spinner(f"「{c_n_name}」へワープ中..."):
                                 res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
                                 if res_next:
                                     st.session_state.current_result = res_next
@@ -1026,7 +1071,8 @@ def main():
                                     render_video_item(v, f"pre_{p_node.get('global_c_id')}_{tab_idx}_{idx}")
                                 if st.button("🔍 学ぶ", key=f"g_pre_{p_node.get('global_c_id')}_{tab_idx}", use_container_width=True):
                                     st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
-                                    st.session_state.display_query = f"{p_node.get('concept_name', '')} について詳しく知りたい"
+                                    new_query = f"{p_node.get('concept_name', '')} について詳しく知りたい (ID:{p_node.get('global_c_id')})"
+                                    st.session_state.display_query = new_query
                                     st.session_state.last_clicked_node = None
                                     st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
                                     st.rerun()
@@ -1045,7 +1091,8 @@ def main():
                                 
                                 if st.button("🔍 学ぶ", key=f"g_sib_{s_node.get('global_c_id')}_{tab_idx}", use_container_width=True):
                                     st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
-                                    st.session_state.display_query = f"{s_node.get('concept_name', '')} について詳しく知りたい"
+                                    new_query = f"{s_node.get('concept_name', '')} について詳しく知りたい (ID:{s_node.get('global_c_id')})"
+                                    st.session_state.display_query = new_query
                                     st.session_state.last_clicked_node = None
                                     st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
                                     st.rerun()
@@ -1064,7 +1111,8 @@ def main():
                                 
                                 if st.button("🔍 学ぶ", key=f"g_nxt_{n_node.get('global_c_id')}_{tab_idx}", use_container_width=True):
                                     st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
-                                    st.session_state.display_query = f"{n_node.get('concept_name', '')} について詳しく知りたい"
+                                    new_query = f"{n_node.get('concept_name', '')} について詳しく知りたい (ID:{n_node.get('global_c_id')})"
+                                    st.session_state.display_query = new_query
                                     st.session_state.last_clicked_node = None
                                     st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
                                     st.rerun()
@@ -1178,7 +1226,7 @@ def main():
                                         "query": st.session_state.display_query,
                                         "image_choices": st.session_state.pending_image_choices,
                                     })
-                                    new_query = f"{q.get('question_text', '')} の解き方"
+                                    new_query = f"{q_label} {cleaned_num} の解き方 (ID:{q_id_val})"
                                     st.session_state.display_query = new_query
                                     st.session_state.last_clicked_node = None
                                     with st.spinner("切り替え中..."):
@@ -1238,7 +1286,7 @@ def main():
                                     "query": st.session_state.display_query,
                                     "image_choices": st.session_state.pending_image_choices,
                                 })
-                                new_query = f"{r_node.get('question_text', '')} の解き方"
+                                new_query = f"確認問題 {cleaned_num} の解き方 (ID:{r_q_id})"
                                 st.session_state.display_query = new_query
                                 st.session_state.last_clicked_node = None
                                 with st.spinner("切り替え中..."):
@@ -1299,7 +1347,6 @@ def main():
                 cleaned_num = clean_q_label(q_num_str)
                 q_label = f"問題: {cleaned_num}"
                 
-                # 🌟 ツールチップの拡張 (問題ルート)
                 add_graph_node(q_id, q_label, "problem", tooltip=f"📍 現在地：{q_label}", is_current=True)
                 
                 for t_node in tm.get("graph_linked_tasks", []):
@@ -1310,7 +1357,6 @@ def main():
                 for k_node in tm.get("graph_linked_knowledges", []):
                     kn_name = k_node.get("concept_name")
                     add_graph_node(kn_name, kn_name, k_node.get("type", "foundation_knowledge"), tooltip=f"🟦 [必要な知識]\n{kn_name}")
-                    # 🌟 矢印の向きを「知識 ➔ 問題」に変更
                     graph_edges.append(Edge(source=kn_name, target=q_id, label="必要な知識", dashes=False))
 
                 kanban_name = tm.get("kanban_concept_name")
@@ -1319,7 +1365,6 @@ def main():
                     if kanban_node_obj:
                         p_name_target = kanban_node_obj.get("parent_concept", "未分類")
                         
-                        # 🌟 ツールチップの拡張 (問題ルート:看板概念)
                         add_graph_node(kanban_name, kanban_name, kanban_node_obj.get("type", "unknown"), tooltip=f"📍 看板概念：{kanban_name}")
                         
                         added_edges = set()
@@ -1336,7 +1381,6 @@ def main():
 
                         if p_name_target and p_name_target != "未分類":
                             add_graph_node(p_name_target, f"親: {p_name_target}", "unknown")
-                            # 🌟 問題ルートの周辺情報は薄い青にする
                             graph_edges.append(Edge(source=p_name_target, target=kanban_name, dashes=True, arrows="", width=3, color="#BBDEFB"))
 
                         for pre_info in tm.get("graph_prerequisites", []):
@@ -1351,11 +1395,9 @@ def main():
                                 add_graph_node(pre_name, pre_name, pre_node.get("type", "unknown"), tooltip=tt_text)
                                 
                                 edge_label = "必須" if is_mandatory else "補足"
-                                # 🌟 問題ルートの前提は周辺情報なので薄い青にする
                                 edge_color = "#BBDEFB"
                                 edge_width = None
                                 
-                                # 🌟 トリガーかつ必須/補足の場合、ラベルとスタイルを統合
                                 if promoted_node and pre_name == promoted_node.get("concept_name"):
                                     edge_label = f"トリガー ({edge_label})"
                                     edge_color = "#FF9800"
@@ -1379,7 +1421,6 @@ def main():
                             nxt_name = nxt.get("concept_name")
                             if nxt_name:
                                 add_graph_node(nxt_name, nxt_name, nxt.get("type", "unknown")) 
-                                # 🌟 Nextに向かう周辺線も薄い青にする
                                 graph_edges.append(Edge(source=kanban_name, target=nxt_name, label="必要", dashes=True, color="#BBDEFB"))
 
                 config = Config(
@@ -1401,10 +1442,11 @@ def main():
                                 "query": st.session_state.display_query,
                                 "image_choices": st.session_state.pending_image_choices,
                             })
-                            clean_query_name = clicked_node_id.replace("親: ", "")
-                            new_query = f"{clean_query_name} について詳しく知りたい"
+                            tgt_n = concept_nodes.get(clicked_node_id) or question_nodes.get(clicked_node_id)
+                            c_n_name = tgt_n.get("concept_name", "") if tgt_n else clicked_node_id.replace("親: ", "")
+                            new_query = f"{c_n_name} について詳しく知りたい (ID:{clicked_node_id})"
                             st.session_state.display_query = new_query
-                            with st.spinner(f"「{clean_query_name}」へワープ中..."):
+                            with st.spinner(f"「{c_n_name}」へワープ中..."):
                                 res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
                                 if res_next:
                                     st.session_state.current_result = res_next
@@ -1432,7 +1474,8 @@ def main():
                                     render_video_item(v, f"pre_{p_node.get('global_c_id')}_{tab_idx}_{idx}")
                                 if st.button("🔍 学ぶ", key=f"g_pre_{p_node.get('global_c_id')}_{tab_idx}", use_container_width=True):
                                     st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
-                                    st.session_state.display_query = f"{p_node.get('concept_name', '')} について詳しく知りたい"
+                                    new_query = f"{p_node.get('concept_name', '')} について詳しく知りたい (ID:{p_node.get('global_c_id')})"
+                                    st.session_state.display_query = new_query
                                     st.session_state.last_clicked_node = None
                                     st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
                                     st.rerun()
@@ -1451,7 +1494,8 @@ def main():
                                 
                                 if st.button("🔍 学ぶ", key=f"g_sib_{s_node.get('global_c_id')}_{tab_idx}", use_container_width=True):
                                     st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
-                                    st.session_state.display_query = f"{s_node.get('concept_name', '')} について詳しく知りたい"
+                                    new_query = f"{s_node.get('concept_name', '')} について詳しく知りたい (ID:{s_node.get('global_c_id')})"
+                                    st.session_state.display_query = new_query
                                     st.session_state.last_clicked_node = None
                                     st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
                                     st.rerun()
@@ -1470,7 +1514,8 @@ def main():
                                 
                                 if st.button("🔍 学ぶ", key=f"g_nxt_{n_node.get('global_c_id')}_{tab_idx}", use_container_width=True):
                                     st.session_state.history.append({"result": st.session_state.current_result, "query": st.session_state.display_query})
-                                    st.session_state.display_query = f"{n_node.get('concept_name', '')} について詳しく知りたい"
+                                    new_query = f"{n_node.get('concept_name', '')} について詳しく知りたい (ID:{n_node.get('global_c_id')})"
+                                    st.session_state.display_query = new_query
                                     st.session_state.last_clicked_node = None
                                     st.session_state.current_result = execute_search_for_ui(st.session_state.display_query, db, is_drilldown=True)
                                     st.rerun()
@@ -1487,7 +1532,7 @@ def main():
                 st.subheader("📝 テキストで検索")
                 query = st.text_area(
                     "わからない概念や問題を教えてください",
-                    value=st.session_state.display_query,
+                    value=re.sub(r"\s*\(ID:.+?\)$", "", st.session_state.display_query) if st.session_state.display_query else "",
                     height=100,
                 )
             with col2:
@@ -1535,7 +1580,7 @@ def main():
                         new_query = f"{item}{boost}"
                         st.session_state.display_query = new_query
                         with st.spinner("検索中..."):
-                            res = execute_search_for_ui(new_query, db, is_drilldown=False)
+                            res = execute_search_for_ui(new_query, db, is_drilldown=False, is_image_query=True)
                             if res:
                                 st.session_state.current_result = res
                             st.session_state.pending_image_choices = None
