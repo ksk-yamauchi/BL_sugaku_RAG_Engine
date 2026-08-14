@@ -414,6 +414,10 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
 
                 for cid, c_node in concept_nodes.items():
                     if c_node["concept_name"] == p_name:
+                        # 🌟 再構成知識を前提のリスト（次点）から除外
+                        if c_node.get("type") == "derived_knowledge":
+                            continue
+                            
                         already_added = any(x["node"]["global_c_id"] == c_node["global_c_id"] for x in prereqs)
                         if not already_added:
                             prereqs.append({
@@ -442,10 +446,25 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
     if is_concept_intent:
         for tm in top_matches:
             c_name = tm["node"].get("concept_name")
-            tm["linked_questions"] = [
-                q for q in question_nodes.values() 
-                if c_name in q.get("linked_task_names", []) or c_name in q.get("linked_knowledge_names", [])
-            ]
+            c_type = tm["node"].get("type")
+            # 🌟 再構成からプロモートされたかどうかの判定フラグ
+            is_promoted = "promoted_from_node" in tm["node"]
+            
+            linked_qs = []
+            for q in question_nodes.values():
+                t_names = q.get("linked_task_names", [])
+                k_names = q.get("linked_knowledge_names", [])
+                
+                if c_name in t_names or c_name in k_names:
+                    # 🌟 概念ルート：タスクの場合は、他のタスクが混入している応用問題を除外（純粋化）
+                    # ただし、再構成知識からプロモートされたタスクの場合は除外しない
+                    if c_type == "tasks" and not is_promoted:
+                        other_tasks = [t for t in t_names if t != c_name]
+                        if other_tasks:
+                            continue
+                    linked_qs.append(q)
+            
+            tm["linked_questions"] = linked_qs
             prereqs, sibs, nxts = get_concept_graph_data(c_name)
             tm["graph_prerequisites"] = prereqs
             tm["graph_siblings"] = sibs
@@ -593,7 +612,7 @@ def main():
         return
 
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{db.get('metadata', {}).get('engine_version', 'バージョン情報なし')}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.17.1`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.17.3`")
 
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
         if key not in st.session_state:
@@ -658,7 +677,7 @@ def main():
                     except:
                         pass
                     
-                    st.video("https://www.w3schools.com/html/mov_bbb.mp4", start_time=start_sec)
+                    st.video("[https://www.w3schools.com/html/mov_bbb.mp4](https://www.w3schools.com/html/mov_bbb.mp4)", start_time=start_sec)
 
                 with col_chap:
                     st.markdown("<div style='font-size: 0.9em; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px;'>チャプター</div>", unsafe_allow_html=True)
@@ -958,7 +977,6 @@ def main():
 
                                 btn_key = f"btn_runner_c_{p_q_id}_{tab_idx}_{drawn_count}"
                                 
-                                # 🌟 ボタン名変更
                                 if st.button("🔍 この概念について深く学ぶ", key=btn_key, use_container_width=True):
                                     st.session_state.history.append({
                                         "result": st.session_state.current_result,
