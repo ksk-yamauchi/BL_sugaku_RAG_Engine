@@ -536,7 +536,6 @@ def render_answer_explanation(answer_text):
     if not answer_text:
         return
         
-    # [解説] または 【解説】 という文字で分割する
     parts = re.split(r'\[解説\]|【解説】', answer_text)
     
     ans_part = parts[0].replace('[正解]', '').replace('【正解】', '').strip()
@@ -894,6 +893,7 @@ def main():
                                 q_text = ex.get("question_text", "").replace("\n", "  \n")
                                 st.markdown(q_text)
                                 
+                                # 🌟 概念ルートの第二アクション（大問）にも解答解説を表示
                                 render_answer_explanation(ex.get("answer_text", ""))
                                 
                                 ex_videos = ex.get("aligned_videos", [])
@@ -902,6 +902,7 @@ def main():
                     else:
                         st.write("該当なし")
 
+                    # 🌟 概念ルートの第三アクション（確認問題）から「解き方を見る」ボタンとワープを削除
                     st.markdown("#### 📗 第三アクション (アセスメント: 確認問題演習)")
                     questions = [q for q in tm.get("linked_questions", []) if q.get("type") == "question"]
                     if questions:
@@ -921,22 +922,9 @@ def main():
                                     q_text = q.get("question_text", "").replace("\n", "  \n")
                                     st.markdown(q_text)
                                     
+                                    # 🌟 確認問題に解答解説を表示（これによりワープ不要に）
                                     render_answer_explanation(q.get("answer_text", ""))
 
-                                    if st.button("🔍 解き方を見る", key=f"action3_{q_id_val}_{tab_idx}_{i}", use_container_width=True):
-                                        st.session_state.history.append({
-                                            "result": st.session_state.current_result,
-                                            "query": st.session_state.display_query,
-                                            "image_choices": st.session_state.pending_image_choices,
-                                        })
-                                        new_query = f"確認問題 {cleaned_num} の解き方 (ID:{q_id_val})"
-                                        st.session_state.display_query = new_query
-                                        st.session_state.last_clicked_node = None
-                                        with st.spinner("問題ルートへ切り替え中..."):
-                                            res_next = execute_search_for_ui(new_query, db, is_drilldown=True)
-                                            if res_next:
-                                                st.session_state.current_result = res_next
-                                        st.rerun()
                     else:
                         st.write("該当なし")
 
@@ -1101,6 +1089,10 @@ def main():
                 with st.expander("🗺️ 学習スキルツリーを開く (クリックで探索可能)", expanded=True):
                     st.info("💡 **ヒント**: 気になるノードにカーソルを合わせるか、クリックするとその概念の世界へワープして探索を続けられます！")
                     st.caption("🟦 基礎知識 | 🟪 視点・条件(六角形) | 🟩 再構成知識 | ⬛ タスク(技能) | ⭐️ 現在地")
+                    # 🌟 global_concept_nodes を直接取得してスコープエラーを回避
+                    global_c_nodes = db.get("global_concept_nodes", {})
+                    global_q_nodes = db.get("global_question_nodes", {})
+                    
                     clicked_node_id = agraph(nodes=graph_nodes, edges=graph_edges, config=config)
                     
                     target_to_check = c_name_target
@@ -1112,7 +1104,7 @@ def main():
                                 "query": st.session_state.display_query,
                                 "image_choices": st.session_state.pending_image_choices,
                             })
-                            tgt_n = concept_nodes.get(clicked_node_id) or question_nodes.get(clicked_node_id)
+                            tgt_n = global_c_nodes.get(clicked_node_id) or global_q_nodes.get(clicked_node_id)
                             c_n_name = tgt_n.get("concept_name", "") if tgt_n else clicked_node_id.replace("親: ", "")
                             new_query = f"{c_n_name} について詳しく知りたい (ID:{clicked_node_id})"
                             st.session_state.display_query = new_query
@@ -1247,7 +1239,6 @@ def main():
                         q_text = node.get("question_text", "").replace("\n", "  \n")
                         st.info(q_text)
                         
-                        # 🌟 解答・解説の分割表示処理を呼び出し
                         render_answer_explanation(node.get("answer_text", ""))
                     else:
                         st.write("該当なし")
@@ -1272,7 +1263,6 @@ def main():
                         q_text = ex.get("question_text", "").replace("\n", "  \n")
                         st.markdown(q_text)
                         
-                        # 🌟 解答・解説の分割表示処理を呼び出し
                         render_answer_explanation(ex.get("answer_text", ""))
                         
                         edges = ex.get("aligned_videos", [])
@@ -1517,6 +1507,10 @@ def main():
                 with st.expander("🗺️ 学習スキルツリーを開く (クリックで探索可能)", expanded=True):
                     st.info("💡 **ヒント**: 気になるノードにカーソルを合わせるか、クリックするとその概念の世界へワープして探索を続けられます！")
                     st.caption("🟦 基礎知識 | 🟪 視点・条件(六角形) | 🟩 再構成知識 | ⬛ タスク(技能) | ⭐️ 現在地")
+                    # 🌟 global_concept_nodes を直接取得してスコープエラーを回避
+                    global_c_nodes = db.get("global_concept_nodes", {})
+                    global_q_nodes = db.get("global_question_nodes", {})
+                    
                     clicked_node_id = agraph(nodes=graph_nodes, edges=graph_edges, config=config)
                     
                     target_to_check = tm["node"].get("global_q_id")
@@ -1528,7 +1522,7 @@ def main():
                                 "query": st.session_state.display_query,
                                 "image_choices": st.session_state.pending_image_choices,
                             })
-                            tgt_n = concept_nodes.get(clicked_node_id) or question_nodes.get(clicked_node_id)
+                            tgt_n = global_c_nodes.get(clicked_node_id) or global_q_nodes.get(clicked_node_id)
                             c_n_name = tgt_n.get("concept_name", "") if tgt_n else clicked_node_id.replace("親: ", "")
                             new_query = f"{c_n_name} について詳しく知りたい (ID:{clicked_node_id})"
                             st.session_state.display_query = new_query
