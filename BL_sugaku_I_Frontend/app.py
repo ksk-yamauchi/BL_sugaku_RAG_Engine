@@ -130,7 +130,6 @@ def analyze_image_with_gemini_json(image_bytes):
         return {"image_type": "PROBLEM", "extracted_items": []}
 
 
-# 🌟 レートリミット対策（リトライ機能）を追加
 def generate_required_concepts(problem_text, retries=1):
     prompt = f"""
     あなたは優秀な高校数学教師です。以下の生徒が直面している問題（または質問）を解くために必要な「高校数学の概念や公式」を箇条書きで簡潔に提示・解説してください。
@@ -149,13 +148,12 @@ def generate_required_concepts(problem_text, retries=1):
             return response.text
         except Exception as e:
             if attempt < retries:
-                time.sleep(2) # 🌟 連続APIエラーを防ぐため2秒待機してリトライ
+                time.sleep(2)
             else:
                 print(f"Concept Generation Error: {e}")
                 return "⚠️ 概念情報の取得に失敗しました。"
 
 
-# 🌟 乱暴な正規表現を廃止し、純粋に$記号のみを取り除くよう最適化
 def sanitize_query_for_search(raw_query):
     text = raw_query.replace("$", "")
     text = re.sub(r'\s+', ' ', text).strip()
@@ -197,7 +195,6 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
     else:
         if needs_hyde:
             ai_explanation = generate_required_concepts(search_query)
-            # 🌟 ベクトル汚染の防止：エラー（⚠️）の時は合体させない
             if ai_explanation and not ai_explanation.startswith("⚠️"):
                 text_to_embed = f"{sanitized_query}\n{ai_explanation}"
             else:
@@ -563,6 +560,7 @@ def render_video_item(v, unique_key, is_modeling=False):
                     "image_choices": st.session_state.pending_image_choices,
                 })
                 st.session_state.selected_video = v.get("video_file")
+                st.session_state.target_start_time = v.get("start_time", "00:00")
                 st.rerun()
 
 # =========================================================
@@ -577,55 +575,105 @@ def main():
         return
 
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{db.get('metadata', {}).get('engine_version', 'バージョン情報なし')}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.6.31`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.17.0`")
 
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
         if key not in st.session_state:
             st.session_state[key] = [] if key == "history" else None
 
     # ==========================================
-    # 🎬 タイムスタンプ（チャプター）表示 UI
+    # 🎬 タイムスタンプ（チャプター）表示 UI (for TEACHERS モック)
     # ==========================================
     if st.session_state.get("selected_video"):
         v_file = st.session_state.selected_video
+        v_start = st.session_state.get("target_start_time", "00:00")
         catalog = db.get("global_video_catalog", {})
         v_data = catalog.get(v_file)
         
-        st.markdown(f"## 📺 動画講義: `{v_file}`")
-        
-        col_btn, _ = st.columns([1, 4])
+        # 戻るボタン
+        col_btn, _ = st.columns([1, 5])
         with col_btn:
             if st.button("🔙 検索結果に戻る", use_container_width=True):
                 st.session_state.selected_video = None
+                st.session_state.target_start_time = None
                 st.rerun()
-            
-        st.divider()
-        
-        if v_data:
-            st.caption(f"🎓 講義名: {v_data.get('lecture_name', '')} | 🏷️ 授業タイプ: {v_data.get('role', '')}")
-            
-            # 🌟 完全にクリーンなモック動画プレイヤーの実装
-            col_vid, col_chap = st.columns([3, 2])
-            
-            with col_vid:
-                st.video("[https://www.w3schools.com/html/mov_bbb.mp4](https://www.w3schools.com/html/mov_bbb.mp4)") 
-                st.info("💡 講師の解説（概要）を事前に確認して、見たいチャプターからダイレクトに再生できます。")
                 
-            with col_chap:
-                st.markdown("### 📑 タイムライン・チャプター")
+        # for TEACHERS 宿題配信画面風ヘッダー
+        st.markdown("<div style='background-color: #2e5c9e; padding: 12px; color: white; font-size: 1.2em; font-weight: bold;'>宿題配信</div>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color: #f0f2f5; padding: 8px; border-bottom: 1px solid #ccc;'><b>STEP1. 講座選択</b> &nbsp;&nbsp;|&nbsp;&nbsp; <span style='color: #666;'>STEP2. 配信設定</span></div>", unsafe_allow_html=True)
+        st.write("")
+
+        col_sidebar, col_main = st.columns([1, 3])
+
+        # 左側メニュー（ダミー）
+        with col_sidebar:
+            with st.container(border=True):
+                st.markdown("**[新版] ベーシックレベル数学Ⅰ**\n\n<span style='font-size: 0.8em; color: gray;'>60講義</span>", unsafe_allow_html=True)
+                with st.expander("第1講 式の計算と展開", expanded=True):
+                    st.checkbox("PART1 単項式と多項式", disabled=True)
+                    st.checkbox("PART2 整式の整理", value=True, disabled=True)
+                    st.checkbox("PART3 整式の加法と減法", disabled=True)
+                    st.checkbox("PART4 展開", disabled=True)
+                with st.expander("第2講 因数分解", expanded=False):
+                    st.write("...")
+                with st.expander("第3講 実数", expanded=False):
+                    st.write("...")
+
+        # 右側メインコンテンツ
+        with col_main:
+            lecture_name = v_data.get('lecture_name', '未設定') if v_data else '未設定'
+            
+            # 画像のヘッダー風に
+            st.markdown(f"<div style='font-size: 1.1em; font-weight: bold; color: #333;'>[新版] ベーシックレベル数学Ⅰ<br>{lecture_name}</div>", unsafe_allow_html=True)
+            st.write("")
+            
+            with st.container(border=True):
+                st.markdown(f"**▶️ 講義動画** <span style='font-size: 0.8em; color: gray; margin-left: 10px;'>13分30秒 2チャプター</span>", unsafe_allow_html=True)
                 
+                col_vid, col_chap = st.columns([4, 1])
+                
+                with col_vid:
+                    start_sec = 0
+                    try:
+                        m, s = v_start.split(':')
+                        start_sec = int(m) * 60 + int(s)
+                    except:
+                        pass
+                    
+                    st.video("https://www.w3schools.com/html/mov_bbb.mp4", start_time=start_sec)
+
+                with col_chap:
+                    st.markdown("<div style='font-size: 0.9em; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px;'>チャプター</div>", unsafe_allow_html=True)
+                    # モック固定表示
+                    st.markdown("<div style='background-color: #e6f3ff; padding: 8px; border-radius: 4px; margin-bottom: 5px;'>1 🎥 00:04:32</div>", unsafe_allow_html=True)
+                    st.markdown("<div style='padding: 8px; border-radius: 4px; margin-bottom: 5px;'>2 🎥 00:08:58</div>", unsafe_allow_html=True)
+
+            # --- ここから下がタイムスタンプ ---
+            st.markdown("#### 📑 動画内タイムスタンプ (DB抽出)")
+            st.info("※DBから該当動画のセグメント情報を抽出し、再生箇所をピンポイントで指定できる想定のUIです。")
+            if v_data:
+                # 🌟 指定された start_time と一致するセグメントのインデックスを特定
+                target_idx = 0
+                for i, seg in enumerate(v_data.get("segments", [])):
+                    if seg.get('start_time') == v_start:
+                        target_idx = i
+                        break
+                        
                 for idx, seg in enumerate(v_data.get("segments", [])):
-                    start = seg.get('start_time', '00:00')
-                    end = seg.get('end_time', '00:00')
+                    s_time = seg.get('start_time', '00:00')
                     topic = seg.get('topic', '無題')
                     
-                    with st.expander(f"⏱️ {start} 〜 {end} | 📌 {topic}", expanded=(idx==0)):
-                        st.markdown(f"**💬 概要:**\n{seg.get('explanation_summary', 'データなし')}")
-                        if st.button("▶️ ここから再生", key=f"play_{v_file}_{idx}", use_container_width=True):
-                            st.toast(f"{start} から再生を開始しました！")
-        else:
-            st.warning("⚠️ この動画の詳細なチャプターカタログデータがデータベースに見つかりません。")
-            
+                    # 🌟 特定したインデックスのみ expanded を True にする
+                    with st.expander(f"⏱️ {s_time} 〜 | 📌 {topic}", expanded=(idx == target_idx)):
+                        col_ts1, col_ts2 = st.columns([4, 1])
+                        with col_ts1:
+                            st.markdown(f"**💬 概要:**\n{seg.get('explanation_summary', 'データなし')}")
+                        with col_ts2:
+                            if st.button("▶️ ここから再生", key=f"play_ts_{idx}", use_container_width=True):
+                                st.session_state.target_start_time = s_time
+                                st.rerun()
+            else:
+                st.warning("⚠️ この動画の詳細なチャプターカタログデータがデータベースに見つかりません。")
         return  
 
 
