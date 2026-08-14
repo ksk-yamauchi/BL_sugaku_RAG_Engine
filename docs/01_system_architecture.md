@@ -169,4 +169,3 @@ AIの抽出揺らぎによる「階層の逆転」や「孤立ノード」を防
     ├── 📜 app.py                           # AIチューター UI アプリ (Ver 4.6)
     ├── 📜 app_ft.py                        # 教員向け Semantic Zoom ダッシュボード
     └── 📄 requirements.txt                 # 依存パッケージ定義
-```
