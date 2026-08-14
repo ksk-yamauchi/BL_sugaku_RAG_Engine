@@ -893,7 +893,6 @@ def main():
                                 q_text = ex.get("question_text", "").replace("\n", "  \n")
                                 st.markdown(q_text)
                                 
-                                # 🌟 概念ルートの第二アクション（大問）にも解答解説を表示
                                 render_answer_explanation(ex.get("answer_text", ""))
                                 
                                 ex_videos = ex.get("aligned_videos", [])
@@ -902,7 +901,6 @@ def main():
                     else:
                         st.write("該当なし")
 
-                    # 🌟 概念ルートの第三アクション（確認問題）から「解き方を見る」ボタンとワープを削除
                     st.markdown("#### 📗 第三アクション (アセスメント: 確認問題演習)")
                     questions = [q for q in tm.get("linked_questions", []) if q.get("type") == "question"]
                     if questions:
@@ -922,7 +920,6 @@ def main():
                                     q_text = q.get("question_text", "").replace("\n", "  \n")
                                     st.markdown(q_text)
                                     
-                                    # 🌟 確認問題に解答解説を表示（これによりワープ不要に）
                                     render_answer_explanation(q.get("answer_text", ""))
 
                     else:
@@ -961,7 +958,8 @@ def main():
 
                                 btn_key = f"btn_runner_c_{p_q_id}_{tab_idx}_{drawn_count}"
                                 
-                                if st.button("🔍 学ぶ", key=btn_key, use_container_width=True):
+                                # 🌟 ボタン名変更
+                                if st.button("🔍 この概念について深く学ぶ", key=btn_key, use_container_width=True):
                                     st.session_state.history.append({
                                         "result": st.session_state.current_result,
                                         "query": st.session_state.display_query,
@@ -1089,7 +1087,6 @@ def main():
                 with st.expander("🗺️ 学習スキルツリーを開く (クリックで探索可能)", expanded=True):
                     st.info("💡 **ヒント**: 気になるノードにカーソルを合わせるか、クリックするとその概念の世界へワープして探索を続けられます！")
                     st.caption("🟦 基礎知識 | 🟪 視点・条件(六角形) | 🟩 再構成知識 | ⬛ タスク(技能) | ⭐️ 現在地")
-                    # 🌟 global_concept_nodes を直接取得してスコープエラーを回避
                     global_c_nodes = db.get("global_concept_nodes", {})
                     global_q_nodes = db.get("global_question_nodes", {})
                     
@@ -1507,7 +1504,6 @@ def main():
                 with st.expander("🗺️ 学習スキルツリーを開く (クリックで探索可能)", expanded=True):
                     st.info("💡 **ヒント**: 気になるノードにカーソルを合わせるか、クリックするとその概念の世界へワープして探索を続けられます！")
                     st.caption("🟦 基礎知識 | 🟪 視点・条件(六角形) | 🟩 再構成知識 | ⬛ タスク(技能) | ⭐️ 現在地")
-                    # 🌟 global_concept_nodes を直接取得してスコープエラーを回避
                     global_c_nodes = db.get("global_concept_nodes", {})
                     global_q_nodes = db.get("global_question_nodes", {})
                     
