@@ -483,11 +483,36 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
                     
         return prereqs, sibs, nxts
 
+    # 🌟 メタタスク判定関数（前提に再構成知識を含むか）Ver 4.18.6 強化版
+    def check_is_meta_task(node_obj):
+        p_raw = node_obj.get("prerequisite_concepts", [])
+        for p_item in p_raw:
+            p_name = p_item.get("concept_name", "") if isinstance(p_item, dict) else str(p_item)
+            if not p_name: continue
+            for cid, c_node in concept_nodes.items():
+                if c_node.get("concept_name") == p_name and c_node.get("type") == "derived_knowledge":
+                    return True
+        
+        # incoming_edges 全てを走査して「再構成知識」を探す (requires_logical や applies_condition も含む)
+        incoming = node_obj.get("incoming_edges", {})
+        for rel_type, edge_list in incoming.items():
+            for edge_item in edge_list:
+                src_id = edge_item.get("source_id")
+                if src_id in concept_nodes and concept_nodes[src_id].get("type") == "derived_knowledge":
+                    return True
+                
+        return False
+
     if is_concept_intent:
         for tm in top_matches:
             c_name = tm["node"].get("concept_name")
             c_type = tm["node"].get("type")
             is_promoted = "promoted_from_node" in tm["node"]
+            
+            # メタタスク判定
+            meta_task_flag = False
+            if c_type == "tasks":
+                meta_task_flag = check_is_meta_task(tm["node"])
             
             linked_qs = []
             for q in question_nodes.values():
@@ -495,7 +520,9 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
                 k_names = q.get("linked_knowledge_names", [])
                 
                 if c_name in t_names or c_name in k_names:
-                    if c_type == "tasks" and not is_promoted:
+                    # 🌟 概念ルート：タスクの場合は、他のタスクが混入している応用問題を除外（純粋化）
+                    # ただし、再構成知識からプロモートされたタスク、またはメタタスクの場合は除外しない
+                    if c_type == "tasks" and not is_promoted and not meta_task_flag:
                         other_tasks = [t for t in t_names if t != c_name]
                         if other_tasks:
                             continue
@@ -508,7 +535,7 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
             tm["graph_next_steps"] = nxts
     else:
         # ===============================================
-        # 🌟 問題解法ルート (Ver 4.18.4) タスク起点の新アーキテクチャ
+        # 🌟 問題解法ルート (Ver 4.18.6) タスク起点の新アーキテクチャ
         # ===============================================
         for tm in top_matches:
             tm_task_node = tm["node"]
@@ -517,14 +544,17 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
             
             tm["kanban_concept_name"] = kanban_c_name
             tm["kanban_concept_node"] = tm_task_node
+            
+            # メタタスク判定
+            meta_task_flag = check_is_meta_task(tm_task_node)
 
             # 1. タスクに紐づく問題をすべて抽出 (A: 本命問題の純化)
             m_exs = []
             m_qs = []
             for q in question_nodes.values():
                 if kanban_c_name in q.get("linked_task_names", []):
-                    # 🌟 レゴブロックの共通化: 他タスク混入問題を排除（プロモート時は例外）
-                    if not is_promoted:
+                    # 🌟 レゴブロックの共通化: 他タスク混入問題を排除（プロモート時・メタタスク時は例外）
+                    if not is_promoted and not meta_task_flag:
                         other_tasks = [t for t in q.get("linked_task_names", []) if t != kanban_c_name]
                         if other_tasks:
                             continue
@@ -579,6 +609,10 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
                                 has_derived = True
                                 break
                         if has_derived:
+                            continue
+
+                        # 🌟 他タスク混入排除
+                        if len(q.get("linked_task_names", [])) > 1:
                             continue
 
                         prereq_qs.append({
@@ -666,7 +700,7 @@ def main():
         return
 
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{db.get('metadata', {}).get('engine_version', 'バージョン情報なし')}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.18.4`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.18.6`")
 
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
         if key not in st.session_state:
@@ -1193,7 +1227,7 @@ def main():
                             st.rerun()
 
             # ===============================================
-            # 📗 問題・解法ステップ優先ルート (Ver 4.18.4)
+            # 📗 問題・解法ステップ優先ルート (Ver 4.18.6)
             # ===============================================
             else:
                 top_matches = res.get("top_matches", [res["top_match"]])
