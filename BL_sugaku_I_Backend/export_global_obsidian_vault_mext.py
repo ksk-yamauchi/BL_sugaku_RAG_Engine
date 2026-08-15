@@ -226,12 +226,23 @@ def main():
                         content += f"  - 💬 解説要約: {exp_text}\n"
                 content += "\n"
 
-        q_texts = ndata.get("aligned_questions_text", [])
-        if q_texts:
-            content += f"## 📝 関連する演習問題\n"
-            for q_text in q_texts:
-                clean_q_text = q_text.replace('\\n', '\n')
-                content += f"```text\n{clean_q_text}\n```\n"
+        # 🌟 従来の aligned_questions_text (解答解説含むベタ書き) を廃止し、
+        # 🌟 DBのquestionsから直接「タイトルリンク ＋ 問題文のみ」を動的に構築する
+        c_name = ndata.get("name", "")
+        related_qs = []
+        for qid, qdata in questions.items():
+            if c_name in qdata.get("linked_task_names", []) or c_name in qdata.get("linked_knowledge_names", []):
+                related_qs.append((qid, qdata))
+
+        if related_qs:
+            content += f"## 📝 関連する演習問題\n\n"
+            for qid, qdata in related_qs:
+                q_filename = id_to_filename.get(qid, qid)
+                # 解答解説を含まない、純粋な question_text のみを抽出
+                q_text = qdata.get("question_text", "").replace('\\n', '\n')
+                
+                content += f"- **[[{q_filename}]]**\n"
+                content += f"```text\n{q_text}\n```\n\n"
 
         with open(os.path.join(VAULT_PATH, f"{filename}.md"), "w", encoding="utf-8") as f:
             f.write(content)
