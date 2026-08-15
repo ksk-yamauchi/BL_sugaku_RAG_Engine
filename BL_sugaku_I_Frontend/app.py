@@ -535,7 +535,7 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
             tm["graph_next_steps"] = nxts
     else:
         # ===============================================
-        # 🌟 問題解法ルート (Ver 4.18.6) タスク起点の新アーキテクチャ
+        # 🌟 問題解法ルート (Ver 4.18.7) タスク起点の新アーキテクチャ
         # ===============================================
         for tm in top_matches:
             tm_task_node = tm["node"]
@@ -700,7 +700,7 @@ def main():
         return
 
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{db.get('metadata', {}).get('engine_version', 'バージョン情報なし')}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.18.6`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.18.7`")
 
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
         if key not in st.session_state:
@@ -886,7 +886,8 @@ def main():
                 else "📗 問題・解法ステップ優先ルート"
             )
             
-            if res.get("required_concepts_text"):
+            # 🌟 修正：問題・解法ステップ優先ルート（question）のときのみ、AIチューターのアプローチ解説を表示
+            if res.get("required_concepts_text") and res.get("intent") == "question":
                 with st.chat_message("assistant"):
                     st.markdown("**💡 AIチューターからのアプローチ解説**")
                     st.markdown(format_text_for_markdown(res["required_concepts_text"]))
@@ -1227,7 +1228,7 @@ def main():
                             st.rerun()
 
             # ===============================================
-            # 📗 問題・解法ステップ優先ルート (Ver 4.18.6)
+            # 📗 問題・解法ステップ優先ルート (Ver 4.18.7)
             # ===============================================
             else:
                 top_matches = res.get("top_matches", [res["top_match"]])
