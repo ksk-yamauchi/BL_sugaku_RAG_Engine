@@ -86,6 +86,14 @@ def clean_q_label(q_num_str):
     return str(q_num_str).replace("確認問題 ", "").replace("確認問題", "").replace("大問 ", "").replace("大問", "").strip()
 
 
+# 🌟 問題番号を抽出して数値としてソートするためのヘルパー関数
+def extract_q_numbers(q_str):
+    if not q_str: 
+        return [0]
+    nums = re.findall(r'\d+', str(q_str))
+    return [int(n) for n in nums] if nums else [0]
+
+
 def format_text_for_markdown(text):
     if not text: 
         return ""
@@ -427,9 +435,8 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
                     nxts.append(c_node)
         return prereqs, sibs, nxts
 
-    # 🌟 メタタスク判定関数（Ver 4.19.3 強化版：真の再構成知識判定を導入）
+    # 🌟 メタタスク判定関数（真の再構成知識判定を導入）
     def check_is_meta_task(node_obj):
-        # 内部関数: 再構成知識ノードが「真のメタタスク条件（subsumes以外を持つ）」を満たすかチェック
         def is_true_derived_knowledge(dk_node):
             if not dk_node: 
                 return False
@@ -457,15 +464,37 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
                         return True
         return False
 
+    # 🌟 到達可能性(Reachability)による前提ツリーの再帰的構築（逆流防止）
+    def get_all_ancestor_nodes(start_names, concept_nodes_dict):
+        ancestors = set(start_names)
+        queue = list(start_names)
+        valid_incoming_rels = {"prerequisite", "requires_logical", "applies_condition", "applied_to"}
+        while queue:
+            curr_name = queue.pop(0)
+            node = next((n for n in concept_nodes_dict.values() if n.get("concept_name") == curr_name), None)
+            if not node: continue
+            for p in node.get("prerequisite_concepts", []):
+                p_name = p.get("concept_name", "") if isinstance(p, dict) else str(p)
+                if p_name and p_name not in ancestors:
+                    ancestors.add(p_name)
+                    queue.append(p_name)
+            for rel_type, edges in node.get("incoming_edges", {}).items():
+                if rel_type in valid_incoming_rels:
+                    for edge in edges:
+                        src_id = edge.get("source_id")
+                        if src_id in concept_nodes_dict:
+                            src_name = concept_nodes_dict[src_id].get("concept_name")
+                            if src_name and src_name not in ancestors:
+                                ancestors.add(src_name)
+                                queue.append(src_name)
+        return ancestors
+
+
     # =========================================================
-    # 🌟 抽出ロジックの一元化 (MVC分離)
-    # ルートの判定に関わらず、すべてのトップ候補に対して
-    # 共通の純化ロジックで「動画」「大問」「確認問題」「前提問題」を生成・格納する
+    # 🌟 抽出ロジックの一元化 (適材適所のハイブリッドアーキテクチャ)
     # =========================================================
     
-    # 🌟 [問題・解法ステップ優先ルート用] すべての本命タスクの前提概念(タスクのみ)を収集し、OKリストを作成
     all_kanban_names = set()
-    all_valid_prereq_task_names = set()
     global_prereq_infos = []
     
     if not is_concept_intent:
@@ -474,14 +503,10 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
             all_kanban_names.add(c_name)
             prereqs, _, _ = get_concept_graph_data(c_name)
             for pre_info in prereqs:
-                p_node = pre_info["node"]
-                if p_node.get("type") == "tasks":
-                    p_name = pre_info["prereq_name"]
-                    if p_name not in all_valid_prereq_task_names:
-                        all_valid_prereq_task_names.add(p_name)
-                        global_prereq_infos.append(pre_info)
+                if pre_info["node"].get("type") == "tasks":
+                    global_prereq_infos.append(pre_info)
 
-        # 🌟 GNNトラバーサル: 統合された前提タスクから確認問題を逆引き抽出
+        global_ancestors = get_all_ancestor_nodes(all_kanban_names, concept_nodes)
         global_prereq_qs = []
         for pre_info in global_prereq_infos:
             p_name = pre_info["prereq_name"]
@@ -491,40 +516,13 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
                     continue
 
                 if q.get("type") == "question" and p_name in q.get("linked_task_names", []):
-                    
-                    is_valid = True
+                    # 🌟 次点問題の純化: GNN到達可能性フィルター
+                    is_on_route = True
                     for t_name in q.get("linked_task_names", []):
-                        if t_name in all_valid_prereq_task_names:
-                            continue 
-                        
-                        t_node = next((c for c in concept_nodes.values() if c.get("concept_name") == t_name), None)
-                        if t_node:
-                            has_main_task_as_prereq = False
-                            for p_item in t_node.get("prerequisite_concepts", []):
-                                p_name_check = p_item.get("concept_name", "") if isinstance(p_item, dict) else str(p_item)
-                                if p_name_check in all_kanban_names:
-                                    has_main_task_as_prereq = True
-                                    break
-                            
-                            if not has_main_task_as_prereq:
-                                for rel_type, edge_list in t_node.get("incoming_edges", {}).items():
-                                    for edge_item in edge_list:
-                                        src_id = edge_item.get("source_id")
-                                        if src_id in concept_nodes and concept_nodes[src_id].get("concept_name") in all_kanban_names:
-                                            has_main_task_as_prereq = True
-                                            break
-                                    if has_main_task_as_prereq:
-                                        break
-                                        
-                            if has_main_task_as_prereq:
-                                is_valid = False
-                                break
-
-                            if check_is_meta_task(t_node):
-                                is_valid = False
-                                break
-                    
-                    if not is_valid:
+                        if t_name not in global_ancestors:
+                            is_on_route = False
+                            break
+                    if not is_on_route:
                         continue
 
                     global_prereq_qs.append({
@@ -536,7 +534,6 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
                         "penalty_reason": "なし (既習・復習範囲)"
                     })
                     
-        # 重複排除
         seen_q_ids = set()
         unique_global_prereq_qs = []
         for pq in global_prereq_qs:
@@ -551,7 +548,6 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
         c_type = c_node.get("type", "")
         is_promoted = "promoted_from_node" in c_node
         
-        # 1. メタタスク判定
         meta_task_flag = False
         if c_type == "tasks":
             meta_task_flag = check_is_meta_task(c_node)
@@ -559,17 +555,17 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
         tm["kanban_concept_name"] = c_name
         tm["kanban_concept_node"] = c_node
 
-        # 2. 純粋なインプット・復習動画の抽出（exercise_walkthroughを除外）
+        local_ancestors = get_all_ancestor_nodes([c_name], concept_nodes)
+        tm["local_ancestors"] = [a for a in local_ancestors if a != c_name]
+
         all_videos = c_node.get("main_videos", []) + c_node.get("review_videos", [])
         pure_videos = []
         for v in all_videos:
             v_file = v.get("video_file")
-            v_role = video_catalog.get(v_file, {}).get("role", "")
-            if v_role != "exercise_walkthrough":
+            if video_catalog.get(v_file, {}).get("role", "") != "exercise_walkthrough":
                 pure_videos.append(v)
         tm["pure_concept_videos"] = pure_videos
 
-        # 3. 大問と確認問題の抽出（純化フィルター＋2段階ソート適用）
         m_exs = []
         m_qs = []
         for qid, q in question_nodes.items():
@@ -577,7 +573,7 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
             k_names = q.get("linked_knowledge_names", [])
             
             if c_name in t_names or c_name in k_names:
-                # 🌟 純化フィルター（他タスクのメタ判定による動的除外）
+                # 🌟 本命問題の純化: 真のメタタスク判定フィルター
                 if c_type == "tasks" and not is_promoted and not meta_task_flag:
                     other_tasks = [t for t in t_names if t != c_name]
                     is_invalid_composite = False
@@ -587,7 +583,6 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
                             if check_is_meta_task(ot_node):
                                 is_invalid_composite = True
                                 break
-                    
                     if is_invalid_composite:
                         continue
                         
@@ -596,26 +591,57 @@ def execute_search_for_ui(search_query, db, is_drilldown=False, is_image_query=F
                 elif q.get("type") == "question":
                     m_qs.append(q)
 
-        # ベクトルソート
-        if query_vector is not None and len(query_vector) > 0 and not is_id_query:
-            m_qs.sort(key=lambda q: cosine_similarity(query_vector, q.get("question_vector", [])), reverse=True)
-            m_exs.sort(key=lambda q: cosine_similarity(query_vector, q.get("question_vector", [])), reverse=True)
+        # 🌟 講義名・問題番号でソート
+        m_qs.sort(key=lambda q: (q.get("lecture_name", ""), extract_q_numbers(q.get("local_q_num", ""))))
+        m_exs.sort(key=lambda q: (q.get("lecture_name", ""), extract_q_numbers(q.get("local_q_num", ""))))
 
-        # IDワープ指定時は強制トップ
+        # 🌟 デフォルトインデックスの計算: 類似度(第2位丸め)の最大値で、同着なら問題番号が小さい方を優先
+        default_q_idx = 0
         if is_id_query and target_id in question_nodes:
-            m_qs.sort(key=lambda q: 0 if q["global_q_id"] == target_id else 1)
-            m_exs.sort(key=lambda q: 0 if q["global_q_id"] == target_id else 1)
+            for i, q in enumerate(m_qs):
+                if q.get("global_q_id") == target_id:
+                    default_q_idx = i
+                    break
+        elif query_vector is not None and len(query_vector) > 0 and m_qs:
+            max_score = (-1.0, 99999)
+            for i, q in enumerate(m_qs):
+                sim = cosine_similarity(query_vector, q.get("question_vector", []))
+                sim_rounded = round(sim, 2)
+                q_nums = extract_q_numbers(q.get("local_q_num", ""))
+                first_num = q_nums[0] if q_nums else 99999
+                
+                if sim_rounded > max_score[0] or (sim_rounded == max_score[0] and first_num < max_score[1]):
+                    max_score = (sim_rounded, first_num)
+                    default_q_idx = i
+        tm["default_q_idx"] = default_q_idx
+
+        default_ex_idx = 0
+        if is_id_query and target_id in question_nodes:
+            for i, ex in enumerate(m_exs):
+                if ex.get("global_q_id") == target_id:
+                    default_ex_idx = i
+                    break
+        elif query_vector is not None and len(query_vector) > 0 and m_exs:
+            max_score = (-1.0, 99999)
+            for i, ex in enumerate(m_exs):
+                sim = cosine_similarity(query_vector, ex.get("question_vector", []))
+                sim_rounded = round(sim, 2)
+                q_nums = extract_q_numbers(ex.get("local_q_num", ""))
+                first_num = q_nums[0] if q_nums else 99999
+                
+                if sim_rounded > max_score[0] or (sim_rounded == max_score[0] and first_num < max_score[1]):
+                    max_score = (sim_rounded, first_num)
+                    default_ex_idx = i
+        tm["default_ex_idx"] = default_ex_idx
 
         tm["pure_modeling_exercises"] = m_exs
         tm["pure_assessment_questions"] = m_qs
 
-        # 4. Graph RAG データの取得
         prereqs, sibs, nxts = get_concept_graph_data(c_name)
         tm["graph_prerequisites"] = prereqs
         tm["graph_siblings"] = sibs
         tm["graph_next_steps"] = nxts
 
-        # 5. 前提確認問題の格納
         if not is_concept_intent:
             tm["prereq_questions"] = unique_global_prereq_qs
         else:
@@ -679,7 +705,7 @@ def main():
         return
 
     st.sidebar.markdown(f"**⚙️ エンジンバージョン:**\n`{db.get('metadata', {}).get('engine_version', 'バージョン情報なし')}`")
-    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.19.3`")
+    st.sidebar.markdown(f"**📱 UI バージョン:**\n`AIチューター UI Ver 4.19.10`")
 
     for key in ["history", "current_result", "display_query", "pending_image_choices", "last_clicked_node", "selected_video"]:
         if key not in st.session_state:
@@ -1024,6 +1050,11 @@ def main():
 
                 # 🧭 Graph RAG
                 st.subheader("🧭 Graph RAG: オントロジー探索 (学習の繋がり)")
+                
+                with st.expander("🧠 AIが推論した前提ツリー (到達可能ルート可視化)"):
+                    st.markdown("このタスクを習得するために必要な「過去の概念・タスク」の一覧です。ここに存在しない別ルート・未来のタスクが混ざった問題は、次点から除外されています。")
+                    st.json(tm.get("local_ancestors", []))
+                    
                 graph_nodes, graph_edges = [], []
                 node_ids = set()
 
@@ -1163,6 +1194,14 @@ def main():
                 st.info(f"**💡 概念要約:** {kanban_node.get('summary', '要約なし')}")
 
                 # 📝 本命の問題
+                mq_state_key = f"selected_mq_for_tab_{tab_idx}_{kanban_node.get('global_c_id', 'none')}"
+                if mq_state_key not in st.session_state:
+                    st.session_state[mq_state_key] = tm.get("default_q_idx", 0)
+                if main_qs and st.session_state[mq_state_key] >= len(main_qs):
+                    st.session_state[mq_state_key] = tm.get("default_q_idx", 0)
+
+                selected_q_idx = st.session_state.get(mq_state_key, 0)
+
                 st.markdown("#### 📝 本命の問題")
                 with st.container(border=True):
                     if main_qs:
@@ -1170,13 +1209,30 @@ def main():
                             if mq.get("global_q_id"): displayed_q_ids.add(mq.get("global_q_id"))
 
                         if len(main_qs) > 1:
-                            q_tab_titles = [f"確認問題 {clean_q_label(q.get('local_q_num', ''))}" for q in main_qs]
-                            selected_q_title = st.radio("📚 表示する問題を選択:", q_tab_titles, horizontal=True)
-                            selected_q_idx = q_tab_titles.index(selected_q_title)
-                            main_q = main_qs[selected_q_idx]
-                        else:
-                            main_q = main_qs[0]
-                            
+                            st.markdown("**📚 表示する問題を選択:**")
+                            # 🌟 講義名でグループ化 (lecture_nameをそのまま表示)
+                            grouped_main_qs = {}
+                            for orig_idx, q in enumerate(main_qs):
+                                lec = q.get('lecture_name', '未設定')
+                                if lec not in grouped_main_qs:
+                                    grouped_main_qs[lec] = []
+                                grouped_main_qs[lec].append((orig_idx, q))
+                                
+                            for lec, qs_list in grouped_main_qs.items():
+                                st.markdown(f"<div style='font-size:0.9em; color:gray; margin-bottom:5px;'>{lec}</div>", unsafe_allow_html=True)
+                                cols = st.columns(max(len(qs_list), 5)) 
+                                for i, (orig_idx, q) in enumerate(qs_list):
+                                    q_num = clean_q_label(q.get('local_q_num', ''))
+                                    btn_label = f"確認問題 {q_num}"
+                                    is_selected = (selected_q_idx == orig_idx)
+                                    
+                                    with cols[i]:
+                                        if st.button(btn_label, key=f"mq_btn_{tab_idx}_{orig_idx}_{kanban_node.get('global_c_id', 'none')}", type="primary" if is_selected else "secondary", use_container_width=True):
+                                            st.session_state[mq_state_key] = orig_idx
+                                            st.rerun()
+                            st.divider()
+
+                        main_q = main_qs[selected_q_idx]
                         lecture_n = main_q.get('lecture_name', '未設定')
                         q_num_str = main_q.get('local_q_num', '')
                         cleaned_num = clean_q_label(q_num_str)
@@ -1194,7 +1250,30 @@ def main():
                 # 🎬 Action 1: モデリング
                 st.markdown("#### 🎬 第一アクション (問題の直接解説・モデリング)")
                 if m_exs:
-                    ex = m_exs[0]
+                    ex_idx = tm.get("default_ex_idx", 0)
+                    
+                    # 🌟 連動ロジック: 選ばれた本命問題に最もマッチする大問を動的に探す
+                    if main_q:
+                        best_ex_idx = 0
+                        best_score = -2.0
+                        mq_vec = main_q.get("question_vector", [])
+                        mq_lec = main_q.get("lecture_name", "")
+                        
+                        for i, ex_node in enumerate(m_exs):
+                            ex_vec = ex_node.get("question_vector", [])
+                            sim = cosine_similarity(mq_vec, ex_vec) if mq_vec and ex_vec else 0.0
+                            
+                            # 講義名が同じ場合は強力なボーナス（優先的に連動させるため）
+                            if ex_node.get("lecture_name") == mq_lec:
+                                sim += 1.0
+                                
+                            if sim > best_score:
+                                best_score = sim
+                                best_ex_idx = i
+                                
+                        ex_idx = best_ex_idx
+
+                    ex = m_exs[ex_idx]
                     for mx in m_exs:
                         if mx.get("global_q_id"): displayed_q_ids.add(mx.get("global_q_id"))
 
@@ -1270,6 +1349,11 @@ def main():
 
                 # 🧭 Graph RAG
                 st.subheader("🧭 Graph RAG: オントロジー探索 (学習の繋がり)")
+                
+                with st.expander("🧠 AIが推論した前提ツリー (到達可能ルート可視化)"):
+                    st.markdown("このタスクを習得するために必要な「過去の概念・タスク」の一覧です。ここに存在しない別ルート・未来のタスクが混ざった問題は、次点から除外されています。")
+                    st.json(tm.get("local_ancestors", []))
+                    
                 graph_nodes, graph_edges = [], []
                 node_ids = set()
 
