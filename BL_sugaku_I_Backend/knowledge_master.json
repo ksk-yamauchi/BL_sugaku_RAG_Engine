@@ -145,6 +145,84 @@
       "name": "輪環の順による多項式の整理",
       "summary_snippet": "3つの文字を含む多項式の展開において、$a \\to b \\to c \\to a$ のようにアルファベットを巡回させる順序（輪環の順）で整理することで、式の対称性を保ち、見通しよく記述する技法。",
       "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "符号を反転させて共通因数を作り出す視点",
+      "summary_snippet": "$b-a = -(a-b)$ のように、項の符号を反転（マイナスを括り出す）させることで共通因数を生み出す視点。",
+      "first_appeared_in": "第2講 因数分解 PART1 共通因数"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "展開公式の逆としての因数分解の視点",
+      "summary_snippet": "展開公式を逆に捉えることで、多項式を因数の積の形に変形する視点。",
+      "first_appeared_in": "第2講 因数分解 PART2 因数分解の公式"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "積と和から2数を見つける視点",
+      "summary_snippet": "2次三項式 $x^2 + px + q$ において、和が $p$（1次の係数）、積が $q$（定数項）となる2数を見つけて因数分解公式に適用する視点。",
+      "first_appeared_in": "第2講 因数分解 PART2 因数分解の公式"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "因数分解における共通因数の先くくり出し原則",
+      "summary_snippet": "因数分解を行う際、公式を適用する前にまず全項に共通する因数を先にくくり出すという基本的な整理手順。",
+      "first_appeared_in": "第2講 因数分解 PART2 因数分解の公式"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "2変数の2次同次式における一方の文字に着目した係数比較の視点",
+      "summary_snippet": "$ax^2 + bxy + cy^2$ のような2変数式に対して、$x$ に着目して $8x^2 + 6y \\cdot x - 5y^2$ のように整理し、1変数2次式と同等にたすきがけを適用する視点",
+      "first_appeared_in": "第2講 因数分解 PART3 たすきがけによる因数分解"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "絶対値を合わせた後に符号を調整する視点",
+      "summary_snippet": "たすきがけの試行錯誤において、まず各数の絶対値の組み合わせで中央の項の絶対値を作り、その後に正負の符号を調整して一致させる視点。",
+      "first_appeared_in": "第2講 因数分解 PART3 たすきがけによる因数分解"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "積と和の偶奇に着目して組み合わせを絞り込む視点",
+      "summary_snippet": "たすきがけにおいて、中央の項の係数の偶奇（奇数・偶数）に着目し、交差して掛け合わせた積の和がその偶奇を満たさない組み合わせをあらかじめ排除する視点。",
+      "first_appeared_in": "第2講 因数分解 PART3 たすきがけによる因数分解"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "最も次数が低い文字に着目する視点",
+      "summary_snippet": "含まれる文字の中で最高次数が最も低い文字を選んで降べきの順に整理する視点。",
+      "first_appeared_in": "第2講 因数分解 PART4 いろいろな因数分解"
+    },
+    {
+      "branch_code": "_K016",
+      "name": "おき換えによる2次因数分解公式への帰着",
+      "summary_snippet": "高次式や複雑な塊を含む式を単一文字でおき換えることで、見た目を2次式の基本的な因数分解公式に変換するパラダイムシフト。",
+      "first_appeared_in": "第2講 因数分解 PART4 いろいろな因数分解"
+    },
+    {
+      "branch_code": "_K017",
+      "name": "絶対値の中身の式の正負に着目する視点",
+      "summary_snippet": "絶対値記号の中身の実数や式が 0 以上か負かによって外れ方が変化することに着目する思考の枠組み。",
+      "first_appeared_in": "第3講 実数 PART2 絶対値"
+    },
+    {
+      "branch_code": "_K018",
+      "name": "原点からの距離として絶対値を解釈する視点",
+      "summary_snippet": "数直線上で原点からどれだけ離れているかという幾何学的な「距離」として $|a|$ を捉える視点。",
+      "first_appeared_in": "第3講 実数 PART2 絶対値"
+    },
+    {
+      "branch_code": "_K019",
+      "name": "連続する不等式 A < B < C を連立不等式とみなす視点",
+      "summary_snippet": "$A < B < C$ の形の不等式を、2つの不等式 $A < B$ と $B < C$ が同時に成り立つ連立不等式として分解して捉える視点。",
+      "first_appeared_in": "第4講 1次不等式 PART2 いろいろな1次不等式"
+    },
+    {
+      "branch_code": "_K020",
+      "name": "不等式 A < B < C の連立不等式への同値変形規則",
+      "summary_snippet": "3辺をもつ連続不等式 $A < B < C$ は、中辺 $B$ を共通にして $\\begin{cases} A < B \\\\ B < C \\end{cases}$ という連立不等式に必ず同値変形できる",
+      "first_appeared_in": "第4講 1次不等式 PART2 いろいろな1次不等式"
     }
   ],
   "8451503113000000": [
@@ -165,6 +243,530 @@
       "name": "クロス掛けによる1次項係数の算出",
       "summary_snippet": "$(ax+b)(cx+d)$ の展開において、外側の項の積 $ad$ と内側の項の積 $bc$ の和 $ad+bc$ を暗算で足し合わせて 1 次の項の係数を求める計算手法。",
       "first_appeared_in": "第1講 式の計算と展開 PART4 展開"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "因数分解",
+      "summary_snippet": "ある整式を、1次以上の整式の積の形で表す操作のこと。",
+      "first_appeared_in": "第2講 因数分解 PART1 共通因数"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "因数",
+      "summary_snippet": "因数分解された式において、積を作っているそれぞれの式のこと。",
+      "first_appeared_in": "第2講 因数分解 PART1 共通因数"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "共通因数",
+      "summary_snippet": "整式の各項に共通して含まれる因数のこと。",
+      "first_appeared_in": "第2講 因数分解 PART1 共通因数"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "因数分解における共通因数の完全抽出ルール",
+      "summary_snippet": "因数分解においては、単に一部の因数を括り出すだけでなく、すべての各項に含まれる最大の共通因数を残らず括り出さなければ不十分であるという規範。",
+      "first_appeared_in": "第2講 因数分解 PART1 共通因数"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "因数分解の公式",
+      "summary_snippet": "展開の公式の逆として得られる、平方・和と差の積・2次三項式に関する基本的な因数分解の公式。",
+      "first_appeared_in": "第2講 因数分解 PART2 因数分解の公式"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "たすきがけ",
+      "summary_snippet": "$x$ の2次式 $Ax^2 + Bx + C$ や $ax^2 + bxy + cy^2$ において、$ac=A, bd=C$ となる数を見つけ、交差して掛け合わせた和 $ad+bc$ が $B$ ",
+      "first_appeared_in": "第2講 因数分解 PART3 たすきがけによる因数分解"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "因数分解公式 $acx^2 + (ad+bc)x + bd = (ax+b)(cx+d)$",
+      "summary_snippet": "展開の公式 $(ax+b)(cx+d) = acx^2 + (ad+bc)x + bd$ を逆に用いた2次式の因数分解公式。",
+      "first_appeared_in": "第2講 因数分解 PART3 たすきがけによる因数分解"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "複2次式",
+      "summary_snippet": "$ax^4+bx^2+c$ のように、4次と2次と定数項のみで構成される多項式の形式。",
+      "first_appeared_in": "第2講 因数分解 PART4 いろいろな因数分解"
+    }
+  ],
+  "8451503111000000": [
+    {
+      "branch_code": "_K001",
+      "name": "有理数",
+      "summary_snippet": "2つの整数 $m, n$ を用いて分数 $\\frac{m}{n}$ の形で表される数（ただし $n \\neq 0$）。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "既約分数",
+      "summary_snippet": "それ以上約分できない分数。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "実数",
+      "summary_snippet": "整数、および有限小数または無限小数で表される数。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "無理数",
+      "summary_snippet": "実数のうち、有理数でないもの（分数で表すことができない循環しない無限小数）。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "各数系における四則演算の閉じ方",
+      "summary_snippet": "自然数・整数・有理数・実数の各数の集合において、加減乗除の演算を行った結果が再び同じ数の集合に含まれるかどうかの代数的性質。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "整数の分類",
+      "summary_snippet": "整数は正の整数（自然数：1, 2, 3, ...）、0、負の整数（-1, -2, -3, ...）の3つに分類されるという知識。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "数直線",
+      "summary_snippet": "直線上に基準となる点 O（0）をとり、単位長 1 と正の向きを定めて、実数を 1 対 1 に対応させた直線。",
+      "first_appeared_in": "第3講 実数 PART2 絶対値"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "原点",
+      "summary_snippet": "数直線上で実数 0 が対応している基準の点 O。",
+      "first_appeared_in": "第3講 実数 PART2 絶対値"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "座標",
+      "summary_snippet": "数直線上で点 P に対応している実数 $a$。点 P の座標が $a$ であるとき P($a$) と表記する。",
+      "first_appeared_in": "第3講 実数 PART2 絶対値"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "絶対値",
+      "summary_snippet": "数直線上で、原点 O から点 P($a$) までの距離。$|a|$ で表す。",
+      "first_appeared_in": "第3講 実数 PART2 絶対値"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "2点間の距離",
+      "summary_snippet": "数直線上の2点 A($a$), B($b$) 間の距離。$\text{AB} = |b - a|$ と表される。",
+      "first_appeared_in": "第3講 実数 PART2 絶対値"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "非負値としての絶対値の性質",
+      "summary_snippet": "距離を表す概念であるため、いかなる実数 $a$ に対しても $|a| \\geqq 0$ となるルール。",
+      "first_appeared_in": "第3講 実数 PART2 絶対値"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "絶対値記号の符号による解除ルール",
+      "summary_snippet": "中身が 0 以上ならそのまま外し、負ならマイナスを付けて正の値にする代数的変換ルール。",
+      "first_appeared_in": "第3講 実数 PART2 絶対値"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "差の絶対値による2点間距離の定式化",
+      "summary_snippet": "座標の大小関係によらず、2点 A($a$), B($b$) 間の距離が $\\text{AB} = |b - a|$ で一意に表される法則。",
+      "first_appeared_in": "第3講 実数 PART2 絶対値"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "平方根",
+      "summary_snippet": "2乗すると $a$ になる数を、$a$ の平方根という。$a > 0$ のとき正の平方根を $\\sqrt{a}$、負の平方根を $-\\sqrt{a}$ と表す。",
+      "first_appeared_in": "第3講 実数 PART3 根号を含む式の計算"
+    },
+    {
+      "branch_code": "_K016",
+      "name": "根号",
+      "summary_snippet": "平方根を表す記号 $\\sqrt{\\phantom{a}}$ のこと。",
+      "first_appeared_in": "第3講 実数 PART3 根号を含む式の計算"
+    },
+    {
+      "branch_code": "_K017",
+      "name": "分母の有理化",
+      "summary_snippet": "分母に根号を含む式を変形し、分母に根号を含まない式にすること。",
+      "first_appeared_in": "第3講 実数 PART3 根号を含む式の計算"
+    },
+    {
+      "branch_code": "_K018",
+      "name": "根号の中身の素因数分解による簡素化の視点",
+      "summary_snippet": "根号の中の数を素因数分解し、$\\sqrt{k^2 a} = k\\sqrt{a}$ を用いて根号の中をできるだけ小さい自然数にする視点。",
+      "first_appeared_in": "第3講 実数 PART3 根号を含む式の計算"
+    },
+    {
+      "branch_code": "_K019",
+      "name": "根号を含む式を文字式と同様に扱う視点",
+      "summary_snippet": "根号を含む式に対し、文字式と同様に同類項をまとめたり乗法公式を適用したりして四則計算を行う視点。",
+      "first_appeared_in": "第3講 実数 PART3 根号を含む式の計算"
+    },
+    {
+      "branch_code": "_K020",
+      "name": "和と差の積の展開公式を利用した分母の有理化の視点",
+      "summary_snippet": "分母が $\\sqrt{a} + \\sqrt{b}$ や $\\sqrt{a} - \\sqrt{b}$ の場合に、展開公式 $(A+B)(A-B) = A^2 - B^2$ を用いて分母の根号を外す視点。",
+      "first_appeared_in": "第3講 実数 PART3 根号を含む式の計算"
+    },
+    {
+      "branch_code": "_K021",
+      "name": "根号の2乗と絶対値の同値性",
+      "summary_snippet": "$\\sqrt{a^2}$ は $a \\geqq 0$ で $a$、$a < 0$ で $-a$ となり、絶対値 $|a|$ と等しくなるという構造的ルール。",
+      "first_appeared_in": "第3講 実数 PART3 根号を含む式の計算"
+    },
+    {
+      "branch_code": "_K022",
+      "name": "和と差の積による根号消去原理",
+      "summary_snippet": "$(\\sqrt{a}+\\sqrt{b})(\\sqrt{a}-\\sqrt{b}) = a-b$ により、根号の和や差を含む式にその共役な式を掛けることで2乗の差を作り出し、根号を完全に消去できる原理。",
+      "first_appeared_in": "第3講 実数 PART3 根号を含む式の計算"
+    }
+  ],
+  "8451505200000000": [
+    {
+      "branch_code": "_K001",
+      "name": "有限小数",
+      "summary_snippet": "小数第何位かまでで表される小数。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "無限小数",
+      "summary_snippet": "小数部分が無限に続く小数。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "循環小数",
+      "summary_snippet": "無限小数のうち、ある位以下から同じ数字の並びが繰り返される小数。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "循環小数の循環部分の桁数に着目する視点",
+      "summary_snippet": "循環小数を分数に変換する際、循環している桁数に応じて $10^n$ 倍（$10, 100, 1000$ など）した式を作り、元の式との差をとることで循環部分を消去する視点。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "有理数と循環・有限小数の同値性",
+      "summary_snippet": "すべての有理数は整数、有限小数、循環小数のいずれかとして表され、逆にこれらは必ず分数（有理数）に書き直すことができるという相互変換可能性のルール。",
+      "first_appeared_in": "第3講 実数 PART1 実数"
+    }
+  ],
+  "8451503114000000": [
+    {
+      "branch_code": "_K001",
+      "name": "不等式",
+      "summary_snippet": "数量の大小関係を不等号を用いて表した式。",
+      "first_appeared_in": "第4講 1次不等式 PART1 1次不等式とその解き方"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "不等号",
+      "summary_snippet": "数量の大小関係を表す記号（$<$，$>$，$\\leqq$，$\\geqq$）。",
+      "first_appeared_in": "第4講 1次不等式 PART1 1次不等式とその解き方"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "不等式の解",
+      "summary_snippet": "$x$ についての不等式を満たす $x$ の値やその範囲のこと。",
+      "first_appeared_in": "第4講 1次不等式 PART1 1次不等式とその解き方"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "1次不等式",
+      "summary_snippet": "すべての項を左辺に移項したとき、左辺が $x$ の 1 次式になる不等式。",
+      "first_appeared_in": "第4講 1次不等式 PART1 1次不等式とその解き方"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "実数の大小関係の基本性質",
+      "summary_snippet": "任意の2つの実数 $a, b$ において、$a > b$、$a = b$、$a < b$ のうち、いずれか1つのみが必ず成立するという性質（三一律）。",
+      "first_appeared_in": "第4講 1次不等式 PART1 1次不等式とその解き方"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "連立不等式",
+      "summary_snippet": "2つ以上の不等式を組み合わせたもの。それらの不等式を同時に満たす $x$ の値の範囲をその連立不等式の解と呼ぶ。",
+      "first_appeared_in": "第4講 1次不等式 PART2 いろいろな1次不等式"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "正定数に対する絶対値を含む方程式・不等式の解法パターン",
+      "summary_snippet": "$c > 0$ のとき、$|x| = c \\iff x = \\pm c$、$|x| < c \\iff -c < x < c$、$|x| > c \\iff x < -c, c < x$ という同値変形に",
+      "first_appeared_in": "第4講 1次不等式 PART3 絶対値を含む方程式・不等式"
+    }
+  ],
+  "8451503123000000": [
+    {
+      "branch_code": "_K001",
+      "name": "不等式の両辺に掛ける・割る数の正負に着目する視点",
+      "summary_snippet": "不等式の両辺に同じ数を掛けたり割ったりする際、その数が正の数か負の数かによって不等号の向きが変わるかどうかを判断する視点。",
+      "first_appeared_in": "第4講 1次不等式 PART1 1次不等式とその解き方"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "負の数を掛ける・割る操作による不等号の向きの反転ルール",
+      "summary_snippet": "不等式の両辺に同じ負の数を掛けたり、両辺を同じ負の数で割ったりすると、不等号の向きが反対に入れ替わるという規則。",
+      "first_appeared_in": "第4講 1次不等式 PART1 1次不等式とその解き方"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "各不等式の解の共通範囲（重なる部分）に着目する視点",
+      "summary_snippet": "連立不等式を解く際、それぞれの不等式の解を数直線上に図示し、共通して重なる範囲を解として見出す視点。",
+      "first_appeared_in": "第4講 1次不等式 PART2 いろいろな1次不等式"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "1次不等式の解の範囲を数直線上に表す",
+      "summary_snippet": "数直線を用いて解の領域を図示し、端点を含める・含めない（黒丸・白丸）を区別して解の範囲や共通領域を視覚的に把握する表現・理解手法。",
+      "first_appeared_in": "第4講 1次不等式 PART2 いろいろな1次不等式"
+    }
+  ],
+  "8451503124000000": [
+    {
+      "branch_code": "_K001",
+      "name": "1次不等式の解と問題の制約条件（整数値・単位）を照合する視点",
+      "summary_snippet": "文章題において1次不等式を解いて得られた $x$ の範囲から、問題文の条件（整数のみ、1時間単位など）に合う適切な数値を決定する視点。",
+      "first_appeared_in": "第4講 1次不等式 PART2 いろいろな1次不等式"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "連続値の解から実生活の離散条件（最小整数など）への帰着ルール",
+      "summary_snippet": "不等式の解（例: $x > 12.5$）が得られた際、実生活上の制約（1時間単位、整数個）に基づいて最小の整数（$x \\geqq 13$）を選び出すという現実解への変換・判断ルール。",
+      "first_appeared_in": "第4講 1次不等式 PART2 いろいろな1次不等式"
+    }
+  ],
+  "8451503112000000": [
+    {
+      "branch_code": "_K001",
+      "name": "集合",
+      "summary_snippet": "範囲のはっきりしたものの集まり。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "要素",
+      "summary_snippet": "集合を構成する1つ1つのもの。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "属する",
+      "summary_snippet": "$x$ が集合 $A$ の要素であるとき、$x$ は $A$ に属するといい、$x \\in A$ と表す。要素でない場合は $y \\notin A$ と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "部分集合",
+      "summary_snippet": "集合 $A$ のすべての要素が集合 $B$ の要素でもあるとき、$A$ は $B$ の部分集合といい、$A \\subset B$ と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "集合の相等",
+      "summary_snippet": "2つの集合 $A, B$ の要素がすべて一致している状態（$A = B$）。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "空集合",
+      "summary_snippet": "要素が1つもない集合。記号 $\\varnothing$ で表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "有限集合と無限集合",
+      "summary_snippet": "要素の個数が有限個である集合を有限集合、有限個ではない集合を無限集合という。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "要素を書き並べて集合を表す視点",
+      "summary_snippet": "集合の要素を波かっこ $\\{ \\}$ の中に具体的に列挙して表現する思考の枠組み。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "要素が満たす条件を明示して集合を表す視点",
+      "summary_snippet": "波かっこ $\\{ \\}$ 内に代表元とそれが満たす代表的条件（内包的表示）を記述して集合を表す視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "共通部分",
+      "summary_snippet": "2つの集合 $A, B$ の両方に属する要素全体の集合を共通部分といい、$A \\cap B$ と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "和集合",
+      "summary_snippet": "2つの集合 $A, B$ の少なくとも一方に属する要素全体の集合を和集合といい、$A \\cup B$ と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K012",
+      "name": "ベン図",
+      "summary_snippet": "集合とその要素を図に表した視覚的な図解表現のこと。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K013",
+      "name": "全体集合",
+      "summary_snippet": "考察対象とする要素や部分集合の全体として最初に定めた集合 $U$ のこと。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K014",
+      "name": "補集合",
+      "summary_snippet": "全体集合 $U$ の部分集合 $A$ に対し、$U$ の要素のうち $A$ に属さない要素全体の集合を $A$ の補集合といい、$\\bar{A}$ と表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K015",
+      "name": "ド・モルガンの法則",
+      "summary_snippet": "2つの集合 $A, B$ について、$\\overline{A \\cup B} = \\bar{A} \\cap \\bar{B}$ および $\\overline{A \\cap B} = \\bar{A} \\c",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K016",
+      "name": "補集合に関する基本性質",
+      "summary_snippet": "$A \\cap \\bar{A} = \\emptyset$, $A \\cup \\bar{A} = U$, $\\overline{\\bar{A}} = A$ という、集合とその補集合の間に成り立つ極限的な",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K017",
+      "name": "命題",
+      "summary_snippet": "正しいか正しくないかが明確に決まる文や式のこと。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K018",
+      "name": "条件",
+      "summary_snippet": "文字を含む文や式のうち，文字のとる値を変えると真偽が変わるもの。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K019",
+      "name": "仮定",
+      "summary_snippet": "命題「$p \\Rightarrow q$」における条件 $p$ のこと。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K020",
+      "name": "結論",
+      "summary_snippet": "命題「$p \\Rightarrow q$」における条件 $q$ のこと。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K021",
+      "name": "反例",
+      "summary_snippet": "仮定 $p$ を満たすが結論 $q$ を満たさない要素（$P \\cap \\bar{Q}$ の要素）のこと。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K022",
+      "name": "十分条件",
+      "summary_snippet": "2つの条件 $p$, $q$ について，命題 $p \\Rightarrow q$ が真であるとき，$p$ は $q$ であるための十分条件という。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K023",
+      "name": "必要条件",
+      "summary_snippet": "2つの条件 $p$, $q$ について，命題 $p \\Rightarrow q$ が真であるとき，$q$ は $p$ であるための必要条件という。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K024",
+      "name": "必要十分条件",
+      "summary_snippet": "2つの命題 $p \\Rightarrow q$，$q \\Rightarrow p$ がともに真であるとき，$p$ は $q$ であるための必要十分条件という。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K025",
+      "name": "同値",
+      "summary_snippet": "2つの条件 $p$, $q$ について，$p \\Leftrightarrow q$ が成り立つとき，$p$ と $q$ は同値であるという。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    },
+    {
+      "branch_code": "_K026",
+      "name": "条件の否定",
+      "summary_snippet": "条件 $p$ に対して，「$p$ でない」という条件を $p$ の否定といい，$\\overline{p}$ で表す。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
+    }
+  ],
+  "8451503121000000": [
+    {
+      "branch_code": "_K001",
+      "name": "相互包含による集合の相等の判定原則",
+      "summary_snippet": "2つの集合 $A, B$ について、$A = B$ であることは $A \\subset B$ かつ $A \\supset B$ が同時に成り立つことと同値であるという構造的ルール。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K002",
+      "name": "空集合の全集合に対する部分集合性原則",
+      "summary_snippet": "空集合 $\\varnothing$ は、いかなる集合 $A$ に対しても常にその部分集合である（$\\varnothing \\subset A$）とみなす規律・概念的定義。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART1 集合と要素，部分集合"
+    },
+    {
+      "branch_code": "_K003",
+      "name": "ベン図を用いて集合の要素の配置を整理する視点",
+      "summary_snippet": "全体集合や各集合、共通部分の領域に要素を順に書き入れることで、集合の関係性や各部分の要素を正確に把握する視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K004",
+      "name": "ド・モルガンの法則による補集合の演算の否定変換規則",
+      "summary_snippet": "和集合や共通部分全体の補集合を、個々の補集合の共通部分や和集合へと相互に変換（否定の分配と記号の反転）する規則。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART2 共通部分と和集合，全体集合と補集合"
+    },
+    {
+      "branch_code": "_K005",
+      "name": "条件を満たす集合の包含関係に着目する視点",
+      "summary_snippet": "条件 $p, q$ を満たす集合 $P, Q$ について、$P \\subset Q$ が成り立つかどうかに着目して論理関係を捉える視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K006",
+      "name": "仮定を満たしつつ結論を満たさない要素を探す視点",
+      "summary_snippet": "命題の偽を証明するために、仮定を満たす範囲の中から結論が成り立たない例を意図的に探す視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K007",
+      "name": "実数の範囲を数直線上に表して包摂関係を視覚化する視点",
+      "summary_snippet": "実数範囲の条件に対して、それぞれの範囲を数直線上に表し、一方の集合が他方に包摂されているかを図形的に確かめる視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K008",
+      "name": "命題の真偽と集合の包含関係の同値性",
+      "summary_snippet": "命題 $p \\Rightarrow q$ が真であることと、条件 $p, q$ の解集合 $P, Q$ について $P \\subset Q$ が成り立つことは同値であるという関係。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K009",
+      "name": "単一の反例の提示による命題の偽判定ルール",
+      "summary_snippet": "仮定を満たし結論を満たさない具体例（反例）がたった1つでも存在すれば、その命題は偽と判定されるというルール。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K010",
+      "name": "偽の命題に対する反例提示の解答作成ルール",
+      "summary_snippet": "問題文で明示的に求められていなくても、命題が偽であると主張・記述する際には具体的な反例を併記して根拠を示すべきであるという答案作成上のルール。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART3 命題と条件"
+    },
+    {
+      "branch_code": "_K011",
+      "name": "条件の否定を補集合の演算に対応付ける視点",
+      "summary_snippet": "条件 $p$ の否定 $\\overline{p}$ を満たす領域を，全体集合における集合 $P$ の補集合 $\\overline{P}$ と捉える視点。",
+      "first_appeared_in": "第5講 集合，命題と条件 PART4 必要条件と十分条件，条件の否定"
     }
   ]
 }
